@@ -10,12 +10,13 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/10.13.2/firebas
 // --- Firebase Web Configuration ---
 // Note: Standard browser Firebase Web configuration (Public client credentials)
 export const FIREBASE_CONFIG = {
-  apiKey: "YOUR_FIREBASE_API_KEY", // أدخل مفتاح Firebase Web API هنا
+  apiKey: "AIzaSyBRdA4z-1aiZ91CGXkvqgMw_MuSK8WpG94",
   authDomain: "clothstore-a9b2c.firebaseapp.com",
   projectId: "clothstore-a9b2c",
   storageBucket: "clothstore-a9b2c.firebasestorage.app",
-  messagingSenderId: "389271645028",
-  appId: "1:389271645028:web:abcdef123456"
+  messagingSenderId: "1053402231825",
+  appId: "1:1053402231825:web:04a1eeafdb355f01f0adb0",
+  measurementId: "G-QW1T59Y9WN"
 };
 
 // --- Cloudinary Configuration ---
