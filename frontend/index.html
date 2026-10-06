@@ -3,113 +3,512 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ANIS SHOP متجر ملابس وأحذية فاخر وسريع الطلب.">
-  <title>ANIS SHOP | متجر ملابس فاخر</title>
+  <meta name="description" content="ClothStore — متجر الأزياء الفاخرة والعصرية في الجزائر. تسوق أحدث التشكيلات مع خدمة الدفع عند الاستلام والتوصيل السريع.">
+  <title>ClothStore | متجر الأزياء الفاخرة</title>
+
+  <!-- Google Fonts: Cairo -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css?v=fashion_v3">
 </head>
 <body>
-  <div class="animated-bg" aria-hidden="true">
-    <span></span>
-    <span></span>
-    <span></span>
-  </div>
 
-  <header class="site-header">
-    <nav class="nav">
-      <a class="brand" href="#home" aria-label="ANIS SHOP الصفحة الرئيسية">
-        <span>ANIS</span>
-        <strong>SHOP</strong>
-      </a>
-      <div class="nav-links" aria-label="روابط الموقع">
-        <a href="#products">المنتجات</a>
-        <a href="#products" data-filter-link="shirts">أقمصة</a>
-        <a href="#products" data-filter-link="jellabas">جلابيب</a>
-        <a href="#products" data-filter-link="shoes">أحذية</a>
-        <a href="#products" data-filter-link="underwear">ملابس داخلية</a>
+  <!-- =========================================================================
+       1. STICKY HEADER
+       ========================================================================= -->
+  <header class="site-header" id="siteHeader">
+    <div class="header-inner">
+      
+      <!-- Right: Brand Logo -->
+      <div class="header-brand">
+        <a class="brand-link" href="#" aria-label="ClothStore الصفحة الرئيسية">
+          <svg class="brand-hanger-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M32 16 C32 10 38 8 38 14 C38 18 32 20 32 26" />
+            <path d="M32 26 L10 42 C8 43.5 9 46 11.5 46 L52.5 46 C55 46 56 43.5 54 42 Z" />
+          </svg>
+          <span class="brand-title">ClothStore</span>
+        </a>
       </div>
-    </nav>
+
+      <!-- Center: Main Navigation Links -->
+      <nav class="header-nav" aria-label="التنقل الرئيسي">
+        <a class="nav-item active" href="#hero">الرئيسية</a>
+        <a class="nav-item" href="#productsSection">المنتجات</a>
+        <a class="nav-item" href="#categoriesSection">الأقسام</a>
+      </nav>
+
+      <!-- Left: Header Actions -->
+      <div class="header-actions">
+        <!-- Search Trigger -->
+        <button class="header-icon-btn" type="button" id="searchBtn" title="بحث عن منتج" aria-label="بحث">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </button>
+
+        <!-- Cart Trigger with Badge -->
+        <button class="header-icon-btn cart-trigger-btn" type="button" id="cartBtn" title="سلة المشتريات" aria-label="سلة المشتريات">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          <span class="cart-badge" id="cartCountBadge">0</span>
+        </button>
+
+        <!-- Account / Admin Link -->
+        <a class="header-icon-btn" href="../dashboard/admin.html" title="حساب المشرف / لوحة التحكم" aria-label="حساب المشرف">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </a>
+
+        <!-- Mobile Menu Toggle -->
+        <button class="header-icon-btn mobile-menu-btn" type="button" id="mobileMenuBtn" aria-label="فتح القائمة">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+    </div>
   </header>
 
-  <main>
-    <section class="shop-hero" id="home">
-      <div class="hero-text-panel">
-        <p class="eyebrow">متجر ملابس حقيقي وجاهز للطلب</p>
-        <h1>أناقة يومية بتصميم فاخر</h1>
-        <p>
-          أقمصة، جلابيب، أحذية وملابس داخلية مختارة بعناية. تصفح المنتجات مباشرة، شاهد الصور، واطلب عبر Telegram.
-        </p>
-        <div class="hero-actions">
-          <a class="primary-btn" href="#products">تسوق الآن</a>
-          <a class="secondary-btn" href="#categories">الأقسام</a>
+  <!-- Mobile Navigation Drawer -->
+  <aside class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
+    <div class="mobile-drawer-header">
+      <div class="header-brand">
+        <svg class="brand-hanger-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.2">
+          <path d="M32 16 C32 10 38 8 38 14 C38 18 32 20 32 26" />
+          <path d="M32 26 L10 42 C8 43.5 9 46 11.5 46 L52.5 46 C55 46 56 43.5 54 42 Z" />
+        </svg>
+        <span class="brand-title">ClothStore</span>
+      </div>
+      <button class="drawer-close-btn" type="button" id="closeMobileDrawerBtn" aria-label="إغلاق القائمة">✕</button>
+    </div>
+    <nav class="mobile-drawer-nav">
+      <a class="mobile-nav-link" href="#hero">الرئيسية</a>
+      <a class="mobile-nav-link" href="#productsSection">المنتجات</a>
+      <a class="mobile-nav-link" href="#categoriesSection">الأقسام</a>
+      <a class="mobile-nav-link" href="../dashboard/admin.html">لوحة التحكم</a>
+    </nav>
+  </aside>
+
+  <!-- =========================================================================
+       2. HERO SECTION (EDITORIAL BILLBOARD)
+       ========================================================================= -->
+  <section class="hero-section" id="hero">
+    <div class="hero-banner">
+      <!-- Background Image with Overlay -->
+      <div class="hero-image-wrap">
+        <img 
+          class="hero-img" 
+          id="heroImg" 
+          src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1600&q=85" 
+          alt="أحدث صيحات أزياء ClothStore"
+        >
+        <div class="hero-overlay"></div>
+      </div>
+
+      <!-- Hero Content Panel -->
+      <div class="hero-content">
+        <h1 class="hero-title">أنيق في كل مناسبة</h1>
+        <p class="hero-subtitle">اكتشف أحدث صيحات الموضة بأفضل جودة وأسعار مناسبة</p>
+        <div class="hero-cta-wrap">
+          <a class="btn-hero-cta" href="#productsSection">
+            <span>تسوق الآن</span>
+            <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </a>
         </div>
       </div>
 
-      <div class="hero-showcase" aria-label="منتجات مميزة">
-        <article class="floating-product main">
-          <img src="images/ji.jpg" alt="جلابية نسائية فاخرة">
-          <strong>جلابيب فاخرة</strong>
-        </article>
-        <article class="floating-product small top">
-          <img src="images/F.jpg" alt="قميص رجالي فاخر">
-          <strong>أقمصة</strong>
-        </article>
-        <article class="floating-product small bottom">
-          <img src="images/p.jpg" alt="حذاء رجالي أنيق">
-          <strong>أحذية</strong>
-        </article>
+      <!-- Slider Arrows -->
+      <button class="hero-nav-btn prev" type="button" id="heroPrevBtn" aria-label="الشريحة السابقة">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+      <button class="hero-nav-btn next" type="button" id="heroNextBtn" aria-label="الشريحة التالية">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+
+      <!-- Slider Indicator Dots -->
+      <div class="hero-dots" id="heroDots">
+        <span class="hero-dot active" data-slide="0"></span>
+        <span class="hero-dot" data-slide="1"></span>
+        <span class="hero-dot" data-slide="2"></span>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="stats-bar" aria-label="إحصائيات المتجر">
-      <div><strong>+1200</strong><span>مبيعات</span></div>
-      <div><strong>+25K</strong><span>زيارة</span></div>
-      <div><strong>98%</strong><span>ثقة العملاء</span></div>
-      <div><strong>58</strong><span>ولاية توصيل</span></div>
-    </section>
-
-    <section class="categories-strip" id="categories" aria-label="أقسام المتجر">
-      <button class="category-chip" type="button" data-filter-link="shirts">أقمصة</button>
-      <button class="category-chip" type="button" data-filter-link="jellabas">جلابيب</button>
-      <button class="category-chip" type="button" data-filter-link="shoes">أحذية</button>
-      <button class="category-chip" type="button" data-filter-link="underwear">ملابس داخلية</button>
-    </section>
-
-    <section class="products-section" id="products">
-      <div class="shop-toolbar">
-        <div class="section-heading">
-          <p class="section-kicker">التشكيلة</p>
-          <h2>منتجات مختارة</h2>
+  <!-- =========================================================================
+       3. TRUST / BENEFITS STRIP
+       ========================================================================= -->
+  <section class="benefits-section" aria-label="مزايا التسوق من متجرنا">
+    <div class="site-container">
+      <div class="benefits-grid">
+        
+        <div class="benefit-item">
+          <div class="benefit-icon-box">
+            <!-- Truck Icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="3" width="15" height="13"/>
+              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+              <circle cx="5.5" cy="18.5" r="2.5"/>
+              <circle cx="18.5" cy="18.5" r="2.5"/>
+            </svg>
+          </div>
+          <div class="benefit-text">
+            <strong class="benefit-title">توصيل سريع</strong>
+            <span class="benefit-sub">لجميع أنحاء الجزائر</span>
+          </div>
         </div>
-        <div class="filter-tabs" role="tablist" aria-label="تصفية المنتجات">
-          <button class="filter-btn active" type="button" data-filter="all">الكل</button>
-          <button class="filter-btn" type="button" data-filter="shirts">أقمصة</button>
-          <button class="filter-btn" type="button" data-filter="jellabas">جلابيب</button>
-          <button class="filter-btn" type="button" data-filter="shoes">أحذية</button>
-          <button class="filter-btn" type="button" data-filter="underwear">ملابس داخلية</button>
+
+        <div class="benefit-item">
+          <div class="benefit-icon-box">
+            <!-- Shield / Check Icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <polyline points="9 12 11 14 15 10"/>
+            </svg>
+          </div>
+          <div class="benefit-text">
+            <strong class="benefit-title">دفع عند الاستلام</strong>
+            <span class="benefit-sub">بكل أمان وراحة</span>
+          </div>
+        </div>
+
+        <div class="benefit-item">
+          <div class="benefit-icon-box">
+            <!-- Quality Badge Icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="6"/>
+              <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+            </svg>
+          </div>
+          <div class="benefit-text">
+            <strong class="benefit-title">جودة عالية</strong>
+            <span class="benefit-sub">منتجات أصلية مضمونة</span>
+          </div>
+        </div>
+
+        <div class="benefit-item">
+          <div class="benefit-icon-box">
+            <!-- Support Headphones Icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+              <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+            </svg>
+          </div>
+          <div class="benefit-text">
+            <strong class="benefit-title">دعم العملاء</strong>
+            <span class="benefit-sub">خدمة على مدار الساعة</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       4. CATEGORIES SECTION ("تسوق حسب الفئة")
+       ========================================================================= -->
+  <section class="categories-section" id="categoriesSection">
+    <div class="site-container">
+      
+      <div class="section-header">
+        <h2 class="section-title">تسوق حسب الفئة</h2>
+        <a class="section-link" href="#productsSection" id="viewAllCategoriesBtn">
+          <span>عرض الكل</span>
+          <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </a>
+      </div>
+
+      <div class="categories-grid" id="categoriesGrid">
+        <!-- 5 Category Cards (Matching Reference Image) -->
+        <div class="category-card" data-category="jackets" role="button" tabindex="0">
+          <div class="category-img-box">
+            <img src="https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=500&q=80" alt="معاطف" loading="lazy">
+          </div>
+          <span class="category-name">معاطف</span>
+        </div>
+
+        <div class="category-card" data-category="hoodies" role="button" tabindex="0">
+          <div class="category-img-box">
+            <img src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=500&q=80" alt="كنزات" loading="lazy">
+          </div>
+          <span class="category-name">كنزات</span>
+        </div>
+
+        <div class="category-card" data-category="pants" role="button" tabindex="0">
+          <div class="category-img-box">
+            <img src="https://images.unsplash.com/photo-1542272604-780c96856592?auto=format&fit=crop&w=500&q=80" alt="بنطلونات" loading="lazy">
+          </div>
+          <span class="category-name">بنطلونات</span>
+        </div>
+
+        <div class="category-card" data-category="shirts" role="button" tabindex="0">
+          <div class="category-img-box">
+            <img src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=500&q=80" alt="قمصان" loading="lazy">
+          </div>
+          <span class="category-name">قمصان</span>
+        </div>
+
+        <div class="category-card" data-category="shoes" role="button" tabindex="0">
+          <div class="category-img-box">
+            <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=500&q=80" alt="أحذية" loading="lazy">
+          </div>
+          <span class="category-name">أحذية</span>
         </div>
       </div>
 
-      <div class="products-grid" id="productsGrid" aria-live="polite"></div>
-    </section>
-  </main>
+    </div>
+  </section>
 
-  <div class="modal" id="productModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal-panel">
-      <button class="icon-btn close-modal" type="button" aria-label="إغلاق النافذة">×</button>
-      <div class="modal-content" id="modalContent"></div>
+  <!-- =========================================================================
+       5. FEATURED / LATEST PRODUCTS ("أحدث المنتجات")
+       ========================================================================= -->
+  <section class="products-section" id="productsSection">
+    <div class="site-container">
+      
+      <div class="section-header">
+        <h2 class="section-title">أحدث المنتجات</h2>
+        <div class="category-tabs" role="tablist">
+          <button class="cat-tab active" type="button" data-filter="all">الكل</button>
+          <button class="cat-tab" type="button" data-filter="shirts">قمصان</button>
+          <button class="cat-tab" type="button" data-filter="hoodies">كنزات</button>
+          <button class="cat-tab" type="button" data-filter="pants">بنطلونات</button>
+          <button class="cat-tab" type="button" data-filter="jackets">معاطف</button>
+          <button class="cat-tab" type="button" data-filter="shoes">أحذية</button>
+        </div>
+      </div>
+
+      <!-- Products Grid (4 Columns Desktop / 2 Mobile) -->
+      <div class="products-grid" id="productsGrid" aria-live="polite">
+        <!-- Rendered dynamically by script.js -->
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       6. PRODUCT DETAILS MODAL (MATCHES TOP-RIGHT OF REFERENCE)
+       ========================================================================= -->
+  <div class="modal-backdrop" id="productModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-dialog product-modal-dialog">
+      <button class="modal-close-btn" type="button" id="closeProductModalBtn" aria-label="إغلاق تفاصيل المنتج">✕</button>
+      
+      <div class="product-detail-layout" id="modalProductContent">
+        <!-- Injected via script.js -->
+      </div>
     </div>
   </div>
 
-  <div class="toast" id="toast" role="status" aria-live="polite">تم استلام طلبك بنجاح</div>
+  <!-- =========================================================================
+       7. SLIDE-IN CART DRAWER (MATCHES BOTTOM-MIDDLE OF REFERENCE)
+       ========================================================================= -->
+  <div class="drawer-overlay" id="cartDrawerOverlay" aria-hidden="true"></div>
+  <aside class="cart-drawer" id="cartDrawer" aria-hidden="true" role="dialog" aria-label="سلة المشتريات">
+    <!-- Header -->
+    <div class="cart-drawer-header">
+      <div class="cart-drawer-title-wrap">
+        <h3 class="cart-drawer-title">سلة المشتريات</h3>
+        <span class="cart-total-badge" id="cartDrawerItemsBadge">0</span>
+      </div>
+      <button class="drawer-close-btn" type="button" id="closeCartDrawerBtn" aria-label="إغلاق السلة">✕</button>
+    </div>
 
-  <footer class="footer">
-    <p>ANIS SHOP</p>
-    <span></span>
+    <!-- Items List -->
+    <div class="cart-items-list" id="cartItemsList">
+      <!-- Populated via script.js -->
+    </div>
+
+    <!-- Footer -->
+    <div class="cart-drawer-footer">
+      <div class="cart-subtotal-row">
+        <span class="subtotal-label">المجموع</span>
+        <strong class="subtotal-val" id="cartSubtotalVal">0 د.ج</strong>
+      </div>
+
+      <button class="btn-primary-action btn-checkout" type="button" id="proceedCheckoutBtn">
+        <span>متابعة الدفع</span>
+        <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+
+      <div class="cart-cod-guarantee">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+          <rect x="2" y="6" width="20" height="12" rx="2"/>
+          <circle cx="12" cy="12" r="2"/>
+          <path d="M6 12h.01M18 12h.01"/>
+        </svg>
+        <span>الدفع عند الاستلام — ادفع عند استلام طلبك</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- =========================================================================
+       8. CASH ON DELIVERY CHECKOUT MODAL
+       ========================================================================= -->
+  <div class="modal-backdrop" id="checkoutModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-dialog checkout-modal-dialog">
+      <button class="modal-close-btn" type="button" id="closeCheckoutModalBtn" aria-label="إغلاق">✕</button>
+      
+      <div class="checkout-header">
+        <h3 class="checkout-title">إتمام الطلب (الدفع عند الاستلام)</h3>
+        <p class="checkout-desc">يرجى ملء بياناتك وسنتواصل معك فوراً لتأكيد وتوصيل الطلب.</p>
+      </div>
+
+      <!-- Order Summary Strip -->
+      <div class="checkout-summary-strip" id="checkoutSummaryStrip">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Form -->
+      <form class="checkout-form" id="checkoutForm" novalidate>
+        <div class="form-grid">
+          <div class="field-wrap">
+            <label for="custName">الاسم الكامل *</label>
+            <input type="text" id="custName" name="customerName" placeholder="مثال: سالم بن علي" required autocomplete="name">
+            <span class="field-error" id="custNameError"></span>
+          </div>
+
+          <div class="field-wrap">
+            <label for="custPhone">رقم الهاتف *</label>
+            <input type="tel" id="custPhone" name="phone" placeholder="0550 00 00 00" required autocomplete="tel" dir="ltr" style="text-align: right;">
+            <span class="field-error" id="custPhoneError"></span>
+          </div>
+
+          <div class="field-wrap">
+            <label for="custState">الولاية *</label>
+            <input type="text" id="custState" name="state" placeholder="مثال: الجزائر، وهران، سطيف..." required>
+            <span class="field-error" id="custStateError"></span>
+          </div>
+
+          <div class="field-wrap">
+            <label for="custCity">البلدية *</label>
+            <input type="text" id="custCity" name="city" placeholder="مثال: الجزائر الوسطى، بئر مراد رايس..." required>
+            <span class="field-error" id="custCityError"></span>
+          </div>
+
+          <div class="field-wrap full">
+            <label for="custAddress">العنوان بالتفصيل *</label>
+            <textarea id="custAddress" name="address" rows="2" placeholder="الحي، رقم الشارع، رقم العمارة أو المنزل..." required></textarea>
+            <span class="field-error" id="custAddressError"></span>
+          </div>
+
+          <div class="field-wrap full">
+            <label for="custNotes">ملاحظات إضافية (اختياري)</label>
+            <textarea id="custNotes" name="notes" rows="2" placeholder="أي تعليمات للموزع أو وقت مفضل للاتصال..."></textarea>
+          </div>
+        </div>
+
+        <div class="checkout-actions">
+          <button class="btn-primary-action btn-submit-order" type="submit" id="submitOrderBtn">
+            <span id="submitOrderText">تأكيد الطلب الآن</span>
+            <span id="submitOrderLoader" hidden>جاري الإرسال...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       9. INSTANT SEARCH OVERLAY
+       ========================================================================= -->
+  <div class="search-overlay" id="searchOverlay" aria-hidden="true">
+    <div class="search-box-card">
+      <div class="search-input-row">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="search" id="liveSearchInput" placeholder="ابحث عن قميص، هودي، حذاء، بنطلون..." autocomplete="off">
+        <button class="search-close-btn" type="button" id="closeSearchBtn">✕</button>
+      </div>
+      <div class="search-results-list" id="searchResultsList"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       10. PREMIUM DARK FOOTER
+       ========================================================================= -->
+  <footer class="site-footer">
+    <div class="site-container">
+      <div class="footer-grid">
+        
+        <!-- Col 1: Brand Info -->
+        <div class="footer-col brand-col">
+          <div class="footer-brand">
+            <svg class="brand-hanger-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.2">
+              <path d="M32 16 C32 10 38 8 38 14 C38 18 32 20 32 26" />
+              <path d="M32 26 L10 42 C8 43.5 9 46 11.5 46 L52.5 46 C55 46 56 43.5 54 42 Z" />
+            </svg>
+            <span class="brand-title">ClothStore</span>
+          </div>
+          <p class="brand-tagline">أكثر من مجرد ملابس .. أسلوب حياة</p>
+          <div class="social-links">
+            <a href="#" class="social-icon" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+            </a>
+            <a href="#" class="social-icon" aria-label="Facebook">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+            </a>
+            <a href="#" class="social-icon" aria-label="TikTok">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Col 2: Quick Links -->
+        <div class="footer-col">
+          <h4 class="footer-col-title">روابط سريعة</h4>
+          <ul class="footer-links">
+            <li><a href="#hero">الرئيسية</a></li>
+            <li><a href="#productsSection">المنتجات</a></li>
+            <li><a href="#categoriesSection">الأقسام</a></li>
+            <li><a href="#checkoutModal" id="footerOrderLink">تواصل معنا</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Customer Service -->
+        <div class="footer-col">
+          <h4 class="footer-col-title">خدمة العملاء</h4>
+          <ul class="footer-links">
+            <li><a href="#">معلومات الشحن</a></li>
+            <li><a href="#">سياسة الاسترجاع</a></li>
+            <li><a href="#">الأسئلة الشائعة</a></li>
+            <li><a href="#">الدعم الفني</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 4: Newsletter -->
+        <div class="footer-col newsletter-col">
+          <h4 class="footer-col-title">اشترك في نشرتنا</h4>
+          <p class="newsletter-desc">احصل على آخر العروض والتحديثات</p>
+          <form class="newsletter-form" id="newsletterForm">
+            <input type="email" placeholder="أدخل بريدك الإلكتروني" required dir="rtl">
+            <button class="newsletter-btn" type="submit">اشتراك</button>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- Copyright Bar -->
+      <div class="footer-bottom-bar">
+        <p class="copyright-text">© 2026 ClothStore. جميع الحقوق محفوظة.</p>
+      </div>
+    </div>
   </footer>
 
-  <script type="module" src="script.js?v=2"></script>
+  <!-- Global Toast Message -->
+  <div class="toast-notify" id="toastNotify" role="status" aria-live="polite"></div>
+
+  <!-- Scripts -->
+  <script type="module" src="script.js?v=fashion_v3"></script>
 </body>
 </html>
