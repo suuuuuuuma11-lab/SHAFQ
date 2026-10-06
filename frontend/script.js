@@ -11,8 +11,8 @@ import {
   orderBy 
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
-const TELEGRAM_BOT_TOKEN = "PUT_YOUR_TELEGRAM_BOT_TOKEN_HERE";
-const TELEGRAM_CHAT_ID = "PUT_YOUR_TELEGRAM_CHAT_ID_HERE";
+const TELEGRAM_BOT_TOKEN = "8916406368:AAFIJTPkAykiL54hn_mmbv6AqGax6lvq08U";
+const TELEGRAM_CHAT_ID = "6609345622";
 
 const productsGrid = document.querySelector("#productsGrid");
 const filterButtons = document.querySelectorAll(".filter-btn");
