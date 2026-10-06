@@ -221,19 +221,23 @@ function showToast() {
 }
 
 function formatTelegramMessage(product, formValues) {
+  const prodName = product ? (product.name || "طلب مباشر") : "طلب مباشر";
+  const prodCategory = product ? getCategoryLabel(product.category) : "عام";
+  const prodPrice = product ? (product.price || "—") : "—";
+
   return [
     "🛒 طلب جديد من ANIS SHOP",
     "",
-    `المنتج: ${product.name}`,
-    `القسم: ${getCategoryLabel(product.category)}`,
-    `السعر: ${product.price}`,
+    `المنتج: ${prodName}`,
+    `القسم: ${prodCategory}`,
+    `السعر: ${prodPrice}`,
     "",
     "بيانات الزبون:",
-    `الاسم: ${formValues.customerName}`,
-    `الهاتف: ${formValues.phone}`,
-    `الولاية: ${formValues.state}`,
-    `البلدية: ${formValues.city}`,
-    `العنوان: ${formValues.address}`,
+    `الاسم: ${formValues.customerName || "—"}`,
+    `الهاتف: ${formValues.phone || "—"}`,
+    `الولاية: ${formValues.state || "—"}`,
+    `البلدية: ${formValues.city || "—"}`,
+    `العنوان: ${formValues.address || "—"}`,
     `الملاحظات: ${formValues.notes || "لا توجد"}`,
     "",
     `التاريخ: ${new Date().toLocaleString("ar-DZ")}`
@@ -242,14 +246,6 @@ function formatTelegramMessage(product, formValues) {
 
 async function sendOrderToTelegram(product, formData) {
   const formValues = Object.fromEntries(formData.entries());
-
-  if (
-    TELEGRAM_BOT_TOKEN === "PUT_YOUR_TELEGRAM_BOT_TOKEN_HERE" ||
-    TELEGRAM_CHAT_ID === "PUT_YOUR_TELEGRAM_CHAT_ID_HERE"
-  ) {
-    console.info("Telegram Dev Order:", { product, formValues });
-    return;
-  }
 
   const endpoint = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
   const text = formatTelegramMessage(product, formValues);
@@ -261,13 +257,17 @@ async function sendOrderToTelegram(product, formData) {
     },
     body: JSON.stringify({
       chat_id: TELEGRAM_CHAT_ID,
-      text,
-      parse_mode: "HTML"
+      text: text
     })
   });
 
   if (!response.ok) {
-    throw new Error("تعذر إرسال الطلب حالياً، يرجى المحاولة بعد قليل.");
+    let errorMsg = "";
+    try {
+      const errData = await response.json();
+      errorMsg = errData.description;
+    } catch (_) {}
+    throw new Error(errorMsg || "تعذر إرسال الطلب حالياً، يرجى المحاولة بعد قليل.");
   }
 }
 
