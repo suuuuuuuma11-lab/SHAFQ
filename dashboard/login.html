@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ClothStore — تسجيل الدخول إلى لوحة التحكم">
+  <title>ClothStore | تسجيل الدخول</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+</head>
+
+<body class="login-page-body">
+
+  <div class="login-card">
+    <!-- Brand Header -->
+    <div class="login-brand">
+      <svg class="brand-hanger-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M32 16 C32 10 38 8 38 14 C38 18 32 20 32 26" />
+        <path d="M32 26 L10 42 C8 43.5 9 46 11.5 46 L52.5 46 C55 46 56 43.5 54 42 Z" />
+      </svg>
+      <h1 class="login-brand-title">ClothStore</h1>
+      <p class="login-brand-subtitle">تسجيل الدخول إلى لوحة التحكم</p>
+    </div>
+
+    <!-- Error Alert -->
+    <div class="login-error-alert" id="loginErrorAlert" hidden role="alert" aria-live="assertive">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      <span id="loginErrorText"></span>
+    </div>
+
+    <!-- Login Form -->
+    <form class="login-form" id="loginForm" novalidate>
+      <div class="form-field-group" id="emailGroup">
+        <label for="loginEmail">البريد الإلكتروني</label>
+        <input type="email" id="loginEmail" name="email" placeholder="admin@clothstore.com" required
+          autocomplete="username" dir="ltr" style="text-align: right;">
+        <span class="field-error-msg" id="emailError"></span>
+      </div>
+
+      <div class="form-field-group" id="passwordGroup">
+        <label for="loginPassword">كلمة المرور</label>
+        <input type="password" id="loginPassword" name="password" placeholder="••••••••" required
+          autocomplete="current-password" dir="ltr">
+        <span class="field-error-msg" id="passwordError"></span>
+      </div>
+
+      <button class="btn btn-primary login-btn-submit" type="submit" id="loginBtn">
+        <span class="btn-text" id="loginBtnText">تسجيل الدخول</span>
+        <span class="btn-loader" id="loginBtnLoader" hidden>جاري التحقق...</span>
+      </button>
+    </form>
+
+    <div class="login-footer-link">
+      <a href="../frontend/index.html">← العودة إلى المتجر</a>
+    </div>
+  </div>
+
+  <script type="module" src="login.js"></script>
+</body>
+
+</html>

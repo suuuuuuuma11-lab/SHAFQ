@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ANIS SHOP متجر ملابس وأحذية فاخر وسريع الطلب.">
+  <title>ANIS SHOP | متجر ملابس فاخر</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="animated-bg" aria-hidden="true">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="#home" aria-label="ANIS SHOP الصفحة الرئيسية">
+        <span>ANIS</span>
+        <strong>SHOP</strong>
+      </a>
+      <div class="nav-links" aria-label="روابط الموقع">
+        <a href="#products">المنتجات</a>
+        <a href="#products" data-filter-link="shirts">أقمصة</a>
+        <a href="#products" data-filter-link="jellabas">جلابيب</a>
+        <a href="#products" data-filter-link="shoes">أحذية</a>
+        <a href="#products" data-filter-link="underwear">ملابس داخلية</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="shop-hero" id="home">
+      <div class="hero-text-panel">
+        <p class="eyebrow">متجر ملابس حقيقي وجاهز للطلب</p>
+        <h1>أناقة يومية بتصميم فاخر</h1>
+        <p>
+          أقمصة، جلابيب، أحذية وملابس داخلية مختارة بعناية. تصفح المنتجات مباشرة، شاهد الصور، واطلب عبر Telegram.
+        </p>
+        <div class="hero-actions">
+          <a class="primary-btn" href="#products">تسوق الآن</a>
+          <a class="secondary-btn" href="#categories">الأقسام</a>
+        </div>
+      </div>
+
+      <div class="hero-showcase" aria-label="منتجات مميزة">
+        <article class="floating-product main">
+          <img src="images/ji.jpg" alt="جلابية نسائية فاخرة">
+          <strong>جلابيب فاخرة</strong>
+        </article>
+        <article class="floating-product small top">
+          <img src="images/F.jpg" alt="قميص رجالي فاخر">
+          <strong>أقمصة</strong>
+        </article>
+        <article class="floating-product small bottom">
+          <img src="images/p.jpg" alt="حذاء رجالي أنيق">
+          <strong>أحذية</strong>
+        </article>
+      </div>
+    </section>
+
+    <section class="stats-bar" aria-label="إحصائيات المتجر">
+      <div><strong>+1200</strong><span>مبيعات</span></div>
+      <div><strong>+25K</strong><span>زيارة</span></div>
+      <div><strong>98%</strong><span>ثقة العملاء</span></div>
+      <div><strong>58</strong><span>ولاية توصيل</span></div>
+    </section>
+
+    <section class="categories-strip" id="categories" aria-label="أقسام المتجر">
+      <button class="category-chip" type="button" data-filter-link="shirts">أقمصة</button>
+      <button class="category-chip" type="button" data-filter-link="jellabas">جلابيب</button>
+      <button class="category-chip" type="button" data-filter-link="shoes">أحذية</button>
+      <button class="category-chip" type="button" data-filter-link="underwear">ملابس داخلية</button>
+    </section>
+
+    <section class="products-section" id="products">
+      <div class="shop-toolbar">
+        <div class="section-heading">
+          <p class="section-kicker">التشكيلة</p>
+          <h2>منتجات مختارة</h2>
+        </div>
+        <div class="filter-tabs" role="tablist" aria-label="تصفية المنتجات">
+          <button class="filter-btn active" type="button" data-filter="all">الكل</button>
+          <button class="filter-btn" type="button" data-filter="shirts">أقمصة</button>
+          <button class="filter-btn" type="button" data-filter="jellabas">جلابيب</button>
+          <button class="filter-btn" type="button" data-filter="shoes">أحذية</button>
+          <button class="filter-btn" type="button" data-filter="underwear">ملابس داخلية</button>
+        </div>
+      </div>
+
+      <div class="products-grid" id="productsGrid" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <div class="modal" id="productModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-panel">
+      <button class="icon-btn close-modal" type="button" aria-label="إغلاق النافذة">×</button>
+      <div class="modal-content" id="modalContent"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">تم استلام طلبك بنجاح</div>
+
+  <footer class="footer">
+    <p>ANIS SHOP</p>
+    <span></span>
+  </footer>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
