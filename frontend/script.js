@@ -230,6 +230,7 @@ const DOM = {
   // Mobile
   mobileMenuBtn: $("mobileMenuBtn"),
   mobileDrawer: $("mobileDrawer"),
+  mobileDrawerOverlay: $("mobileDrawerOverlay"),
   closeMobileDrawerBtn: $("closeMobileDrawerBtn"),
 
   // Toast
@@ -435,7 +436,7 @@ function openProductDetails(product) {
       <h2 class="detail-title">${product.name}</h2>
       
       <div class="detail-price-rating-row">
-        <span class="detail-price">${product.priceDisplay || formatPrice(p.price)}</span>
+        <span class="detail-price">${product.priceDisplay || formatPrice(product.price)}</span>
         <div class="detail-rating">
           <span class="detail-stars">★★★★★</span>
           <span>(${product.rating})</span>
@@ -1013,18 +1014,62 @@ function setupEventListeners() {
     }
   });
 
-  // Mobile Menu Drawer
-  DOM.mobileMenuBtn.addEventListener("click", () => {
+  // Mobile Menu Drawer & Overlay
+  const openMobileDrawer = () => {
     DOM.mobileDrawer.classList.add("active");
-  });
-  DOM.closeMobileDrawerBtn.addEventListener("click", () => {
+    DOM.mobileDrawerOverlay?.classList.add("active");
+    document.body.classList.add("modal-open");
+  };
+
+  const closeMobileDrawer = () => {
     DOM.mobileDrawer.classList.remove("active");
-  });
+    DOM.mobileDrawerOverlay?.classList.remove("active");
+    document.body.classList.remove("modal-open");
+  };
+
+  DOM.mobileMenuBtn?.addEventListener("click", openMobileDrawer);
+  DOM.closeMobileDrawerBtn?.addEventListener("click", closeMobileDrawer);
+  DOM.mobileDrawerOverlay?.addEventListener("click", closeMobileDrawer);
+
   document.querySelectorAll(".mobile-nav-link").forEach(link => {
-    link.addEventListener("click", () => {
-      DOM.mobileDrawer.classList.remove("active");
+    link.addEventListener("click", closeMobileDrawer);
+  });
+
+  // Category Pills inside Mobile Drawer
+  document.querySelectorAll(".drawer-cat-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      const cat = pill.dataset.cat;
+      state.activeFilter = cat;
+      DOM.catTabs.forEach(t => t.classList.toggle("active", t.dataset.filter === cat));
+      renderProducts();
+      closeMobileDrawer();
+      $("productsSection")?.scrollIntoView({ behavior: "smooth" });
     });
   });
+
+  // Touch Swipe for Hero Banner on Mobile
+  let heroTouchStartX = 0;
+  let heroTouchEndX = 0;
+  const heroBannerBox = document.querySelector(".hero-banner");
+  if (heroBannerBox) {
+    heroBannerBox.addEventListener("touchstart", (e) => {
+      heroTouchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    heroBannerBox.addEventListener("touchend", (e) => {
+      heroTouchEndX = e.changedTouches[0].screenX;
+      const diff = heroTouchEndX - heroTouchStartX;
+      if (Math.abs(diff) > 40) {
+        if (diff > 0) {
+          // swiped right (RTL next)
+          setHeroSlide(state.heroSlideIndex - 1);
+        } else {
+          // swiped left
+          setHeroSlide(state.heroSlideIndex + 1);
+        }
+      }
+    }, { passive: true });
+  }
 
   // Footer Links
   $("footerOrderLink")?.addEventListener("click", (e) => {
