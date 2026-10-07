@@ -71,7 +71,6 @@ const SEED_PRODUCTS = [
       { name: "ذهبي", value: "#b99a6b" }
     ],
     sizes: ["S", "M", "L", "XL"],
-    stock: 25,
     status: "active",
     desc: "قميص قطني 100% بقصّة عصرية وخياطة متقنة بأزرار صدفية."
   },
@@ -90,7 +89,6 @@ const SEED_PRODUCTS = [
       { name: "بني", value: "#6b6357" }
     ],
     sizes: ["S", "M", "L", "XL", "XXL"],
-    stock: 18,
     status: "active",
     desc: "قميص أسود راقٍ بخامة فاخرة ومقاومة للتجعد للمناسبات الخاصة."
   },
@@ -109,7 +107,6 @@ const SEED_PRODUCTS = [
       { name: "أزرق فاتح", value: "#dce8f5" }
     ],
     sizes: ["S", "M", "L", "XL"],
-    stock: 30,
     status: "active",
     desc: "قصّة سليم فيت مريحة بأزرار صدف طبيعية وقماش أكسفورد ناعم."
   },
@@ -128,7 +125,6 @@ const SEED_PRODUCTS = [
       { name: "رمادي", value: "#8a8277" }
     ],
     sizes: ["M", "L", "XL"],
-    stock: 12,
     status: "active",
     desc: "تصميم كلاسيكي مميز بلون بيج أنيق يناسب البدل والإطلالات الرسمية."
   },
@@ -147,7 +143,6 @@ const SEED_PRODUCTS = [
       { name: "أخضر فاتح", value: "#7c7d63" }
     ],
     sizes: ["S", "M", "L", "XL"],
-    stock: 8,
     status: "active",
     desc: "كتان أوروبي نقي وخفيف الوزن مناسب لجميع فصول السنة."
   },
@@ -166,7 +161,6 @@ const SEED_PRODUCTS = [
       { name: "أبيض مخطط", value: "#ffffff" }
     ],
     sizes: ["S", "M", "L", "XL", "XXL"],
-    stock: 22,
     status: "active",
     desc: "خطوط رفيعة بتناغم أنيق تمنح مظهراً عصرياً جذاباً."
   },
@@ -185,7 +179,6 @@ const SEED_PRODUCTS = [
       { name: "رمادي أزرق", value: "#6b7a99" }
     ],
     sizes: ["S", "M", "L", "XL"],
-    stock: 15,
     status: "active",
     desc: "لون كحلي ملكي عميق وقماش فاخر عالي الجودة."
   },
@@ -204,7 +197,6 @@ const SEED_PRODUCTS = [
       { name: "بيج فاتح", value: "#dcd5c8" }
     ],
     sizes: ["S", "M", "L", "XL"],
-    stock: 0,
     status: "active",
     desc: "قطن مصري طويل التيلة فائق النعومة والراحة."
   }
@@ -384,7 +376,6 @@ function initRealtimeFirestore() {
           sizes: Array.isArray(d.sizes) ? d.sizes : [],
           colors: colors,
           colorNames: colors.map((c) => c.name),
-          stock: typeof d.stock === "number" ? d.stock : (d.stock !== undefined ? Number(d.stock) : 20),
           status: d.status || "active",
           desc: d.description || d.desc || "",
           createdAt: d.createdAt || "",
@@ -713,7 +704,6 @@ function editProduct(id) {
     c.checked = Array.isArray(p.sizes) && p.sizes.includes(c.value);
   });
 
-  $("pStock").value = p.stock !== undefined ? p.stock : 20;
   $("pDesc").value = p.desc || p.description || "";
 
   const statusRadio = document.querySelector(`input[name="pStatus"][value="${p.status || "active"}"]`);
@@ -796,10 +786,9 @@ function renderProductsTable() {
 
   if (q) list = list.filter((p) => p.name.toLowerCase().includes(q));
   if (fc) list = list.filter((p) => p.categoryId === fc || p.category === fc);
-  if (fs === "active") list = list.filter((p) => p.status === "active" && +p.stock > 0);
+  if (fs === "active") list = list.filter((p) => p.status === "active");
   if (fs === "hidden") list = list.filter((p) => p.status === "hidden");
   if (fs === "sale") list = list.filter((p) => p.oldPrice && p.oldPrice > p.price);
-  if (fs === "out") list = list.filter((p) => +p.stock === 0);
 
   if (emptyState) emptyState.style.display = list.length ? "none" : "block";
 
@@ -808,13 +797,6 @@ function renderProductsTable() {
       const cat = state.categories.find((c) => c.id === p.categoryId || c.name === p.category);
       const disc =
         p.oldPrice && p.oldPrice > p.price ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
-
-      const stockTag =
-        +p.stock === 0
-          ? '<span class="tag red">نفدت الكمية</span>'
-          : +p.stock < 10
-          ? `<span class="tag red">متبقي ${p.stock}</span>`
-          : `<span class="tag green">متوفر (${p.stock})</span>`;
 
       const statusTag = p.status === "hidden" ? '<span class="tag gray">مخفي</span>' : "";
 
@@ -850,7 +832,6 @@ function renderProductsTable() {
             <span style="font-size:11px;color:var(--muted);margin-right:6px">${(p.colors || []).length} ألوان</span>
           </div>
         </td>
-        <td>${stockTag}</td>
         <td>
           ${p.badge ? `<span class="tag gold">${esc(p.badge)}</span> ` : ""}
           ${statusTag}
@@ -1306,7 +1287,7 @@ function initEvents() {
   });
 
   // Validation auto-clearers
-  ["pName", "pCategory", "pPrice", "pOldPrice", "pStock", "cName", "cMsg"].forEach((id) => {
+  ["pName", "pCategory", "pPrice", "pOldPrice", "cName", "cMsg"].forEach((id) => {
     const el = $(id);
     if (el) {
       el.addEventListener("input", () => clearErr(id));
@@ -1329,7 +1310,6 @@ function initEvents() {
         ? ($("pBadgeCustom")?.value || "").trim()
         : badgeBtn?.dataset.v || "";
 
-    const stock = $("pStock") ? $("pStock").value : 20;
     const statusRadio = document.querySelector('input[name="pStatus"]:checked');
     const status = statusRadio ? statusRadio.value : "active";
     const desc = $("pDesc") ? $("pDesc").value.trim() : "";
@@ -1355,10 +1335,6 @@ function initEvents() {
     }
     if (oldPrice !== null && (!oldPrice || oldPrice <= price)) {
       markErr("pOldPrice");
-      ok = false;
-    }
-    if (stock === "" || +stock < 0) {
-      markErr("pStock");
       ok = false;
     }
     if (!sizes.length) {
@@ -1407,7 +1383,6 @@ function initEvents() {
       colors,
       colorNames: colors.map((c) => c.name),
       sizes,
-      stock: +stock,
       status,
       description: desc,
       desc: desc,

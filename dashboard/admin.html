@@ -151,12 +151,6 @@
               </div>
 
               <div class="field">
-                <label>الكمية في المخزون <span class="req">*</span></label>
-                <input type="number" id="pStock" placeholder="20" min="0" step="1">
-                <span class="err-msg" id="e-pStock">أدخل كمية (صفر = نفدت الكمية)</span>
-              </div>
-
-              <div class="field">
                 <label>حالة المنتج</label>
                 <div class="status-row">
                   <label class="status-chip"><input type="radio" name="pStatus" value="active" checked><span>✓ متاح للبيع</span></label>
@@ -294,12 +288,11 @@
               <option value="active">متاح</option>
               <option value="hidden">مخفي</option>
               <option value="sale">عليه خصم</option>
-              <option value="out">نفدت كميته</option>
             </select>
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>المنتج</th><th>السعر</th><th>الألوان</th><th>المخزون</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+              <thead><tr><th>المنتج</th><th>السعر</th><th>الألوان</th><th>الحالة</th><th>إجراءات</th></tr></thead>
               <tbody id="productsTbody"></tbody>
             </table>
           </div>
