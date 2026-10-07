@@ -373,10 +373,49 @@ function changeQty(d){ qty = Math.max(1, qty + d); document.getElementById("qty"
   document.getElementById("total").textContent = (p.price * qty).toLocaleString('ar-DZ') + " دج"; }
 changeQty(0);
 
+/* Telegram Bot Integration */
+const TELEGRAM_BOT_TOKEN = "8916406368:AAFIJTPkAykiL54hn_mmbv6AqGax6lvq08U";
+const TELEGRAM_CHAT_ID = "6609345622";
+
+async function sendTelegramOrder(orderData) {
+  const text = [
+    "🛍️ طلب جديد من متجر النور!",
+    "==========================",
+    "",
+    "📦 تفاصيل المنتج:",
+    `• ${orderData.productName}`,
+    `  - اللون: ${orderData.color}`,
+    `  - المقاس: ${orderData.size}`,
+    `  - الكمية: ${orderData.qty}`,
+    `  - السعر الفردي: ${orderData.price} دج`,
+    "",
+    `💰 الإجمالي الكلي: ${orderData.total} دج (الدفع عند التسليم)`,
+    "",
+    "👤 بيانات الزبون:",
+    `• الاسم: ${orderData.name}`,
+    `• رقم الهاتف: ${orderData.phone}`,
+    `• الولاية: ${orderData.wilaya}`,
+    `• البلدية: ${orderData.commune}`,
+    `• العنوان: ${orderData.address || "لم يُحدد"}`,
+    "",
+    `📅 التاريخ: ${new Date().toLocaleString("ar-DZ")}`
+  ].join("\n");
+
+  const endpoint = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  return fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: TELEGRAM_CHAT_ID,
+      text: text
+    })
+  });
+}
+
 /* Validation + submit */
 function setInvalid(fid, bad){ document.getElementById(fid).classList.toggle("invalid", bad); return !bad; }
 
-document.getElementById("orderForm").addEventListener("submit", function(e){
+document.getElementById("orderForm").addEventListener("submit", async function(e){
   e.preventDefault();
   const name = document.getElementById("fullName").value.trim();
   const phone = document.getElementById("phone").value.trim().replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
@@ -390,6 +429,36 @@ document.getElementById("orderForm").addEventListener("submit", function(e){
   ok = setInvalid("fWilaya", !wilaya) && ok;
   ok = setInvalid("fCommune", commune.length < 2) && ok;
   if (!ok) return;
+
+  const submitBtn = document.querySelector("#orderForm button[type=submit]");
+  const originalText = submitBtn ? submitBtn.textContent : "تأكيد الطلب — الدفع عند الاستلام";
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "جاري إرسال الطلب...";
+  }
+
+  try {
+    await sendTelegramOrder({
+      productName: p.name,
+      color: p.colorNames[selectedColor],
+      size: selectedSize,
+      qty: qty,
+      price: p.price,
+      total: (p.price * qty).toLocaleString('ar-DZ'),
+      name: name,
+      phone: phone,
+      wilaya: wilaya,
+      commune: commune,
+      address: address
+    });
+  } catch (err) {
+    console.error("Telegram order send error:", err);
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
+  }
 
   const summary = document.getElementById("orderSummary");
   summary.innerHTML = `
@@ -511,7 +580,6 @@ sInput.addEventListener('input', () => {
 });
 
 updateBadge();
-</script>
 </script>
 
 <!-- Search overlay -->
