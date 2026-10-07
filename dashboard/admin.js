@@ -215,8 +215,23 @@ const state = {
   editingCatId: null,
   productImgData: "",
   catImgData: "",
+  catCropSettings: null,
   bannerMode: "color",
-  confirmCb: null
+  confirmCb: null,
+  cropEditor: {
+    isOpen: false,
+    imgUrl: "",
+    desktop: { x: 50, y: 50, zoom: 1.0 },
+    mobile: { x: 50, y: 50, zoom: 1.0 },
+    isDraggingImage: false,
+    isDraggingMobile: false,
+    dragStartX: 0,
+    dragStartY: 0,
+    startDesktopX: 50,
+    startDesktopY: 50,
+    startMobileX: 50,
+    startMobileY: 50
+  }
 };
 
 // --- Toast System ---
@@ -888,10 +903,112 @@ function updateBannerPreview() {
     pv.querySelector("img")?.remove();
     const im = document.createElement("img");
     im.src = state.catImgData;
+    if (state.catCropSettings && state.catCropSettings.desktop) {
+      im.style.objectPosition = `${state.catCropSettings.desktop.x}% ${state.catCropSettings.desktop.y}%`;
+      if (state.catCropSettings.desktop.zoom > 1) {
+        im.style.transform = `scale(${state.catCropSettings.desktop.zoom})`;
+        im.style.transformOrigin = `${state.catCropSettings.desktop.x}% ${state.catCropSettings.desktop.y}%`;
+      }
+    }
     pv.insertBefore(im, pv.firstChild);
   } else {
     pv.querySelector("img")?.remove();
     pv.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
+  }
+}
+
+// --- Category Banner Crop & Position Editor ---
+function openCropModal(imgUrl, existingCrop) {
+  if (!imgUrl) return;
+  state.cropEditor.isOpen = true;
+  state.cropEditor.imgUrl = imgUrl;
+
+  const defaultCrop = {
+    desktop: { x: 50, y: 50, zoom: 1.0 },
+    mobile: { x: 50, y: 50, zoom: 1.0 }
+  };
+
+  const crop = existingCrop || defaultCrop;
+  state.cropEditor.desktop = {
+    x: typeof crop.desktop?.x === "number" ? crop.desktop.x : 50,
+    y: typeof crop.desktop?.y === "number" ? crop.desktop.y : 50,
+    zoom: typeof crop.desktop?.zoom === "number" ? crop.desktop.zoom : 1.0
+  };
+  state.cropEditor.mobile = {
+    x: typeof crop.mobile?.x === "number" ? crop.mobile.x : 50,
+    y: typeof crop.mobile?.y === "number" ? crop.mobile.y : 50,
+    zoom: typeof crop.mobile?.zoom === "number" ? crop.mobile.zoom : 1.0
+  };
+
+  const srcImg = $("cropSourceImg");
+  const pvDImg = $("pvDesktopImg");
+  const pvMImg = $("pvMobileImg");
+
+  if (srcImg) srcImg.src = imgUrl;
+  if (pvDImg) pvDImg.src = imgUrl;
+  if (pvMImg) pvMImg.src = imgUrl;
+
+  const catName = $("cName") ? $("cName").value.trim() : "";
+  const catMsg = $("cMsg") ? $("cMsg").value.trim() : "";
+  if ($("pvCropNameDesktop")) $("pvCropNameDesktop").textContent = catName || "اسم التصنيف";
+  if ($("pvCropMsgDesktop")) $("pvCropMsgDesktop").textContent = catMsg || "الرسالة التسويقية تظهر هنا";
+  if ($("pvCropNameMobile")) $("pvCropNameMobile").textContent = catName || "اسم التصنيف";
+
+  $("cropModal")?.classList.add("open");
+  updateCropEditorUI();
+}
+
+function closeCropModal() {
+  state.cropEditor.isOpen = false;
+  state.cropEditor.isDraggingImage = false;
+  state.cropEditor.isDraggingMobile = false;
+  $("cropModal")?.classList.remove("open");
+}
+
+function updateCropEditorUI() {
+  const d = state.cropEditor.desktop;
+  const m = state.cropEditor.mobile;
+
+  const zoomSlider = $("cropZoomRange");
+  if (zoomSlider) zoomSlider.value = d.zoom;
+  const zoomBadge = $("cropZoomVal");
+  if (zoomBadge) zoomBadge.textContent = Math.round(d.zoom * 100) + "%";
+
+  const srcImg = $("cropSourceImg");
+  if (srcImg) {
+    srcImg.style.objectPosition = `${d.x}% ${d.y}%`;
+    srcImg.style.transform = `scale(${d.zoom})`;
+    srcImg.style.transformOrigin = `${d.x}% ${d.y}%`;
+  }
+
+  const mobBox = $("mobileFocusBox");
+  const frame = $("desktopBannerFrame");
+  if (mobBox && frame) {
+    const frameW = frame.clientWidth || 650;
+    const boxW = mobBox.clientWidth || 150;
+    const maxLeft = Math.max(0, frameW - boxW);
+    const leftPx = (m.x / 100) * maxLeft;
+    mobBox.style.left = `${leftPx}px`;
+    mobBox.style.right = "auto";
+  }
+
+  const pvDImg = $("pvDesktopImg");
+  if (pvDImg) {
+    pvDImg.style.objectPosition = `${d.x}% ${d.y}%`;
+    pvDImg.style.transform = `scale(${d.zoom})`;
+    pvDImg.style.transformOrigin = `${d.x}% ${d.y}%`;
+  }
+
+  const pvMImg = $("pvMobileImg");
+  if (pvMImg) {
+    pvMImg.style.objectPosition = `${m.x}% ${m.y}%`;
+    pvMImg.style.transform = `scale(${d.zoom})`;
+    pvMImg.style.transformOrigin = `${m.x}% ${m.y}%`;
+  }
+
+  const coordInfo = $("cropCoordInfo");
+  if (coordInfo) {
+    coordInfo.textContent = `💻 Desktop: (${Math.round(d.x)}%, ${Math.round(d.y)}%) • Zoom: ${d.zoom.toFixed(1)}x | 📱 Mobile Focus: (${Math.round(m.x)}%, ${Math.round(m.y)}%)`;
   }
 }
 
@@ -912,6 +1029,7 @@ function resetCatForm() {
   if ($("bannerImgBox")) $("bannerImgBox").style.display = "none";
 
   state.catImgData = "";
+  state.catCropSettings = null;
   if ($("cImgFile")) $("cImgFile").value = "";
 
   const uploader = $("cUploader");
@@ -920,6 +1038,11 @@ function resetCatForm() {
     uploader.innerHTML =
       '<div class="up-txt" id="cUpTxt"><b>اضغط لرفع صورة البنر</b>عرض 1600×500 بكسل يُفضل</div>';
   }
+
+  const cropTrigger = $("cropTriggerWrap");
+  if (cropTrigger) cropTrigger.style.display = "none";
+  const cropBadge = $("cropStatusBadge");
+  if (cropBadge) cropBadge.style.display = "none";
 
   state.editingCatId = null;
   const modeTag = $("catFormMode");
@@ -955,12 +1078,25 @@ function editCat(id) {
     if ($("cColor1")) $("cColor1").value = c.banner.c1 || "#1d1a16";
     if ($("cColor2")) $("cColor2").value = c.banner.c2 || "#b99a6b";
     state.catImgData = "";
+    state.catCropSettings = null;
+    if ($("cropTriggerWrap")) $("cropTriggerWrap").style.display = "none";
+    if ($("cropStatusBadge")) $("cropStatusBadge").style.display = "none";
   } else {
     state.catImgData = c.banner.img || "";
+    state.catCropSettings = (c.banner && c.banner.crop) || {
+      desktop: { x: 50, y: 50, zoom: 1.0 },
+      mobile: { x: 50, y: 50, zoom: 1.0 }
+    };
     const uploader = $("cUploader");
     if (uploader) {
       uploader.classList.add("has-img");
       uploader.innerHTML = `<img src="${state.catImgData}" alt="" style="height:150px">`;
+    }
+    if ($("cropTriggerWrap")) $("cropTriggerWrap").style.display = "flex";
+    const cropBadge = $("cropStatusBadge");
+    if (cropBadge) {
+      cropBadge.style.display = "inline-block";
+      cropBadge.textContent = `موضع مخصص (D: ${state.catCropSettings.desktop.x}% M: ${state.catCropSettings.mobile.x}%) ✓`;
     }
   }
 
@@ -1021,7 +1157,11 @@ function renderCatsGrid() {
     .map((c) => {
       const n = state.products.filter((p) => p.categoryId === c.id || p.category === c.name).length;
       const isImg = c.banner && c.banner.type === "image" && c.banner.img;
-      const bg = isImg ? `<img src="${esc(c.banner.img)}" alt="">` : "";
+      const crop = c.banner && c.banner.crop;
+      const cropStyle = isImg && crop
+        ? `style="object-position:${crop.desktop.x}% ${crop.desktop.y}%;${crop.desktop.zoom > 1 ? `transform:scale(${crop.desktop.zoom});transform-origin:${crop.desktop.x}% ${crop.desktop.y}%;` : ''}"`
+        : "";
+      const bg = isImg ? `<img src="${esc(c.banner.img)}" alt="" ${cropStyle}>` : "";
       const style = isImg
         ? ""
         : `style="background:linear-gradient(135deg,${(c.banner && c.banner.c1) || "#1d1a16"},${(c.banner && c.banner.c2) || "#b99a6b"})"`;
@@ -1462,8 +1602,12 @@ function initEvents() {
         uploader.classList.add("has-img");
         uploader.innerHTML = `<img src="${state.catImgData}" alt="" style="height:150px">`;
       }
+      $("cropTriggerWrap")?.style.setProperty("display", "flex");
       updateBannerPreview();
       clearErr("cBanner");
+
+      // Auto-open Crop & Position Editor Modal immediately after upload
+      openCropModal(state.catImgData, state.catCropSettings || null);
     };
     r.readAsDataURL(f);
 
@@ -1471,6 +1615,11 @@ function initEvents() {
       const secureUrl = await uploadImageToCloudinary(f);
       if (secureUrl) {
         state.catImgData = secureUrl;
+        if (state.cropEditor.isOpen && $("cropSourceImg")) {
+          $("cropSourceImg").src = secureUrl;
+          if ($("pvDesktopImg")) $("pvDesktopImg").src = secureUrl;
+          if ($("pvMobileImg")) $("pvMobileImg").src = secureUrl;
+        }
         updateBannerPreview();
       }
     } catch (_) {}
@@ -1511,6 +1660,11 @@ function initEvents() {
       return;
     }
 
+    const cropSettings = state.catCropSettings || {
+      desktop: { x: 50, y: 50, zoom: 1.0 },
+      mobile: { x: 50, y: 50, zoom: 1.0 }
+    };
+
     const banner =
       state.bannerMode === "color"
         ? {
@@ -1523,7 +1677,8 @@ function initEvents() {
             type: "image",
             c1: "#1d1a16",
             c2: "#1d1a16",
-            img: state.catImgData
+            img: state.catImgData,
+            crop: cropSettings
           };
 
     const categoryPayload = {
@@ -1563,6 +1718,166 @@ function initEvents() {
 
   $("exportModal")?.addEventListener("click", (e) => {
     if (e.target.id === "exportModal") e.target.classList.remove("open");
+  });
+
+  // Initialize Crop & Position Editor events
+  initCropEditorEvents();
+}
+
+// --- Crop Editor Event Listeners ---
+function initCropEditorEvents() {
+  const canvas = $("cropCanvas");
+  const mobBox = $("mobileFocusBox");
+  if (!canvas) return;
+
+  canvas.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    const target = e.target;
+    if (mobBox && (target === mobBox || mobBox.contains(target))) {
+      state.cropEditor.isDraggingMobile = true;
+      mobBox.classList.add("dragging");
+    } else {
+      state.cropEditor.isDraggingImage = true;
+      canvas.classList.add("grabbing");
+    }
+
+    state.cropEditor.dragStartX = e.clientX;
+    state.cropEditor.dragStartY = e.clientY;
+    state.cropEditor.startDesktopX = state.cropEditor.desktop.x;
+    state.cropEditor.startDesktopY = state.cropEditor.desktop.y;
+    state.cropEditor.startMobileX = state.cropEditor.mobile.x;
+    state.cropEditor.startMobileY = state.cropEditor.mobile.y;
+
+    if (canvas.setPointerCapture) {
+      try {
+        canvas.setPointerCapture(e.pointerId);
+      } catch (_) {}
+    }
+  });
+
+  canvas.addEventListener("pointermove", (e) => {
+    if (!state.cropEditor.isDraggingImage && !state.cropEditor.isDraggingMobile) return;
+    const deltaX = e.clientX - state.cropEditor.dragStartX;
+    const deltaY = e.clientY - state.cropEditor.dragStartY;
+    const frame = $("desktopBannerFrame");
+    const frameW = (frame && frame.clientWidth) || 600;
+    const frameH = (frame && frame.clientHeight) || 200;
+
+    if (state.cropEditor.isDraggingImage) {
+      const pctX = (deltaX / frameW) * 80;
+      const pctY = (deltaY / frameH) * 80;
+      const newX = Math.max(0, Math.min(100, state.cropEditor.startDesktopX - pctX));
+      const newY = Math.max(0, Math.min(100, state.cropEditor.startDesktopY - pctY));
+      state.cropEditor.desktop.x = Math.round(newX * 10) / 10;
+      state.cropEditor.desktop.y = Math.round(newY * 10) / 10;
+      updateCropEditorUI();
+    } else if (state.cropEditor.isDraggingMobile) {
+      const pctX = (deltaX / frameW) * 100;
+      const pctY = (deltaY / frameH) * 100;
+      const newX = Math.max(0, Math.min(100, state.cropEditor.startMobileX + pctX));
+      const newY = Math.max(0, Math.min(100, state.cropEditor.startMobileY + pctY));
+      state.cropEditor.mobile.x = Math.round(newX * 10) / 10;
+      state.cropEditor.mobile.y = Math.round(newY * 10) / 10;
+      updateCropEditorUI();
+    }
+  });
+
+  const stopDrag = (e) => {
+    state.cropEditor.isDraggingImage = false;
+    state.cropEditor.isDraggingMobile = false;
+    canvas.classList.remove("grabbing");
+    mobBox?.classList.remove("dragging");
+    if (e && e.pointerId && canvas.hasPointerCapture && canvas.hasPointerCapture(e.pointerId)) {
+      try {
+        canvas.releasePointerCapture(e.pointerId);
+      } catch (_) {}
+    }
+  };
+
+  canvas.addEventListener("pointerup", stopDrag);
+  canvas.addEventListener("pointercancel", stopDrag);
+
+  // Zoom controls
+  $("cropZoomRange")?.addEventListener("input", (e) => {
+    state.cropEditor.desktop.zoom = parseFloat(e.target.value) || 1.0;
+    updateCropEditorUI();
+  });
+
+  $("cropZoomIn")?.addEventListener("click", () => {
+    const cur = state.cropEditor.desktop.zoom;
+    state.cropEditor.desktop.zoom = Math.min(3.0, Math.round((cur + 0.1) * 100) / 100);
+    updateCropEditorUI();
+  });
+
+  $("cropZoomOut")?.addEventListener("click", () => {
+    const cur = state.cropEditor.desktop.zoom;
+    state.cropEditor.desktop.zoom = Math.max(1.0, Math.round((cur - 0.1) * 100) / 100);
+    updateCropEditorUI();
+  });
+
+  // Quick centering
+  $("cropCenterDesktop")?.addEventListener("click", () => {
+    state.cropEditor.desktop.x = 50;
+    state.cropEditor.desktop.y = 50;
+    updateCropEditorUI();
+  });
+
+  $("cropCenterMobile")?.addEventListener("click", () => {
+    state.cropEditor.mobile.x = 50;
+    state.cropEditor.mobile.y = 50;
+    updateCropEditorUI();
+  });
+
+  const resetAll = () => {
+    state.cropEditor.desktop = { x: 50, y: 50, zoom: 1.0 };
+    state.cropEditor.mobile = { x: 50, y: 50, zoom: 1.0 };
+    updateCropEditorUI();
+    toast("تمت إعادة ضبط الموضع والتقريب");
+  };
+
+  $("cropResetTop")?.addEventListener("click", resetAll);
+  $("cropResetBottomBtn")?.addEventListener("click", resetAll);
+
+  // Close and Cancel
+  $("cropCloseBtn")?.addEventListener("click", closeCropModal);
+  $("cropCancelBtn")?.addEventListener("click", closeCropModal);
+  $("cropModal")?.addEventListener("click", (e) => {
+    if (e.target.id === "cropModal") closeCropModal();
+  });
+
+  // Save Customization
+  $("cropSaveBtn")?.addEventListener("click", () => {
+    state.catCropSettings = {
+      desktop: {
+        x: Math.round(state.cropEditor.desktop.x),
+        y: Math.round(state.cropEditor.desktop.y),
+        zoom: Number(state.cropEditor.desktop.zoom.toFixed(2))
+      },
+      mobile: {
+        x: Math.round(state.cropEditor.mobile.x),
+        y: Math.round(state.cropEditor.mobile.y),
+        zoom: Number(state.cropEditor.mobile.zoom.toFixed(2))
+      }
+    };
+
+    const badge = $("cropStatusBadge");
+    if (badge) {
+      badge.style.display = "inline-block";
+      badge.textContent = `موضع مخصص (D: ${state.catCropSettings.desktop.x}% M: ${state.catCropSettings.mobile.x}%) ✓`;
+    }
+
+    updateBannerPreview();
+    closeCropModal();
+    toast("تم حفظ تخصيص موضع البنر وتركيز الجوال بنجاح ✓");
+  });
+
+  // Open trigger button from category form
+  $("openCropModalBtn")?.addEventListener("click", () => {
+    if (!state.catImgData) {
+      toast("يرجى اختيار صورة بنر أولاً", false);
+      return;
+    }
+    openCropModal(state.catImgData, state.catCropSettings || null);
   });
 }
 

@@ -364,7 +364,8 @@ function parseCategoriesSnapshot(snapshot) {
         id: docSnap.id,
         name: d.name.trim(),
         slug: d.slug || d.name.trim(),
-        image: d.image || ""
+        image: d.image || (d.banner && d.banner.img) || "",
+        banner: d.banner || null
       });
     }
   });
@@ -633,10 +634,12 @@ function renderCategoriesUI() {
         const isActive = state.activeFilter === cat.id || state.activeFilter === cat.name;
 
         const optimizedCatImg = optimizeImageUrl(imgUrl, 320);
+        const crop = cat.banner && cat.banner.crop;
+        const cropStyle = crop ? `style="object-position: ${crop.desktop?.x ?? 50}% ${crop.desktop?.y ?? 50}%;"` : "";
         return `
           <div class="category-card ${isActive ? "active" : ""}" data-category-id="${escapeHtml(cat.id)}" data-category-name="${escapeHtml(cat.name)}" role="button" tabindex="0">
             <div class="category-img-box">
-              <img src="${escapeHtml(optimizedCatImg)}" alt="${escapeHtml(cat.name)}" width="220" height="220" loading="lazy" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=500&q=80';">
+              <img src="${escapeHtml(optimizedCatImg)}" alt="${escapeHtml(cat.name)}" width="220" height="220" loading="lazy" ${cropStyle} onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=500&q=80';">
             </div>
             <span class="category-name">${escapeHtml(cat.name)}</span>
           </div>

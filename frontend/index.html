@@ -142,7 +142,10 @@
       width: 100%;
       height: 520px;
       object-fit: cover;
-      object-position: top center
+      object-position: var(--crop-dx, 50%) var(--crop-dy, 50%);
+      transform: scale(var(--crop-dz, 1));
+      transform-origin: var(--crop-dx, 50%) var(--crop-dy, 50%);
+      transition: object-position .3s ease;
     }
 
     .hero-overlay {
@@ -464,7 +467,10 @@
       }
 
       .hero img {
-        height: 420px
+        height: 420px;
+        object-position: var(--crop-mx, var(--crop-dx, 50%)) var(--crop-my, var(--crop-dy, 50%));
+        transform: scale(var(--crop-mz, var(--crop-dz, 1)));
+        transform-origin: var(--crop-mx, 50%) var(--crop-my, 50%);
       }
 
       .hero-title {
@@ -1598,7 +1604,7 @@
 
   <!-- Hero -->
   <section class="hero">
-    <img src="img/hero.png" alt="قمصان حجاج">
+    <img src="img/hero.png" alt="قمصان حجاج" id="heroBannerImg">
     <div class="hero-overlay">
       <div class="hero-content">
         <div class="hero-brand">HADJAJ • حجاج</div>
@@ -2354,6 +2360,41 @@
         isLoaded = true;
         render();
       });
+
+      // Categories Listener for Custom Banner & Crop Settings
+      const catsRef = collection(db, "categories");
+      onSnapshot(catsRef, (catSnap) => {
+        let activeCatWithBanner = null;
+        catSnap.forEach(docSnap => {
+          const cd = docSnap.data();
+          if (cd && cd.active !== false && cd.banner && cd.banner.type === 'image' && cd.banner.img) {
+            if (!activeCatWithBanner) activeCatWithBanner = cd;
+          }
+        });
+
+        if (activeCatWithBanner) {
+          const heroImg = document.getElementById("heroBannerImg");
+          if (heroImg && activeCatWithBanner.banner.img) {
+            heroImg.src = activeCatWithBanner.banner.img;
+            const crop = activeCatWithBanner.banner.crop;
+            if (crop) {
+              const dx = typeof crop.desktop?.x === 'number' ? crop.desktop.x : 50;
+              const dy = typeof crop.desktop?.y === 'number' ? crop.desktop.y : 50;
+              const dz = typeof crop.desktop?.zoom === 'number' ? crop.desktop.zoom : 1;
+              const mx = typeof crop.mobile?.x === 'number' ? crop.mobile.x : 50;
+              const my = typeof crop.mobile?.y === 'number' ? crop.mobile.y : 50;
+              const mz = typeof crop.mobile?.zoom === 'number' ? crop.mobile.zoom : 1;
+
+              heroImg.style.setProperty('--crop-dx', `${dx}%`);
+              heroImg.style.setProperty('--crop-dy', `${dy}%`);
+              heroImg.style.setProperty('--crop-dz', `${dz}`);
+              heroImg.style.setProperty('--crop-mx', `${mx}%`);
+              heroImg.style.setProperty('--crop-my', `${my}%`);
+              heroImg.style.setProperty('--crop-mz', `${mz}`);
+            }
+          }
+        }
+      }, (err) => console.warn("Categories banner onSnapshot error:", err));
     }
 
     render();

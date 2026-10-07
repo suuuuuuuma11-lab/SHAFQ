@@ -230,6 +230,13 @@
                     <div class="up-txt" id="cUpTxt"><b>اضغط لرفع صورة البنر</b>عرض 1600×500 بكسل يُفضل</div>
                   </div>
                   <input type="file" id="cImgFile" accept="image/*">
+                  <div id="cropTriggerWrap" style="display:none;margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                    <button type="button" class="btn-ghost" id="openCropModalBtn" style="gap:7px;font-size:13px;padding:8px 16px;border-color:var(--gold);color:var(--ink);font-weight:700">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>
+                      تخصيص موضع البنر وتركيز الجوال (Crop & Focus)
+                    </button>
+                    <span class="tag gold" id="cropStatusBadge" style="display:none;font-size:11px">موضع مخصص محدد ✓</span>
+                  </div>
                 </div>
                 <span class="err-msg" id="e-cBanner">أضف بنراً للتصنيف (لون أو صورة)</span>
               </div>
@@ -396,6 +403,131 @@
     <div class="m-actions">
       <button class="btn-danger" id="cfYes">نعم، احذف</button>
       <button class="btn-cancel" onclick="document.getElementById('confirmModal').classList.remove('open')">تراجع</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: BANNER POSITION & CROP EDITOR ===================== -->
+<div class="modal-bg" id="cropModal" style="z-index:220">
+  <div class="modal crop-modal-container">
+    <div class="crop-modal-head">
+      <div class="cm-title-wrap">
+        <h3>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M6 2v14a2 2 0 0 0 2 2h14"/>
+            <path d="M18 22V8a2 2 0 0 0-2-2H2"/>
+          </svg>
+          محرر موضع بنر التصنيف وتحديد تركيز الجوال
+        </h3>
+        <p>اسحب الصورة خلف إطار الكمبيوتر، وحرك مستطيل الجوال لتحديد الجزء الأهم على الهواتف بدقة</p>
+      </div>
+      <button type="button" class="crop-close-btn" id="cropCloseBtn" title="إغلاق">&times;</button>
+    </div>
+
+    <div class="crop-modal-body">
+      <!-- Toolbar Controls -->
+      <div class="crop-toolbar">
+        <div class="crop-tool-group">
+          <span class="tool-label">التقريب (Zoom):</span>
+          <button type="button" class="crop-zoom-btn" id="cropZoomOut" title="تصغير">−</button>
+          <input type="range" id="cropZoomRange" min="1" max="3" step="0.05" value="1" class="crop-zoom-slider">
+          <button type="button" class="crop-zoom-btn" id="cropZoomIn" title="تكبير">+</button>
+          <span class="crop-zoom-badge" id="cropZoomVal">100%</span>
+        </div>
+
+        <div class="crop-tool-group crop-actions-group">
+          <button type="button" class="crop-quick-btn" id="cropCenterDesktop">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg>
+            توسيط الصورة
+          </button>
+          <button type="button" class="crop-quick-btn" id="cropCenterMobile">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="18" r="1"/></svg>
+            توسيط الجوال
+          </button>
+          <button type="button" class="crop-quick-btn" id="cropResetTop">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            إعادة ضبط
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Interactive Viewport / Workspace -->
+      <div class="crop-canvas-wrapper" id="cropCanvasWrapper">
+        <div class="crop-canvas" id="cropCanvas">
+          <!-- The moveable / zoomable image layer -->
+          <img id="cropSourceImg" class="crop-source-img" alt="Banner Source" draggable="false">
+
+          <!-- Desktop Banner Frame -->
+          <div class="desktop-banner-frame" id="desktopBannerFrame">
+            <div class="frame-tag desktop-tag">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+              مساحة بنر الكمبيوتر (Desktop Banner)
+            </div>
+
+            <!-- Inside Desktop: Mobile Focus Box -->
+            <div class="mobile-focus-box" id="mobileFocusBox">
+              <div class="mobile-tag">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>
+                منطقة تركيز الجوال
+              </div>
+              <div class="mobile-crosshair"></div>
+            </div>
+          </div>
+        </div>
+        <div class="crop-canvas-hint">
+          <span>💡 <b>اسحب الصورة</b> بالماوس أو اللمس لتحريك موضع الكمبيوتر • <b>اسحب إطار الجوال الأخضر</b> لتحديد منطقة التركيز</span>
+        </div>
+      </div>
+
+      <!-- Live Dual Previews -->
+      <div class="crop-previews-section">
+        <div class="preview-box desktop-pv-box">
+          <div class="preview-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            معاينة الكمبيوتر (Desktop Preview)
+          </div>
+          <div class="desktop-preview-window">
+            <div class="preview-inner" id="pvDesktopInner">
+              <img id="pvDesktopImg" alt="" draggable="false">
+              <div class="pv-overlay">
+                <span class="pv-brand">HADJAJ COLLECTION</span>
+                <strong class="pv-cat-name" id="pvCropNameDesktop">اسم التصنيف</strong>
+                <span class="pv-cat-msg" id="pvCropMsgDesktop">الرسالة التسويقية تظهر هنا</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="preview-box mobile-pv-box">
+          <div class="preview-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>
+            معاينة الجوال (Mobile Preview)
+          </div>
+          <div class="mobile-preview-window">
+            <div class="preview-inner" id="pvMobileInner">
+              <img id="pvMobileImg" alt="" draggable="false">
+              <div class="pv-overlay mobile-pv-overlay">
+                <span class="pv-brand">HADJAJ</span>
+                <strong class="pv-cat-name" id="pvCropNameMobile">اسم التصنيف</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div class="crop-modal-footer">
+      <div class="footer-coord-badge" id="cropCoordInfo">
+        💻 Desktop: (50%, 50%) • 📱 Mobile Focus: (50%, 50%)
+      </div>
+      <div class="crop-footer-btns">
+        <button type="button" class="btn-cancel" id="cropCancelBtn">إلغاء</button>
+        <button type="button" class="btn-ghost" id="cropResetBottomBtn">إعادة ضبط</button>
+        <button type="button" class="btn-primary gold" id="cropSaveBtn" style="padding:10px 28px;font-size:14px;font-weight:800">
+          حفظ التخصيص ✓
+        </button>
+      </div>
     </div>
   </div>
 </div>
