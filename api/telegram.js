@@ -87,7 +87,7 @@ export default async function handler(req, res) {
     const safeAddress = sanitizeText(orderData.address) || 'لم يُحدد';
 
     const messageText = [
-      '🛍️ طلب جديد من متجر حجاج (HADJAJ)!',
+      '🛍️ طلب جديد من متجر حجاج ',
       '==========================',
       `🔖 رقم الطلب: #${safeOrderId.slice(-6).toUpperCase()}`,
       '',
