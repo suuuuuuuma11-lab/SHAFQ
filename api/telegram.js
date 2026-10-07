@@ -74,29 +74,36 @@ export default async function handler(req, res) {
 
     // Validate and sanitize data
     const safeOrderId = sanitizeText(orderId).slice(0, 30);
-    const safeProductName = sanitizeText(orderData.productName);
-    const safeColor = sanitizeText(orderData.color);
-    const safeSize = sanitizeText(orderData.size);
-    const safeQty = Number(orderData.qty) || 1;
-    const safePrice = Number(orderData.price) || 0;
-    const safeTotal = sanitizeText(orderData.total);
-    const safeName = sanitizeText(orderData.name);
-    const safePhone = sanitizeText(orderData.phone);
-    const safeWilaya = sanitizeText(orderData.wilaya);
-    const safeCommune = sanitizeText(orderData.commune);
-    const safeAddress = sanitizeText(orderData.address) || 'لم يُحدد';
+    // Format items block (Supports both array of cart items and single product)
+    let itemsBlock = '';
+    let itemCountDesc = '1 عنصر';
+
+    if (Array.isArray(orderData.items) && orderData.items.length > 0) {
+      itemCountDesc = `${orderData.items.length} عنصر`;
+      itemsBlock = orderData.items.map(it => {
+        const sName = sanitizeText(it.name || it.productName || 'منتج');
+        const sColor = sanitizeText(it.color || 'افتراضي');
+        const sSize = sanitizeText(it.size || 'M');
+        const sQty = Number(it.quantity || it.qty) || 1;
+        const sPrice = Number(it.price) || 0;
+        return `• ${sName}\n   - المقاس: ${sSize} | اللون: ${sColor} | الكمية: ${sQty} | السعر: ${sPrice.toLocaleString('ar-DZ')} دج`;
+      }).join('\n');
+    } else {
+      const safeProductName = sanitizeText(orderData.productName || 'منتج');
+      const safeColor = sanitizeText(orderData.color || 'افتراضي');
+      const safeSize = sanitizeText(orderData.size || 'M');
+      const safeQty = Number(orderData.qty) || 1;
+      const safePrice = Number(orderData.price) || 0;
+      itemsBlock = `• ${safeProductName}\n   - المقاس: ${safeSize} | اللون: ${safeColor} | الكمية: ${safeQty} | السعر: ${safePrice.toLocaleString('ar-DZ')} دج`;
+    }
 
     const messageText = [
       '🛍️ طلب جديد من متجر حجاج ',
       '==========================',
       `🔖 رقم الطلب: #${safeOrderId.slice(-6).toUpperCase()}`,
       '',
-      '📦 تفاصيل المنتج:',
-      `• ${safeProductName}`,
-      `  - اللون: ${safeColor}`,
-      `  - المقاس: ${safeSize}`,
-      `  - الكمية: ${safeQty}`,
-      `  - السعر الفردي: ${safePrice} دج`,
+      `📦 تفاصيل المنتجات (${itemCountDesc}):`,
+      itemsBlock,
       '',
       `💰 الإجمالي الكلي: ${safeTotal} دج (الدفع عند التسليم)`,
       '',

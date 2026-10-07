@@ -176,6 +176,47 @@
   .btn-cart{background:#fff;border:1.5px solid var(--ink);color:var(--ink);font-family:inherit;font-size:14px;font-weight:800;padding:12px 22px;border-radius:8px;cursor:pointer;transition:.2s}
   .btn-cart:hover{background:var(--ink);color:#fff}
 
+  /* In-cart options (size & color selector) */
+  .ci-options{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0;font-size:12px}
+  .ci-opt-group{display:inline-flex;align-items:center;gap:4px}
+  .ci-opt-group label{color:var(--muted);font-size:11px}
+  .ci-select{font-family:inherit;font-size:11px;font-weight:600;padding:2px 6px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink);cursor:pointer}
+  .ci-select:focus{outline:none;border-color:var(--gold)}
+  .ci-qty button:disabled{opacity:0.35;cursor:not-allowed}
+
+  /* Checkout Modal & Backdrop */
+  .checkout-modal-backdrop{position:fixed;inset:0;background:rgba(20,16,12,0.65);z-index:100;opacity:0;pointer-events:none;transition:.25s;backdrop-filter:blur(3px)}
+  .checkout-modal-backdrop.show{opacity:1;pointer-events:auto}
+  .checkout-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-48%) scale(0.96);width:92%;max-width:540px;max-height:88vh;overflow-y:auto;background:#fff;border-radius:var(--radius);z-index:101;opacity:0;pointer-events:none;transition:all .25s ease;box-shadow:0 25px 60px rgba(0,0,0,0.22);border:1px solid var(--line)}
+  .checkout-modal.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+  .cm-head{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--line)}
+  .cm-head h3{font-size:17px;font-weight:800}
+  .cm-close{background:none;border:none;font-size:26px;line-height:1;cursor:pointer;color:var(--muted);padding:0 4px}
+  .cm-close:hover{color:var(--ink)}
+  .cm-body{padding:20px 22px}
+  .cm-review-box{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:18px}
+  .cm-review-title{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:10px}
+  .cm-items-list{max-height:170px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+  .cm-review-item{display:flex;align-items:center;gap:10px;font-size:13px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .cm-review-item img{width:42px;height:42px;object-fit:cover;border-radius:6px}
+  .cm-review-info{flex:1;min-width:0;text-align:right}
+  .cm-review-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cm-review-meta{font-size:11px;color:var(--muted);margin-top:2px}
+  .cm-review-calc{text-align:left;font-size:12px;white-space:nowrap}
+  .cm-review-calc b{display:block;font-size:13px;color:var(--gold-dark);margin-top:2px}
+  .cm-summary-row{display:flex;justify-content:space-between;align-items:center;border-top:1px dashed var(--line);padding-top:10px;font-size:14px;font-weight:700}
+  .cm-total{font-size:18px;color:var(--gold-dark)}
+  .cm-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;text-align:right}
+  body.modal-open, body.drawer-open{overflow:hidden}
+
+  /* Success Modal */
+  .success-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-48%) scale(0.96);width:92%;max-width:480px;background:#fff;border-radius:var(--radius);z-index:102;opacity:0;pointer-events:none;transition:all .25s ease;box-shadow:0 25px 60px rgba(0,0,0,0.22);border:1px solid var(--line);padding:30px 22px;text-align:center}
+  .success-modal.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+  .sm-card .check{width:64px;height:64px;background:#eafaf1;color:#27ae60;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+  .sm-card h3{font-size:22px;font-weight:800;margin-bottom:8px}
+  .sm-card p{font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:16px}
+  .sm-card .summary{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px;text-align:right;margin-bottom:18px}
+
 </style>
 </head>
 <body>
@@ -349,7 +390,80 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- Checkout Modal -->
+<div class="checkout-modal-backdrop" id="checkoutBackdrop"></div>
+<div class="checkout-modal" id="checkoutModal" role="dialog" aria-labelledby="checkoutModalTitle">
+  <div class="cm-head">
+    <h3 id="checkoutModalTitle">إتمام الطلب — الدفع عند الاستلام</h3>
+    <button type="button" class="cm-close" id="checkoutClose" aria-label="إغلاق">&times;</button>
+  </div>
+  <div class="cm-body">
+    <!-- Order items review summary -->
+    <div class="cm-review-box">
+      <div class="cm-review-title">مراجعة المنتجات في السلة (<span id="cmItemCount">0</span>):</div>
+      <div class="cm-items-list" id="cmItemsList"></div>
+      <div class="cm-summary-row">
+        <span>المجموع الكلي:</span>
+        <b class="cm-total" id="cmTotalAmount">0 دج</b>
+      </div>
+      <div class="cm-note">تدفع نقداً عند استلام طلبك بعد المعاينة. التوصيل متوفر لجميع الولايات.</div>
+    </div>
 
+    <!-- COD Customer Details Form -->
+    <form id="checkoutForm" novalidate>
+      <div class="field" id="cmFName">
+        <label>الاسم الكامل <em>*</em></label>
+        <input type="text" id="cmName" placeholder="مثال: محمد بن علي" autocomplete="name" required>
+        <div class="err">يرجى إدخال الاسم الكامل (3 أحرف على الأقل)</div>
+      </div>
+
+      <div class="field" id="cmFPhone">
+        <label>رقم الهاتف <em>*</em></label>
+        <input type="tel" id="cmPhone" placeholder="مثال: 0551234567" autocomplete="tel" maxlength="10" inputmode="numeric" required>
+        <div class="err">يرجى إدخال رقم هاتف جزائري صحيح (يبدأ بـ 05 / 06 / 07)</div>
+      </div>
+
+      <div class="two-col">
+        <div class="field" id="cmFWilaya">
+          <label>الولاية <em>*</em></label>
+          <select id="cmWilaya" required>
+            <option value="">— اختر الولاية —</option>
+          </select>
+          <div class="err">يرجى اختيار الولاية</div>
+        </div>
+        <div class="field" id="cmFCommune">
+          <label>البلدية <em>*</em></label>
+          <input type="text" id="cmCommune" placeholder="مثال: باب الزوار" required>
+          <div class="err">يرجى إدخال اسم البلدية</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>العنوان (اختياري)</label>
+        <input type="text" id="cmAddress" placeholder="الحي، الشارع، رقم المنزل...">
+      </div>
+
+      <button type="submit" class="btn-order" id="cmSubmitBtn">تأكيد الطلب — الدفع عند الاستلام</button>
+      <div class="secure">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        معلوماتك مشفرة وآمنة — تدفع فقط عند استلام طلبك
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Order Success Modal -->
+<div class="success-modal" id="orderSuccessModal">
+  <div class="sm-card">
+    <div class="check">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12.5l5 5L20 6.5"/></svg>
+    </div>
+    <h3>تم استلام طلبك بنجاح!</h3>
+    <p>شكراً لطلبك من متجر حجاج! سنتصل بك هاتفياً لتأكيد شحن طلبك.<br>الدفع نقداً فقط عند استلام المنتجات.</p>
+    <div class="summary" id="smOrderSummary"></div>
+    <button type="button" class="btn-order" id="smContinueBtn" style="width:100%;margin-top:16px">متابعة التسوق</button>
+  </div>
+</div>
 
 <script type="module">
 import { db } from "./firebase-config.js";
@@ -360,6 +474,7 @@ import {
   getDocs, 
   addDoc 
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+import { initCartUI, addToCart, toast as cartToast, sendTelegramOrderNotification } from "./cart.js";
 
 // Telegram Bot token is strictly stored on server-side (/api/telegram) and never exposed to the browser.
 
@@ -383,7 +498,6 @@ let currentProduct = null;
 let qty = 1;
 let selectedSize = "M";
 let selectedColorIndex = 0;
-let cart = JSON.parse(localStorage.getItem('alnoor_cart') || '[]');
 let favsP = new Set(JSON.parse(localStorage.getItem('alnoor_favs') || '[]'));
 
 // URL Params
@@ -689,7 +803,7 @@ if (favBtn) {
   });
 }
 
-/* add to cart */
+/* add to cart with complete variant metadata */
 const addCartBtn = document.getElementById('addCartBtn');
 if (addCartBtn) {
   addCartBtn.addEventListener('click', () => {
@@ -697,111 +811,25 @@ if (addCartBtn) {
     const colorsList = Array.isArray(currentProduct.colors) && currentProduct.colors.length > 0 ? currentProduct.colors : [{ name: "افتراضي", value: "#1d1a16" }];
     const chosenColor = colorsList[selectedColorIndex] || colorsList[0];
     const colorName = typeof chosenColor === 'object' ? chosenColor.name : (currentProduct.colorNames && currentProduct.colorNames[selectedColorIndex] ? currentProduct.colorNames[selectedColorIndex] : 'لون');
+    const colorHex = typeof chosenColor === 'object' ? chosenColor.value : chosenColor;
 
-    const ex = cart.find(c => String(c.id) === String(currentProduct.id) && c.size === selectedSize && c.color === colorName);
-    if (ex) {
-      ex.qty += qty;
-    } else {
-      cart.push({ id: currentProduct.id, qty: qty, size: selectedSize, color: colorName });
-    }
-    localStorage.setItem('alnoor_cart', JSON.stringify(cart));
-    updateBadge();
-    renderCart();
-    toast('أُضيف إلى الحقيبة');
+    addToCart({
+      productId: currentProduct.id,
+      name: currentProduct.name,
+      price: currentProduct.price,
+      image: currentProduct.img || currentProduct.mainImage || 'img/p1.png',
+      quantity: qty,
+      size: selectedSize,
+      color: colorName,
+      colorHex: colorHex,
+      availableSizes: Array.isArray(currentProduct.sizes) && currentProduct.sizes.length ? currentProduct.sizes : defaultSizes,
+      availableColors: colorsList
+    });
   });
 }
 
-/* cart drawer */
-const drawer = document.getElementById('cartDrawer');
-const backdrop = document.getElementById('backdrop');
-const cartBtn = document.getElementById('cartBtn');
-if (cartBtn) {
-  cartBtn.addEventListener('click', () => {
-    renderCart();
-    drawer?.classList.add('open');
-    backdrop?.classList.add('show');
-  });
-}
-
-document.getElementById('cartClose')?.addEventListener('click', closeCart);
-backdrop?.addEventListener('click', closeCart);
-
-function closeCart(){
-  drawer?.classList.remove('open');
-  backdrop?.classList.remove('show');
-}
-function cartTotalQty(){ return cart.reduce((s,c)=>s+c.qty, 0); }
-function cartTotalPrice(){
-  return cart.reduce((s,c)=> {
-    const prod = products.find(p => String(p.id) === String(c.id));
-    return s + (c.qty * (prod ? prod.price : 0));
-  }, 0);
-}
-function updateBadge(){
-  const b = document.getElementById('cartBadge');
-  const n = cartTotalQty();
-  if (b) {
-    b.textContent = n;
-    b.style.display = n ? 'flex' : 'none';
-  }
-}
-function cartKey(c){ return c.id + '|' + c.size + '|' + c.color; }
-function changeCartQty(key, d){
-  const it = cart.find(c => cartKey(c) === key);
-  if(!it) return;
-  it.qty = Math.max(1, it.qty + d);
-  localStorage.setItem('alnoor_cart', JSON.stringify(cart));
-  updateBadge();
-  renderCart();
-}
-function removeFromCart(key){
-  cart = cart.filter(c => cartKey(c) !== key);
-  localStorage.setItem('alnoor_cart', JSON.stringify(cart));
-  updateBadge();
-  renderCart();
-  toast('أُزيل المنتج من الحقيبة');
-}
-function renderCart(){
-  const box = document.getElementById('cartItems');
-  const foot = document.getElementById('cartFoot');
-  if(!cart.length){
-    if (box) box.innerHTML = '<div class="drawer-empty">حقيبتك فارغة<br><small>أضف منتجات من المتجر</small></div>';
-    if (foot) foot.style.display = 'none';
-    return;
-  }
-  if (foot) foot.style.display = 'block';
-  if (box) {
-    box.innerHTML = cart.map(c => {
-      const pr = products.find(prod => String(prod.id) === String(c.id));
-      if(!pr) return '';
-      const k = cartKey(c);
-      return `<div class="ci">
-        <img src="${esc(pr.img || pr.mainImage)}" alt="${esc(pr.name)}">
-        <div class="ci-info">
-          <div class="ci-name">${esc(pr.name)}</div>
-          <div class="ci-meta">المقاس: ${esc(c.size)} — اللون: ${esc(c.color)}</div>
-          <div class="ci-row">
-            <div class="ci-qty"><button onclick="changeCartQty('${k}',1)">+</button><span>${c.qty}</span><button onclick="changeCartQty('${k}',-1)">−</button></div>
-            <span class="ci-price">${(pr.price*c.qty).toLocaleString('ar-DZ')} دج</span>
-          </div>
-          <button class="ci-remove" onclick="removeFromCart('${k}')">إزالة</button>
-        </div>
-      </div>`;
-    }).filter(Boolean).join('');
-  }
-  const totalEl = document.getElementById('cartTotal');
-  if (totalEl) totalEl.textContent = cartTotalPrice().toLocaleString('ar-DZ') + ' دج';
-}
-
-document.getElementById('checkoutBtn')?.addEventListener('click', () => {
-  toast('املأ نموذج الدفع عند الاستلام بالأسفل لإتمام طلبك');
-  closeCart();
-  document.querySelector('.order-box')?.scrollIntoView({behavior:'smooth'});
-});
-
-// Expose globals for cart items HTML
-window.changeCartQty = changeCartQty;
-window.removeFromCart = removeFromCart;
+// Initialize Unified Shopping Cart & Checkout
+initCartUI();
 
 /* search overlay */
 const sOverlay = document.getElementById('searchOverlay');
@@ -904,7 +932,6 @@ async function loadProductFromFirestore() {
   }
 }
 
-updateBadge();
 loadProductFromFirestore();
 </script>
 
