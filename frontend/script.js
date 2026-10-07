@@ -305,6 +305,7 @@ function renderProductsSkeleton(count = 8) {
         <div class="skeleton-shimmer"></div>
       </div>
       <div class="product-info-body">
+        <div class="skeleton-line skeleton-cat-line"></div>
         <div class="skeleton-line skeleton-title-line-1"></div>
         <div class="skeleton-line skeleton-title-line-2"></div>
         <div class="product-price-row">
@@ -469,7 +470,7 @@ function renderCategoriesUI() {
   // 1. Categories Grid Cards ("تسوق حسب الفئة")
   if (DOM.categoriesGrid) {
     if (state.categories.length === 0) {
-      DOM.categoriesGrid.innerHTML = "";
+      DOM.categoriesGrid.innerHTML = `<div class="categories-empty-state"><p class="store-state-desc">لا توجد أقسام متوفرة حالياً</p></div>`;
     } else {
       DOM.categoriesGrid.innerHTML = state.categories.map(cat => {
         const matchingProduct = state.products.find(p => 
@@ -483,7 +484,7 @@ function renderCategoriesUI() {
         return `
           <div class="category-card ${isActive ? "active" : ""}" data-category-id="${escapeHtml(cat.id)}" data-category-name="${escapeHtml(cat.name)}" role="button" tabindex="0">
             <div class="category-img-box">
-              <img src="${escapeHtml(optimizedCatImg)}" alt="${escapeHtml(cat.name)}" width="180" height="180" loading="lazy">
+              <img src="${escapeHtml(optimizedCatImg)}" alt="${escapeHtml(cat.name)}" width="220" height="220" loading="lazy" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=500&q=80';">
             </div>
             <span class="category-name">${escapeHtml(cat.name)}</span>
           </div>
@@ -625,6 +626,7 @@ function renderProducts() {
             width="400" 
             height="500" 
             ${loadingAttr}
+            onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80';"
           >
           
           <!-- Favorite Heart Button -->
@@ -637,6 +639,7 @@ function renderProducts() {
 
         <!-- Body -->
         <div class="product-info-body">
+          <span class="product-cat-label">${escapeHtml(getCategoryLabel(p.category))}</span>
           <h3 class="product-name" data-action="view-details" data-id="${escapeHtml(p.id)}">${escapeHtml(p.name)}</h3>
           
           <div class="product-price-row">
@@ -1432,6 +1435,23 @@ function setupEventListeners() {
   }
 
 
+
+  // Header On-Scroll Refinement
+  window.addEventListener("scroll", () => {
+    if (DOM.header) {
+      DOM.header.classList.toggle("scrolled", window.scrollY > 20);
+    }
+  }, { passive: true });
+
+  // Newsletter Form Handler in Footer
+  const newsletterForm = $("newsletterForm");
+  if (newsletterForm) {
+    newsletterForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      showToast("🎉 شكراً لاشتراكك في النشرة البريدية الحصرية لـ ClothStore!");
+      newsletterForm.reset();
+    });
+  }
 
   // Global Escape Key Handler
   document.addEventListener("keydown", (e) => {
