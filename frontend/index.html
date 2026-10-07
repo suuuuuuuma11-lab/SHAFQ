@@ -761,6 +761,51 @@ sInput.addEventListener('input', () => {
 // Expose favorites function
 window.toggleFav = toggleFav;
 
+// --- Card Button Feedback Helpers ---
+function setCardButtonFeedback(button, duration = 1500) {
+  if (!button) return;
+
+  // Clear existing timer if any (prevents timer accumulation on rapid clicks)
+  if (button._resetTimer) {
+    clearTimeout(button._resetTimer);
+    button._resetTimer = null;
+  }
+
+  button.classList.add('added');
+  button.style.removeProperty('background');
+  button.style.removeProperty('background-color');
+  button.style.removeProperty('border-color');
+  button.style.removeProperty('color');
+
+  const txt = button.querySelector('.btn-text');
+  if (txt) {
+    txt.textContent = '✓ تمت الإضافة إلى السلة';
+  }
+
+  button._resetTimer = setTimeout(() => {
+    resetCardButtonFeedback(button);
+  }, duration);
+}
+
+function resetCardButtonFeedback(button) {
+  if (!button) return;
+  if (button._resetTimer) {
+    clearTimeout(button._resetTimer);
+    button._resetTimer = null;
+  }
+  button.classList.remove('added');
+  button.style.removeProperty('background');
+  button.style.removeProperty('background-color');
+  button.style.removeProperty('border-color');
+  button.style.removeProperty('color');
+
+  const txt = button.querySelector('.btn-text');
+  if (txt) {
+    txt.textContent = 'إضافة إلى السلة';
+  }
+  button._busy = false;
+}
+
 // --- Quick Add To Cart Flow (Card 🛒 button) ---
 let currentQoProduct = null;
 let currentQoBtn = null;
@@ -957,19 +1002,15 @@ document.getElementById('qoSubmitBtn')?.addEventListener('click', () => {
     openDrawer: false
   });
 
-  // Visual feedback on card button if provided
-  if (currentQoBtn) {
-    currentQoBtn.classList.add('added');
-    const txt = currentQoBtn.querySelector('.btn-text');
-    if (txt) txt.textContent = '✓ تمت الإضافة إلى السلة';
-    setTimeout(() => {
-      currentQoBtn.classList.remove('added');
-      if (txt) txt.textContent = 'إضافة إلى السلة';
-      currentQoBtn._busy = false;
-    }, 1500);
-  }
+  const targetBtn = currentQoBtn;
 
   closeQuickOptions();
+
+  // Visual feedback on card button if provided (safe captured reference)
+  if (targetBtn) {
+    setCardButtonFeedback(targetBtn, 1500);
+  }
+
   setTimeout(() => {
     isQoSubmitting = false;
     if (submitBtn) submitBtn.disabled = false;
@@ -980,6 +1021,7 @@ document.getElementById('qoSubmitBtn')?.addEventListener('click', () => {
 window.handleCardQuickAdd = function(productId, btn) {
   if (btn._busy) return;
   btn._busy = true;
+  setTimeout(() => { btn._busy = false; }, 250);
 
   const p = products.find(item => String(item.id) === String(productId));
   if (!p) {
@@ -1004,14 +1046,7 @@ window.handleCardQuickAdd = function(productId, btn) {
       openDrawer: false
     });
 
-    btn.classList.add('added');
-    const txt = btn.querySelector('.btn-text');
-    if (txt) txt.textContent = '✓ تمت الإضافة إلى السلة';
-    setTimeout(() => {
-      btn.classList.remove('added');
-      if (txt) txt.textContent = 'إضافة إلى السلة';
-      btn._busy = false;
-    }, 1500);
+    setCardButtonFeedback(btn, 1500);
     return;
   }
 

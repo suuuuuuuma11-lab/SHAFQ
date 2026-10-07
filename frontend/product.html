@@ -807,9 +807,41 @@ if (favBtn) {
 /* add to cart with complete variant metadata */
 const addCartBtn = document.getElementById('addCartBtn');
 if (addCartBtn) {
+  function setProductBtnFeedback(duration = 1500) {
+    if (addCartBtn._resetTimer) {
+      clearTimeout(addCartBtn._resetTimer);
+      addCartBtn._resetTimer = null;
+    }
+    addCartBtn.classList.add('added');
+    addCartBtn.style.removeProperty('background');
+    addCartBtn.style.removeProperty('background-color');
+    addCartBtn.style.removeProperty('border-color');
+    addCartBtn.style.removeProperty('color');
+    addCartBtn.textContent = '✓ تمت الإضافة إلى السلة';
+
+    addCartBtn._resetTimer = setTimeout(() => {
+      resetProductBtnFeedback();
+    }, duration);
+  }
+
+  function resetProductBtnFeedback() {
+    if (addCartBtn._resetTimer) {
+      clearTimeout(addCartBtn._resetTimer);
+      addCartBtn._resetTimer = null;
+    }
+    addCartBtn.classList.remove('added');
+    addCartBtn.style.removeProperty('background');
+    addCartBtn.style.removeProperty('background-color');
+    addCartBtn.style.removeProperty('border-color');
+    addCartBtn.style.removeProperty('color');
+    addCartBtn.textContent = '🛒 إضافة إلى السلة';
+    addCartBtn._busy = false;
+  }
+
   addCartBtn.addEventListener('click', () => {
     if (addCartBtn._busy || !currentProduct) return;
     addCartBtn._busy = true;
+    setTimeout(() => { addCartBtn._busy = false; }, 250);
 
     const colorsList = Array.isArray(currentProduct.colors) && currentProduct.colors.length > 0 ? currentProduct.colors : [{ name: "افتراضي", value: "#1d1a16" }];
     const chosenColor = colorsList[selectedColorIndex] || colorsList[0];
@@ -830,13 +862,7 @@ if (addCartBtn) {
       openDrawer: false
     });
 
-    addCartBtn.classList.add('added');
-    addCartBtn.textContent = '✓ تمت الإضافة إلى السلة';
-    setTimeout(() => {
-      addCartBtn.classList.remove('added');
-      addCartBtn.textContent = '🛒 إضافة إلى السلة';
-      addCartBtn._busy = false;
-    }, 1500);
+    setProductBtnFeedback(1500);
   });
 }
 
