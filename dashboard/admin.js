@@ -17,6 +17,7 @@ import {
   addDoc, 
   updateDoc, 
   deleteDoc, 
+  deleteField,
   onSnapshot, 
   query, 
   orderBy, 
@@ -342,6 +343,15 @@ function initRealtimeFirestore() {
       const list = [];
       snapshot.forEach((docSnap) => {
         const d = docSnap.data();
+
+        // Database Cleanup: Permanently remove stock field from Firestore database document
+        if (d.stock !== undefined) {
+          updateDoc(doc(db, "products", docSnap.id), {
+            stock: deleteField()
+          }).then(() => {
+            console.log("Permanently deleted stock field from Firestore database document:", docSnap.id);
+          }).catch(() => {});
+        }
         
         // Normalize colors to array of { name, value }
         let colors = [];
