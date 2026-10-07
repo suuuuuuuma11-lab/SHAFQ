@@ -12,6 +12,8 @@ import { db } from "../dashboard/firebase-config.js";
 import { 
   collection, 
   getDocs, 
+  getDocsFromCache,
+  getDocsFromServer,
   query, 
   orderBy 
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
@@ -30,6 +32,7 @@ const state = {
   currentDetailProduct: null,
   selectedColor: null,
   selectedSize: null,
+  currentCheckoutItems: [],
   heroSlideIndex: 0
 };
 
@@ -104,7 +107,18 @@ const DOM = {
 function loadCartFromStorage() {
   try {
     const raw = localStorage.getItem("clothstore_cart_items");
-    return raw ? JSON.parse(raw) : [];
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (Array.isArray(parsed)) {
+      return parsed.map(item => {
+        const colorName = item.color ? (typeof item.color === "object" ? (item.color.name || "") : String(item.color)) : "";
+        const sizeVal = item.size ? String(item.size).trim() : "";
+        return {
+          ...item,
+          cartKey: item.cartKey || `${item.id}__${sizeVal}__${colorName}`
+        };
+      });
+    }
+    return [];
   } catch (_) {
     return [];
   }
@@ -165,99 +179,256 @@ function showToast(message) {
   }, 3200);
 }
 
-// --- Live Firestore Sync ---
-async function fetchStoreCategories() {
-  try {
-    const colRef = collection(db, "categories");
-    let snapshot;
-    try {
-      const q = query(colRef, orderBy("createdAt", "desc"));
-      snapshot = await getDocs(q);
-    } catch (_) {
-      snapshot = await getDocs(colRef);
-    }
+// --- Image Optimization Helper (Cloudinary & Unsplash) ---
+function optimizeImageUrl(url, width = 600) {
+  if (!url || typeof url !== "string") return "";
 
-    const list = [];
-    if (snapshot && !snapshot.empty) {
-      snapshot.forEach((docSnap) => {
-        const d = docSnap.data();
-        if (d && d.name && d.name.trim()) {
-          list.push({
-            id: docSnap.id,
-            name: d.name.trim(),
-            slug: d.slug || d.name.trim(),
-            image: d.image || ""
-          });
-        }
+  // Cloudinary Transformation: auto format, auto quality, max width, limit crop
+  if (url.includes("res.cloudinary.com") && url.includes("/upload/")) {
+    if (!url.includes("f_auto") && !url.includes("q_auto")) {
+      const transform = `c_limit,w_${width},f_auto,q_auto`;
+      return url.replace("/upload/", `/upload/${transform}/`);
+    }
+  }
+
+  // Unsplash Transformation: auto format, max width, 80 quality
+  if (url.includes("images.unsplash.com")) {
+    try {
+      const u = new URL(url);
+      u.searchParams.set("auto", "format");
+      u.searchParams.set("w", String(width));
+      u.searchParams.set("q", "80");
+      return u.toString();
+    } catch (_) {
+      return url;
+    }
+  }
+
+  return url;
+}
+
+// --- Snapshot Parsers ---
+function parseCategoriesSnapshot(snapshot) {
+  if (!snapshot || snapshot.empty) return;
+  const list = [];
+  snapshot.forEach((docSnap) => {
+    const d = docSnap.data();
+    if (d && d.name && d.name.trim()) {
+      list.push({
+        id: docSnap.id,
+        name: d.name.trim(),
+        slug: d.slug || d.name.trim(),
+        image: d.image || ""
       });
     }
-
+  });
+  if (list.length > 0) {
     state.categories = list;
-  } catch (err) {
-    console.warn("Firestore categories fetch:", err.message);
-    state.categories = [];
   }
 }
 
-async function fetchStoreProducts() {
-  try {
-    const colRef = collection(db, "products");
-    let snapshot;
-    try {
-      const q = query(colRef, orderBy("createdAt", "desc"));
-      snapshot = await getDocs(q);
-    } catch (_) {
-      snapshot = await getDocs(colRef);
-    }
-
-    if (!snapshot.empty) {
-      const liveList = [];
-      snapshot.forEach((docSnap) => {
-        const p = docSnap.data();
-        const rawImages = Array.isArray(p.images) ? p.images : [];
-        const imageUrls = rawImages.map(i => typeof i === "string" ? i : (i && i.url)).filter(Boolean);
-        if (imageUrls.length === 0 && p.mainImage) {
-          imageUrls.push(p.mainImage);
-        }
-
-        const priceNum = typeof p.price === "number" ? p.price : (parseInt(p.price, 10) || 0);
-
-        let catName = (p.category || "").trim();
-        const catId = (p.categoryId || "").trim();
-        if (!catName && catId) {
-          const matchCat = state.categories.find(c => c.id === catId);
-          if (matchCat) catName = matchCat.name;
-        }
-        if (!catName) catName = "عام";
-
-        liveList.push({
-          id: docSnap.id,
-          name: p.name || "منتج",
-          categoryId: catId,
-          category: catName,
-          price: priceNum,
-          priceDisplay: formatPrice(priceNum),
-          rating: typeof p.rating === "number" ? p.rating : 4.8,
-          reviewsCount: typeof p.reviewsCount === "number" ? p.reviewsCount : 12,
-          description: p.description || p.title || "منتج عالي الجودة متوفر للطلب مع خدمة التوصيل والدفع عند الاستلام.",
-          images: imageUrls.length > 0 ? imageUrls : ["https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80"],
-          colors: Array.isArray(p.colors) && p.colors.length > 0 ? p.colors : ["#111615", "#ffffff"],
-          sizes: Array.isArray(p.sizes) && p.sizes.length > 0 ? p.sizes : ["S", "M", "L", "XL"],
-          specs: Array.isArray(p.specs) && p.specs.length > 0 ? p.specs : [
-            "الخامة: جودة ممتازة مضمونة",
-            "المقاس: متوفر بمقاسات متعددة",
-            "الدفع عند الاستلام بعد المعاينة"
-          ]
-        });
-      });
-
-      state.products = liveList;
-    } else {
-      state.products = [];
-    }
-  } catch (err) {
-    console.warn("Firestore products fetch:", err.message);
+function parseProductsSnapshot(snapshot) {
+  if (!snapshot) return;
+  if (snapshot.empty) {
     state.products = [];
+    return;
+  }
+
+  const liveList = [];
+  snapshot.forEach((docSnap) => {
+    const p = docSnap.data();
+    const rawImages = Array.isArray(p.images) ? p.images : [];
+    const imageUrls = rawImages.map(i => typeof i === "string" ? i : (i && i.url)).filter(Boolean);
+    if (imageUrls.length === 0 && p.mainImage) {
+      imageUrls.push(p.mainImage);
+    }
+
+    const priceNum = typeof p.price === "number" ? p.price : (parseInt(p.price, 10) || 0);
+
+    let catName = (p.category || "").trim();
+    const catId = (p.categoryId || "").trim();
+    if (!catName && catId) {
+      const matchCat = state.categories.find(c => c.id === catId);
+      if (matchCat) catName = matchCat.name;
+    }
+    if (!catName) catName = "عام";
+
+    // Parse optional product sizes (empty array if none)
+    const parsedSizes = Array.isArray(p.sizes)
+      ? p.sizes.map(s => String(s).trim()).filter(Boolean)
+      : [];
+
+    // Parse optional product colors (empty array if none)
+    const parsedColors = Array.isArray(p.colors)
+      ? p.colors.map(col => {
+          if (typeof col === "string") {
+            const trimmed = col.trim();
+            return { name: trimmed, value: trimmed.startsWith("#") ? trimmed : "#111111" };
+          }
+          if (col && typeof col === "object") {
+            return {
+              name: String(col.name || "لون").trim(),
+              value: String(col.value || "#111111").trim()
+            };
+          }
+          return null;
+        }).filter(Boolean)
+      : [];
+
+    liveList.push({
+      id: docSnap.id,
+      name: p.name || "منتج",
+      categoryId: catId,
+      category: catName,
+      price: priceNum,
+      priceDisplay: formatPrice(priceNum),
+      description: p.description || p.title || "منتج عالي الجودة متوفر للطلب مع خدمة التوصيل والدفع عند الاستلام.",
+      images: imageUrls.length > 0 ? imageUrls : ["https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80"],
+      colors: parsedColors,
+      sizes: parsedSizes,
+      specs: Array.isArray(p.specs) && p.specs.length > 0 ? p.specs : [
+        "الخامة: جودة ممتازة مضمونة",
+        "الدفع عند الاستلام بعد المعاينة"
+      ]
+    });
+  });
+
+  state.products = liveList;
+}
+
+// --- UI State Renderers ---
+function renderProductsSkeleton(count = 8) {
+  if (!DOM.productsGrid) return;
+  DOM.productsGrid.innerHTML = Array.from({ length: count }, () => `
+    <article class="product-card product-card-skeleton" aria-hidden="true">
+      <div class="product-thumb-wrap skeleton-thumb">
+        <div class="skeleton-shimmer"></div>
+      </div>
+      <div class="product-info-body">
+        <div class="skeleton-line skeleton-title-line-1"></div>
+        <div class="skeleton-line skeleton-title-line-2"></div>
+        <div class="product-price-row">
+          <div class="skeleton-line skeleton-price-line"></div>
+        </div>
+        <div class="skeleton-btn"></div>
+      </div>
+    </article>
+  `).join("");
+}
+
+function renderEmptyState(message = "لا توجد منتجات حاليًا") {
+  if (!DOM.productsGrid) return;
+  DOM.productsGrid.innerHTML = `
+    <div class="store-state-box">
+      <div class="store-state-icon store-empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="32" height="32">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+      </div>
+      <h3 class="store-state-title">${escapeHtml(message)}</h3>
+      <p class="store-state-desc">سيتم إضافة تشكيلات جديدة قريباً، تفضل بزيارتنا لاحقاً.</p>
+    </div>
+  `;
+}
+
+function renderErrorState() {
+  if (!DOM.productsGrid) return;
+  DOM.productsGrid.innerHTML = `
+    <div class="store-state-box">
+      <div class="store-state-icon store-error-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <h3 class="store-state-title">تعذر تحميل المنتجات</h3>
+      <p class="store-state-desc">حدث خطأ أثناء الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.</p>
+      <button class="btn-state-action" type="button" id="retryProductsBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        <span>إعادة المحاولة</span>
+      </button>
+    </div>
+  `;
+  const retryBtn = document.getElementById("retryProductsBtn");
+  if (retryBtn) {
+    retryBtn.addEventListener("click", () => {
+      loadStoreData();
+    });
+  }
+}
+
+// --- Live Firestore Sync (Parallel + Browser Persistent Cache) ---
+async function loadStoreData() {
+  // If grid is currently empty or has no children, render skeleton placeholders immediately
+  if (DOM.productsGrid && DOM.productsGrid.children.length === 0) {
+    renderProductsSkeleton();
+  }
+
+  const catCol = collection(db, "categories");
+  const prodCol = collection(db, "products");
+  const catQuery = query(catCol, orderBy("createdAt", "desc"));
+  const prodQuery = query(prodCol, orderBy("createdAt", "desc"));
+
+  // 1. Fast Cache Read: Return immediately to user if previously cached in IndexedDB
+  try {
+    const [cachedCatSnap, cachedProdSnap] = await Promise.all([
+      getDocsFromCache(catQuery).catch(() => getDocsFromCache(catCol)).catch(() => null),
+      getDocsFromCache(prodQuery).catch(() => getDocsFromCache(prodCol)).catch(() => null)
+    ]);
+
+    let hadCachedData = false;
+    if (cachedCatSnap && !cachedCatSnap.empty) {
+      parseCategoriesSnapshot(cachedCatSnap);
+      hadCachedData = true;
+    }
+    if (cachedProdSnap && !cachedProdSnap.empty) {
+      parseProductsSnapshot(cachedProdSnap);
+      syncCategoriesFromProducts();
+      hadCachedData = true;
+    }
+
+    if (hadCachedData && state.products.length > 0) {
+      renderCategoriesUI();
+      renderProducts();
+    }
+  } catch (_) {
+    // Cache miss on fresh visit — continue directly to server query
+  }
+
+  // 2. Authoritative Server Query (Executed in parallel for minimum roundtrip latency)
+  try {
+    const [catSnap, prodSnap] = await Promise.all([
+      getDocsFromServer(catQuery).catch(() => getDocs(catQuery)).catch(() => getDocs(catCol)),
+      getDocsFromServer(prodQuery).catch(() => getDocs(prodQuery)).catch(() => getDocs(prodCol))
+    ]);
+
+    if (catSnap) {
+      parseCategoriesSnapshot(catSnap);
+    }
+    if (prodSnap) {
+      parseProductsSnapshot(prodSnap);
+    }
+    syncCategoriesFromProducts();
+
+    renderCategoriesUI();
+
+    if (state.products.length === 0) {
+      renderEmptyState("لا توجد منتجات حاليًا");
+    } else {
+      renderProducts();
+    }
+  } catch (serverErr) {
+    console.warn("Firestore server fetch failed:", serverErr?.message || serverErr);
+    // If cache already provided products, keep them visible gracefully
+    if (state.products.length === 0) {
+      renderErrorState();
+    }
   }
 }
 
@@ -308,10 +479,11 @@ function renderCategoriesUI() {
         const imgUrl = cat.image || (matchingProduct && matchingProduct.images && matchingProduct.images[0]) || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=500&q=80";
         const isActive = state.activeFilter === cat.id || state.activeFilter === cat.name;
 
+        const optimizedCatImg = optimizeImageUrl(imgUrl, 320);
         return `
           <div class="category-card ${isActive ? "active" : ""}" data-category-id="${escapeHtml(cat.id)}" data-category-name="${escapeHtml(cat.name)}" role="button" tabindex="0">
             <div class="category-img-box">
-              <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(cat.name)}" loading="lazy">
+              <img src="${escapeHtml(optimizedCatImg)}" alt="${escapeHtml(cat.name)}" width="180" height="180" loading="lazy">
             </div>
             <span class="category-name">${escapeHtml(cat.name)}</span>
           </div>
@@ -410,28 +582,53 @@ function renderProducts() {
     return false;
   });
 
-  if (filtered.length === 0) {
-    DOM.productsGrid.innerHTML = `
-      <div style="grid-column: 1 / -1; text-align: center; padding: 64px 20px; color: var(--color-text-sub);">
-        <p style="font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; color: var(--color-text-main);">لا توجد منتجات في هذا القسم حالياً</p>
-        <p style="font-size: 0.95rem;">اختر قسماً آخر أو تصفح تشكيلة "الكل".</p>
-      </div>
-    `;
+  if (state.products.length === 0) {
+    renderEmptyState("لا توجد منتجات حاليًا");
     return;
   }
 
-  DOM.productsGrid.innerHTML = filtered.map(p => {
+  if (filtered.length === 0) {
+    DOM.productsGrid.innerHTML = `
+      <div class="store-state-box">
+        <div class="store-state-icon store-empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="32" height="32">
+            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </div>
+        <h3 class="store-state-title">لا توجد منتجات في هذا القسم حالياً</h3>
+        <p class="store-state-desc">اختر قسماً آخر أو تصفح تشكيلة "الكل".</p>
+        <button class="btn-state-action" type="button" id="resetCatFilterBtn">
+          <span>عرض جميع المنتجات</span>
+        </button>
+      </div>
+    `;
+    const resetBtn = document.getElementById("resetCatFilterBtn");
+    if (resetBtn) resetBtn.addEventListener("click", () => setActiveCategory("all"));
+    return;
+  }
+
+  DOM.productsGrid.innerHTML = filtered.map((p, index) => {
     const isFav = state.favorites.has(p.id);
-    const mainImg = p.images && p.images.length > 0 ? p.images[0] : "";
+    const rawImg = p.images && p.images.length > 0 ? p.images[0] : "";
+    const optimizedThumb = optimizeImageUrl(rawImg, 600);
+    const isAboveFold = index < 4;
+    const loadingAttr = isAboveFold ? 'loading="eager" fetchpriority="high"' : 'loading="lazy" decoding="async"';
 
     return `
-      <article class="product-card" data-product-id="${p.id}">
+      <article class="product-card" data-product-id="${escapeHtml(p.id)}">
         <!-- Thumbnail Wrap -->
-        <div class="product-thumb-wrap" data-action="view-details" data-id="${p.id}">
-          <img class="product-thumb-img" src="${mainImg}" alt="${p.name}" loading="lazy">
+        <div class="product-thumb-wrap" data-action="view-details" data-id="${escapeHtml(p.id)}">
+          <img 
+            class="product-thumb-img" 
+            src="${escapeHtml(optimizedThumb)}" 
+            alt="${escapeHtml(p.name)}" 
+            width="400" 
+            height="500" 
+            ${loadingAttr}
+          >
           
           <!-- Favorite Heart Button -->
-          <button class="btn-favorite ${isFav ? "active" : ""}" type="button" data-action="toggle-fav" data-id="${p.id}" title="${isFav ? "إزالة من المفضلة" : "إضافة للمفضلة"}">
+          <button class="btn-favorite ${isFav ? "active" : ""}" type="button" data-action="toggle-fav" data-id="${escapeHtml(p.id)}" title="${isFav ? "إزالة من المفضلة" : "إضافة للمفضلة"}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
             </svg>
@@ -440,19 +637,19 @@ function renderProducts() {
 
         <!-- Body -->
         <div class="product-info-body">
-          <h3 class="product-name" data-action="view-details" data-id="${p.id}">${p.name}</h3>
+          <h3 class="product-name" data-action="view-details" data-id="${escapeHtml(p.id)}">${escapeHtml(p.name)}</h3>
           
           <div class="product-price-row">
-            <span class="product-price">${p.priceDisplay || formatPrice(p.price)}</span>
+            <span class="product-price">${escapeHtml(p.priceDisplay || formatPrice(p.price))}</span>
           </div>
 
-          <button class="btn-add-cart" type="button" data-action="quick-add-cart" data-id="${p.id}">
+          <button class="btn-add-cart" type="button" data-action="quick-add-cart" data-id="${escapeHtml(p.id)}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
               <line x1="3" y1="6" x2="21" y2="6"/>
               <path d="M16 10a4 4 0 0 1-8 0"/>
             </svg>
-            <span>أضف إلى السلة</span>
+            <span>إضافة للسلة</span>
           </button>
         </div>
       </article>
@@ -463,33 +660,66 @@ function renderProducts() {
 // --- Product Details Modal ---
 function openProductDetails(product) {
   state.currentDetailProduct = product;
-  state.selectedColor = product.colors && product.colors.length > 0 ? product.colors[0] : null;
-  state.selectedSize = product.sizes && product.sizes.length > 0 ? product.sizes[0] : null;
+  state.selectedColor = null;
+  state.selectedSize = null;
 
-  const images = product.images && product.images.length > 0 ? product.images : [];
+  const images = (product.images && product.images.length > 0) ? product.images : [];
   const mainImage = images[0] || "";
 
   const thumbsHtml = images.map((img, i) => `
-    <button class="thumb-btn ${i === 0 ? "active" : ""}" type="button" data-image="${img}">
-      <img src="${img}" alt="${product.name} ${i + 1}">
+    <button class="thumb-btn ${i === 0 ? "active" : ""}" type="button" data-image="${escapeHtml(optimizeImageUrl(img, 900))}">
+      <img src="${escapeHtml(optimizeImageUrl(img, 180))}" alt="${escapeHtml(product.name)} ${i + 1}" width="70" height="70" loading="lazy">
     </button>
   `).join("");
 
-  const colorsHtml = (product.colors || []).map((col, idx) => `
-    <span class="color-swatch-dot ${idx === 0 ? "active" : ""}" style="background-color: ${col};" data-color="${col}" title="${col}"></span>
-  `).join("");
+  // Optional Colors Section
+  const hasColors = Array.isArray(product.colors) && product.colors.length > 0;
+  const colorsHtml = hasColors ? `
+    <div class="picker-group">
+      <div class="picker-label-row">
+        <label class="picker-label">اختر اللون</label>
+        <span class="selected-opt-badge" id="selectedColorBadge">لم يتم الاختيار</span>
+      </div>
+      <div class="color-swatches" id="colorSwatchesWrap">
+        ${product.colors.map(col => {
+          const name = typeof col === 'object' ? (col.name || 'لون') : col;
+          const val = typeof col === 'object' ? (col.value || '#111111') : (col.startsWith('#') ? col : '#111111');
+          return `
+            <button class="color-swatch-chip" type="button" data-color-name="${escapeHtml(name)}" data-color-val="${escapeHtml(val)}" title="${escapeHtml(name)}">
+              <span class="color-swatch-dot" style="background-color: ${escapeHtml(val)};"></span>
+              <span class="color-name-text">${escapeHtml(name)}</span>
+            </button>
+          `;
+        }).join("")}
+      </div>
+      <span class="option-validation-msg" id="colorValidationMsg" style="display: none;">يرجى اختيار اللون</span>
+    </div>
+  ` : "";
 
-  const sizesHtml = (product.sizes || []).map((sz, idx) => `
-    <button class="size-chip ${idx === 0 ? "active" : ""}" type="button" data-size="${sz}">${sz}</button>
-  `).join("");
+  // Optional Sizes Section
+  const hasSizes = Array.isArray(product.sizes) && product.sizes.length > 0;
+  const sizesHtml = hasSizes ? `
+    <div class="picker-group">
+      <div class="picker-label-row">
+        <label class="picker-label">اختر المقاس</label>
+        <span class="selected-opt-badge" id="selectedSizeBadge">لم يتم الاختيار</span>
+      </div>
+      <div class="size-chips" id="sizeChipsWrap">
+        ${product.sizes.map(sz => `
+          <button class="size-chip" type="button" data-size="${escapeHtml(sz)}">${escapeHtml(sz)}</button>
+        `).join("")}
+      </div>
+      <span class="option-validation-msg" id="sizeValidationMsg" style="display: none;">يرجى اختيار المقاس</span>
+    </div>
+  ` : "";
 
-  const specsHtml = (product.specs || []).map(s => `<li>${s}</li>`).join("");
+  const specsHtml = (product.specs || []).map(s => `<li>${escapeHtml(s)}</li>`).join("");
 
   DOM.modalProductContent.innerHTML = `
     <!-- Gallery -->
     <div class="detail-gallery-wrap">
       <div class="detail-main-img-box">
-        <img id="detailMainImage" src="${mainImage}" alt="${product.name}">
+        <img id="detailMainImage" src="${escapeHtml(optimizeImageUrl(mainImage, 900))}" alt="${escapeHtml(product.name)}" width="500" height="600">
       </div>
       <div class="detail-thumbs-strip" id="detailThumbsStrip">
         ${thumbsHtml}
@@ -498,35 +728,18 @@ function openProductDetails(product) {
 
     <!-- Info -->
     <div class="detail-info-col">
-      <div class="detail-breadcrumbs">الرئيسية > المنتجات > ${product.name}</div>
-      <h2 class="detail-title">${product.name}</h2>
+      <div class="detail-breadcrumbs">الرئيسية > المنتجات > ${escapeHtml(product.name)}</div>
+      <h2 class="detail-title">${escapeHtml(product.name)}</h2>
       
-      <div class="detail-price-rating-row">
+      <div class="detail-price-row">
         <span class="detail-price">${product.priceDisplay || formatPrice(product.price)}</span>
-        <div class="detail-rating">
-          <span class="detail-stars">★★★★★</span>
-          <span>(${product.rating})</span>
-          <span>(${product.reviewsCount} تقييم)</span>
-        </div>
       </div>
 
-      <p class="detail-desc">${product.description}</p>
+      <p class="detail-desc">${escapeHtml(product.description)}</p>
 
-      <!-- Color Selector -->
-      <div class="picker-group">
-        <label class="picker-label">اللون</label>
-        <div class="color-swatches" id="colorSwatchesWrap">
-          ${colorsHtml}
-        </div>
-      </div>
+      ${colorsHtml}
 
-      <!-- Size Selector -->
-      <div class="picker-group">
-        <label class="picker-label">المقاس</label>
-        <div class="size-chips" id="sizeChipsWrap">
-          ${sizesHtml}
-        </div>
-      </div>
+      ${sizesHtml}
 
       <!-- Actions -->
       <div class="detail-cta-row">
@@ -545,12 +758,14 @@ function openProductDetails(product) {
       </div>
 
       <!-- Product Specs -->
+      ${specsHtml ? `
       <div class="detail-specs-box">
         <h4 class="specs-title">تفاصيل المنتج</h4>
         <ul class="specs-list">
           ${specsHtml}
         </ul>
       </div>
+      ` : ""}
     </div>
   `;
 
@@ -564,6 +779,35 @@ function closeProductDetails() {
   DOM.productModal.setAttribute("aria-hidden", "true");
   document.body.classList.remove("modal-open");
   state.currentDetailProduct = null;
+  state.selectedColor = null;
+  state.selectedSize = null;
+}
+
+// Validation for Required Product Options
+function validateProductOptions(product) {
+  let isValid = true;
+  const sizeMsg = $("sizeValidationMsg");
+  const colorMsg = $("colorValidationMsg");
+
+  if (sizeMsg) sizeMsg.style.display = "none";
+  if (colorMsg) colorMsg.style.display = "none";
+
+  const hasSizes = Array.isArray(product.sizes) && product.sizes.length > 0;
+  const hasColors = Array.isArray(product.colors) && product.colors.length > 0;
+
+  if (hasSizes && !state.selectedSize) {
+    if (sizeMsg) sizeMsg.style.display = "block";
+    showToast("يرجى اختيار المقاس");
+    isValid = false;
+  }
+
+  if (hasColors && !state.selectedColor) {
+    if (colorMsg) colorMsg.style.display = "block";
+    showToast("يرجى اختيار اللون");
+    isValid = false;
+  }
+
+  return isValid;
 }
 
 // --- Cart Drawer Flow ---
@@ -597,46 +841,63 @@ function updateCartUI() {
   DOM.proceedCheckoutBtn.disabled = false;
   DOM.proceedCheckoutBtn.style.opacity = "1";
 
-  DOM.cartItemsList.innerHTML = state.cart.map((item, index) => `
-    <div class="cart-item-row" data-cart-index="${index}">
-      <img class="cart-item-img" src="${item.image}" alt="${item.name}">
-      
-      <div class="cart-item-details">
-        <h4 class="cart-item-name">${item.name}</h4>
-        <div class="cart-item-price">${formatPrice(item.price)}</div>
-        
-        <div class="cart-qty-ctrl">
-          <button class="btn-qty" type="button" data-action="qty-minus" data-index="${index}">-</button>
-          <span class="qty-val">${item.quantity}</span>
-          <button class="btn-qty" type="button" data-action="qty-plus" data-index="${index}">+</button>
-        </div>
-      </div>
+  DOM.cartItemsList.innerHTML = state.cart.map((item, index) => {
+    const sizeBadge = item.size ? `<span class="cart-opt-tag">المقاس: <strong>${escapeHtml(item.size)}</strong></span>` : '';
+    const colorBadge = item.color ? `
+      <span class="cart-opt-tag">
+        ${item.color.value ? `<span class="cart-color-dot" style="background-color: ${escapeHtml(item.color.value)}"></span>` : ''}
+        اللون: <strong>${escapeHtml(item.color.name || item.color)}</strong>
+      </span>` : '';
+    const optionsHtml = (sizeBadge || colorBadge) ? `<div class="cart-item-options">${sizeBadge}${colorBadge}</div>` : '';
 
-      <button class="btn-del-item" type="button" data-action="remove-item" data-index="${index}" title="حذف من السلة">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="3 6 5 6 21 6"/>
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-        </svg>
-      </button>
-    </div>
-  `).join("");
+    return `
+      <div class="cart-item-row" data-cart-index="${index}">
+        <img class="cart-item-img" src="${escapeHtml(optimizeImageUrl(item.image, 160))}" alt="${escapeHtml(item.name)}" width="70" height="70" loading="lazy">
+        
+        <div class="cart-item-details">
+          <h4 class="cart-item-name">${escapeHtml(item.name)}</h4>
+          ${optionsHtml}
+          <div class="cart-item-price">${formatPrice(item.price)}</div>
+          
+          <div class="cart-qty-ctrl">
+            <button class="btn-qty" type="button" data-action="qty-minus" data-index="${index}">-</button>
+            <span class="qty-val">${item.quantity}</span>
+            <button class="btn-qty" type="button" data-action="qty-plus" data-index="${index}">+</button>
+          </div>
+        </div>
+
+        <button class="btn-del-item" type="button" data-action="remove-item" data-index="${index}" title="حذف من السلة">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+        </button>
+      </div>
+    `;
+  }).join("");
 }
 
 function addToCart(product, quantity = 1, color = null, size = null) {
-  const existing = state.cart.find(item => item.id === product.id);
+  const colorObj = color ? (typeof color === 'object' ? { name: color.name, value: color.value } : { name: String(color), value: '#111111' }) : null;
+  const colorKeyPart = colorObj ? colorObj.name : '';
+  const sizeVal = size ? String(size).trim() : '';
+  const cartKey = `${product.id}__${sizeVal}__${colorKeyPart}`;
+
+  const existing = state.cart.find(item => (item.cartKey || `${item.id}__${item.size || ''}__${item.color ? (item.color.name || item.color) : ''}`) === cartKey);
   const mainImg = product.images && product.images.length > 0 ? product.images[0] : "";
 
   if (existing) {
     existing.quantity += quantity;
   } else {
     state.cart.push({
+      cartKey,
       id: product.id,
       name: product.name,
       price: product.price,
       image: mainImg,
       quantity,
-      color: color || (product.colors ? product.colors[0] : null),
-      size: size || (product.sizes ? product.sizes[0] : null)
+      color: colorObj,
+      size: sizeVal || null
     });
   }
 
@@ -667,14 +928,18 @@ function openCheckoutModal(singleProduct = null) {
       name: singleProduct.name,
       price: singleProduct.price,
       quantity: 1,
-      image: singleProduct.images ? singleProduct.images[0] : ""
+      image: singleProduct.images ? singleProduct.images[0] : "",
+      color: singleProduct.selectedColor || null,
+      size: singleProduct.selectedSize || null
     }];
+    state.currentCheckoutItems = checkoutItems;
   } else {
     if (state.cart.length === 0) {
       showToast("السلة فارغة، اختر منتجاً أولاً.");
       return;
     }
     checkoutItems = [...state.cart];
+    state.currentCheckoutItems = checkoutItems;
   }
 
   const subtotal = checkoutItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -682,8 +947,14 @@ function openCheckoutModal(singleProduct = null) {
   DOM.checkoutSummaryStrip.innerHTML = `
     <div>
       <strong>عدد المنتجات:</strong> ${checkoutItems.reduce((s, i) => s + i.quantity, 0)} قطع
-      <div style="font-size: 0.8rem; color: var(--color-text-sub); margin-top: 2px;">
-        ${checkoutItems.map(i => `${i.name} (x${i.quantity})`).join(" • ")}
+      <div style="font-size: 0.8rem; color: var(--color-text-sub); margin-top: 4px; display: flex; flex-direction: column; gap: 3px;">
+        ${checkoutItems.map(i => {
+          const opts = [];
+          if (i.size) opts.push(`المقاس: ${escapeHtml(i.size)}`);
+          if (i.color) opts.push(`اللون: ${escapeHtml(i.color.name || i.color)}`);
+          const optStr = opts.length > 0 ? ` (${opts.join(' | ')})` : '';
+          return `<span>• ${escapeHtml(i.name)}${optStr} × ${i.quantity}</span>`;
+        }).join("")}
       </div>
     </div>
     <div>
@@ -700,11 +971,18 @@ function closeCheckoutModal() {
   DOM.checkoutModal.classList.remove("active");
   DOM.checkoutModal.setAttribute("aria-hidden", "true");
   document.body.classList.remove("modal-open");
+  state.currentCheckoutItems = [];
 }
 
 // --- Telegram Order Notification ---
 function formatTelegramOrderMessage(formValues, items, total) {
-  const itemsText = items.map(item => `• ${item.name} | العدد: ${item.quantity} | السعر: ${formatPrice(item.price * item.quantity)}`).join("\n");
+  const itemsText = items.map(item => {
+    const opts = [];
+    if (item.size) opts.push(`المقاس: ${item.size}`);
+    if (item.color) opts.push(`اللون: ${item.color.name || item.color}`);
+    const optStr = opts.length > 0 ? ` [${opts.join(' | ')}]` : '';
+    return `• ${item.name}${optStr} | العدد: ${item.quantity} | السعر: ${formatPrice(item.price * item.quantity)}`;
+  }).join("\n");
 
   return [
     "🛍️ طلب جديد من متجر ClothStore!",
@@ -729,7 +1007,9 @@ function formatTelegramOrderMessage(formValues, items, total) {
 
 async function sendOrderToTelegram(formData) {
   const formValues = Object.fromEntries(formData.entries());
-  const items = state.cart.length > 0 ? state.cart : (state.currentDetailProduct ? [state.currentDetailProduct] : []);
+  const items = (state.currentCheckoutItems && state.currentCheckoutItems.length > 0)
+    ? state.currentCheckoutItems
+    : (state.cart.length > 0 ? state.cart : (state.currentDetailProduct ? [state.currentDetailProduct] : []));
   const total = items.reduce((sum, i) => sum + (i.price * (i.quantity || 1)), 0);
 
   const endpoint = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
@@ -790,7 +1070,7 @@ function renderSearchResults(queryText) {
 
   DOM.searchResultsList.innerHTML = results.map(p => `
     <div class="search-result-item" data-product-id="${p.id}">
-      <img src="${p.images[0]}" alt="${p.name}">
+      <img src="${optimizeImageUrl(p.images[0], 120)}" alt="${p.name}" width="54" height="54" loading="lazy">
       <div>
         <div style="font-weight: 700; color: var(--color-text-main);">${p.name}</div>
         <div style="font-size: 0.85rem; color: var(--color-secondary); font-weight: 800;">${p.priceDisplay || formatPrice(p.price)}</div>
@@ -865,7 +1145,16 @@ function setupEventListeners() {
       e.stopPropagation();
       const id = addBtn.dataset.id;
       const product = state.products.find(p => p.id === id);
-      if (product) addToCart(product, 1);
+      if (product) {
+        const hasSizes = Array.isArray(product.sizes) && product.sizes.length > 0;
+        const hasColors = Array.isArray(product.colors) && product.colors.length > 0;
+        if (hasSizes || hasColors) {
+          openProductDetails(product);
+          showToast("يرجى تحديد الخيارات المطلوبة أولاً");
+        } else {
+          addToCart(product, 1);
+        }
+      }
       return;
     }
 
@@ -890,27 +1179,39 @@ function setupEventListeners() {
       return;
     }
 
-    // Color Swatch
-    const swatch = e.target.closest(".color-swatch-dot");
+    // Color Swatch Chip Click
+    const swatch = e.target.closest(".color-swatch-chip");
     if (swatch) {
-      document.querySelectorAll(".color-swatch-dot").forEach(s => s.classList.remove("active"));
+      document.querySelectorAll(".color-swatch-chip").forEach(s => s.classList.remove("active"));
       swatch.classList.add("active");
-      state.selectedColor = swatch.dataset.color;
+      state.selectedColor = {
+        name: swatch.dataset.colorName,
+        value: swatch.dataset.colorVal
+      };
+      const badge = $("selectedColorBadge");
+      if (badge) badge.textContent = swatch.dataset.colorName;
+      const msg = $("colorValidationMsg");
+      if (msg) msg.style.display = "none";
       return;
     }
 
-    // Size Chip
+    // Size Chip Click
     const chip = e.target.closest(".size-chip");
     if (chip) {
       document.querySelectorAll(".size-chip").forEach(c => c.classList.remove("active"));
       chip.classList.add("active");
       state.selectedSize = chip.dataset.size;
+      const badge = $("selectedSizeBadge");
+      if (badge) badge.textContent = chip.dataset.size;
+      const msg = $("sizeValidationMsg");
+      if (msg) msg.style.display = "none";
       return;
     }
 
     // Modal Add To Cart
     if (e.target.closest("#modalAddToCartBtn")) {
       if (state.currentDetailProduct) {
+        if (!validateProductOptions(state.currentDetailProduct)) return;
         addToCart(state.currentDetailProduct, 1, state.selectedColor, state.selectedSize);
         closeProductDetails();
       }
@@ -920,9 +1221,14 @@ function setupEventListeners() {
     // Modal Quick COD
     if (e.target.closest("#modalQuickCodBtn")) {
       if (state.currentDetailProduct) {
+        if (!validateProductOptions(state.currentDetailProduct)) return;
         const prod = state.currentDetailProduct;
         closeProductDetails();
-        openCheckoutModal(prod);
+        openCheckoutModal({
+          ...prod,
+          selectedColor: state.selectedColor,
+          selectedSize: state.selectedSize
+        });
       }
     }
   });
@@ -1030,12 +1336,16 @@ function setupEventListeners() {
 
     try {
       const formData = new FormData(form);
+      const isSingleOrder = state.currentCheckoutItems && state.currentCheckoutItems.length > 0 && state.currentCheckoutItems !== state.cart;
       await sendOrderToTelegram(formData);
 
       // Order Success
       form.reset();
-      state.cart = [];
-      updateCartUI();
+      if (!isSingleOrder) {
+        state.cart = [];
+        updateCartUI();
+      }
+      state.currentCheckoutItems = [];
       closeCheckoutModal();
       showToast("🎉 تم تأكيد طلبك بنجاح! سنتواصل معك هاتفياً قريباً للتوصيل.");
     } catch (err) {
@@ -1140,25 +1450,8 @@ async function initStore() {
   setupEventListeners();
   updateCartUI();
 
-  // Show clean spinner during initial fetch
-  if (DOM.productsGrid) {
-    DOM.productsGrid.innerHTML = `
-      <div style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; color: var(--color-text-sub);">
-        <p style="font-size: 1rem; font-weight: 600;">جاري تحميل أحدث المنتجات والتصنيفات...</p>
-      </div>
-    `;
-  }
-
-  // Fetch from Firestore
-  await fetchStoreCategories();
-  await fetchStoreProducts();
-
-  // Discover any category present on products
-  syncCategoriesFromProducts();
-
-  // Render dynamic UI
-  renderCategoriesUI();
-  renderProducts();
+  // Load store data with parallel queries and persistent cache
+  await loadStoreData();
 }
 
 initStore();

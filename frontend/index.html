@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=fashion_v4">
+  <link rel="stylesheet" href="style.css?v=fashion_v5">
 </head>
 <body>
 
@@ -257,7 +257,27 @@
       </div>
 
       <div class="categories-grid" id="categoriesGrid">
-        <!-- Rendered dynamically from Firestore categories -->
+        <!-- Immediate Skeleton Loading State -->
+        <div class="category-card category-card-skeleton" aria-hidden="true">
+          <div class="category-img-box skeleton-thumb"><div class="skeleton-shimmer"></div></div>
+          <div class="skeleton-line"></div>
+        </div>
+        <div class="category-card category-card-skeleton" aria-hidden="true">
+          <div class="category-img-box skeleton-thumb"><div class="skeleton-shimmer"></div></div>
+          <div class="skeleton-line"></div>
+        </div>
+        <div class="category-card category-card-skeleton" aria-hidden="true">
+          <div class="category-img-box skeleton-thumb"><div class="skeleton-shimmer"></div></div>
+          <div class="skeleton-line"></div>
+        </div>
+        <div class="category-card category-card-skeleton" aria-hidden="true">
+          <div class="category-img-box skeleton-thumb"><div class="skeleton-shimmer"></div></div>
+          <div class="skeleton-line"></div>
+        </div>
+        <div class="category-card category-card-skeleton" aria-hidden="true">
+          <div class="category-img-box skeleton-thumb"><div class="skeleton-shimmer"></div></div>
+          <div class="skeleton-line"></div>
+        </div>
       </div>
 
     </div>
@@ -278,7 +298,79 @@
 
       <!-- Products Grid (4 Columns Desktop / 2 Mobile) -->
       <div class="products-grid" id="productsGrid" aria-live="polite">
-        <!-- Rendered dynamically by script.js -->
+        <!-- Immediate Skeleton Loading State (Matches Actual Product Card Geometry) -->
+        <article class="product-card product-card-skeleton" aria-hidden="true">
+          <div class="product-thumb-wrap skeleton-thumb"><div class="skeleton-shimmer"></div></div>
+          <div class="product-info-body">
+            <div class="skeleton-line skeleton-title-line-1"></div>
+            <div class="skeleton-line skeleton-title-line-2"></div>
+            <div class="product-price-row"><div class="skeleton-line skeleton-price-line"></div></div>
+            <div class="skeleton-btn"></div>
+          </div>
+        </article>
+        <article class="product-card product-card-skeleton" aria-hidden="true">
+          <div class="product-thumb-wrap skeleton-thumb"><div class="skeleton-shimmer"></div></div>
+          <div class="product-info-body">
+            <div class="skeleton-line skeleton-title-line-1"></div>
+            <div class="skeleton-line skeleton-title-line-2"></div>
+            <div class="product-price-row"><div class="skeleton-line skeleton-price-line"></div></div>
+            <div class="skeleton-btn"></div>
+          </div>
+        </article>
+        <article class="product-card product-card-skeleton" aria-hidden="true">
+          <div class="product-thumb-wrap skeleton-thumb"><div class="skeleton-shimmer"></div></div>
+          <div class="product-info-body">
+            <div class="skeleton-line skeleton-title-line-1"></div>
+            <div class="skeleton-line skeleton-title-line-2"></div>
+            <div class="product-price-row"><div class="skeleton-line skeleton-price-line"></div></div>
+            <div class="skeleton-btn"></div>
+          </div>
+        </article>
+        <article class="product-card product-card-skeleton" aria-hidden="true">
+          <div class="product-thumb-wrap skeleton-thumb"><div class="skeleton-shimmer"></div></div>
+          <div class="product-info-body">
+            <div class="skeleton-line skeleton-title-line-1"></div>
+            <div class="skeleton-line skeleton-title-line-2"></div>
+            <div class="product-price-row"><div class="skeleton-line skeleton-price-line"></div></div>
+            <div class="skeleton-btn"></div>
+          </div>
+        </article>
+        <article class="product-card product-card-skeleton" aria-hidden="true">
+          <div class="product-thumb-wrap skeleton-thumb"><div class="skeleton-shimmer"></div></div>
+          <div class="product-info-body">
+            <div class="skeleton-line skeleton-title-line-1"></div>
+            <div class="skeleton-line skeleton-title-line-2"></div>
+            <div class="product-price-row"><div class="skeleton-line skeleton-price-line"></div></div>
+            <div class="skeleton-btn"></div>
+          </div>
+        </article>
+        <article class="product-card product-card-skeleton" aria-hidden="true">
+          <div class="product-thumb-wrap skeleton-thumb"><div class="skeleton-shimmer"></div></div>
+          <div class="product-info-body">
+            <div class="skeleton-line skeleton-title-line-1"></div>
+            <div class="skeleton-line skeleton-title-line-2"></div>
+            <div class="product-price-row"><div class="skeleton-line skeleton-price-line"></div></div>
+            <div class="skeleton-btn"></div>
+          </div>
+        </article>
+        <article class="product-card product-card-skeleton" aria-hidden="true">
+          <div class="product-thumb-wrap skeleton-thumb"><div class="skeleton-shimmer"></div></div>
+          <div class="product-info-body">
+            <div class="skeleton-line skeleton-title-line-1"></div>
+            <div class="skeleton-line skeleton-title-line-2"></div>
+            <div class="product-price-row"><div class="skeleton-line skeleton-price-line"></div></div>
+            <div class="skeleton-btn"></div>
+          </div>
+        </article>
+        <article class="product-card product-card-skeleton" aria-hidden="true">
+          <div class="product-thumb-wrap skeleton-thumb"><div class="skeleton-shimmer"></div></div>
+          <div class="product-info-body">
+            <div class="skeleton-line skeleton-title-line-1"></div>
+            <div class="skeleton-line skeleton-title-line-2"></div>
+            <div class="product-price-row"><div class="skeleton-line skeleton-price-line"></div></div>
+            <div class="skeleton-btn"></div>
+          </div>
+        </article>
       </div>
 
     </div>
@@ -429,6 +521,6 @@
   <div class="toast-notify" id="toastNotify" role="status" aria-live="polite"></div>
 
   <!-- Scripts -->
-  <script type="module" src="script.js?v=fashion_v3"></script>
+  <script type="module" src="script.js?v=fashion_v5"></script>
 </body>
 </html>

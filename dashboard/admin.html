@@ -197,6 +197,104 @@
                 ></textarea>
               </div>
 
+              <!-- Row 4: الأحجام (اختياري) -->
+              <div class="form-field-group full-width-field" id="fieldSizesGroup">
+                <div class="options-toggle-header">
+                  <label class="options-toggle-title">الأحجام (المقاسات)</label>
+                  <div class="toggle-segmented-control" role="radiogroup" aria-label="تحديد توفر الأحجام">
+                    <label class="segmented-opt">
+                      <input type="radio" name="hasSizesToggle" value="no" id="hasSizesNo" checked>
+                      <span>لا يوجد أحجام</span>
+                    </label>
+                    <label class="segmented-opt">
+                      <input type="radio" name="hasSizesToggle" value="yes" id="hasSizesYes">
+                      <span>يوجد أحجام</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Sizes Config Box -->
+                <div class="options-expandable-box" id="sizesConfigBox" hidden>
+                  <div class="chips-editor-container">
+                    <div class="chips-list" id="sizesChipsList">
+                      <!-- Dynamically rendered size chips -->
+                    </div>
+                    <div class="chip-add-inline">
+                      <input type="text" id="newSizeInput" placeholder="أدخل حجماً (مثال: XL, 42)..." maxlength="15" autocomplete="off">
+                      <button type="button" class="btn-sub-action" id="addSizeBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        <span>إضافة حجم</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="quick-preset-bar">
+                    <span class="preset-label">مقترحات سريعة:</span>
+                    <div class="preset-chips" id="sizePresetsList">
+                      <button type="button" class="preset-chip" data-val="XS">XS</button>
+                      <button type="button" class="preset-chip" data-val="S">S</button>
+                      <button type="button" class="preset-chip" data-val="M">M</button>
+                      <button type="button" class="preset-chip" data-val="L">L</button>
+                      <button type="button" class="preset-chip" data-val="XL">XL</button>
+                      <button type="button" class="preset-chip" data-val="XXL">XXL</button>
+                      <button type="button" class="preset-chip" data-val="38">38</button>
+                      <button type="button" class="preset-chip" data-val="39">39</button>
+                      <button type="button" class="preset-chip" data-val="40">40</button>
+                      <button type="button" class="preset-chip" data-val="41">41</button>
+                      <button type="button" class="preset-chip" data-val="42">42</button>
+                      <button type="button" class="preset-chip" data-val="43">43</button>
+                      <button type="button" class="preset-chip" data-val="44">44</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 5: الألوان (اختياري) -->
+              <div class="form-field-group full-width-field" id="fieldColorsGroup">
+                <div class="options-toggle-header">
+                  <label class="options-toggle-title">الألوان</label>
+                  <div class="toggle-segmented-control" role="radiogroup" aria-label="تحديد توفر الألوان">
+                    <label class="segmented-opt">
+                      <input type="radio" name="hasColorsToggle" value="no" id="hasColorsNo" checked>
+                      <span>لا يوجد ألوان</span>
+                    </label>
+                    <label class="segmented-opt">
+                      <input type="radio" name="hasColorsToggle" value="yes" id="hasColorsYes">
+                      <span>يوجد ألوان</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Colors Config Box -->
+                <div class="options-expandable-box" id="colorsConfigBox" hidden>
+                  <div class="colors-list-grid" id="colorsListGrid">
+                    <!-- Dynamically rendered color rows -->
+                  </div>
+
+                  <div class="color-add-bar">
+                    <button type="button" class="btn-sub-action" id="addColorBtn">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      <span>إضافة لون جديد</span>
+                    </button>
+                  </div>
+
+                  <div class="quick-preset-bar">
+                    <span class="preset-label">ألوان شائعة:</span>
+                    <div class="preset-chips" id="colorPresetsList">
+                      <button type="button" class="color-preset-chip" data-name="أسود" data-val="#111111"><span class="swatch-dot" style="background:#111111"></span> أسود</button>
+                      <button type="button" class="color-preset-chip" data-name="أبيض" data-val="#FFFFFF"><span class="swatch-dot" style="background:#FFFFFF; border:1px solid #cbd5e1"></span> أبيض</button>
+                      <button type="button" class="color-preset-chip" data-name="رمادي" data-val="#64748B"><span class="swatch-dot" style="background:#64748B"></span> رمادي</button>
+                      <button type="button" class="color-preset-chip" data-name="كحلي" data-val="#1E3A8A"><span class="swatch-dot" style="background:#1E3A8A"></span> كحلي</button>
+                      <button type="button" class="color-preset-chip" data-name="أزرق" data-val="#2563EB"><span class="swatch-dot" style="background:#2563EB"></span> أزرق</button>
+                      <button type="button" class="color-preset-chip" data-name="أخضر" data-val="#15803D"><span class="swatch-dot" style="background:#15803D"></span> أخضر</button>
+                      <button type="button" class="color-preset-chip" data-name="أحمر" data-val="#DC2626"><span class="swatch-dot" style="background:#DC2626"></span> أحمر</button>
+                      <button type="button" class="color-preset-chip" data-name="بيج" data-val="#E7D8C9"><span class="swatch-dot" style="background:#E7D8C9"></span> بيج</button>
+                      <button type="button" class="color-preset-chip" data-name="بني" data-val="#78350F"><span class="swatch-dot" style="background:#78350F"></span> بني</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
 

@@ -5,7 +5,12 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+import { 
+  getFirestore, 
+  initializeFirestore, 
+  persistentLocalCache, 
+  persistentMultipleTabManager 
+} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
 // --- Firebase Web Configuration ---
 // Note: Standard browser Firebase Web configuration (Public client credentials)
@@ -27,10 +32,24 @@ export const CLOUDINARY_CONFIG = {
   folder: "products"
 };
 
-// --- Initialize Firebase Services ---
+// --- Initialize Firebase Services with Multi-Tab Browser Persistence ---
 export const app = initializeApp(FIREBASE_CONFIG);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+let dbInstance;
+try {
+  dbInstance = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager()
+    })
+  });
+} catch (err) {
+  // Fallback to memory / default cache if already initialized or restricted mode
+  console.info("Firestore persistence initialized or fallback:", err?.message || err);
+  dbInstance = getFirestore(app);
+}
+
+export const db = dbInstance;
 
 // --- Cloudinary Unsigned Image Upload Helper ---
 /**

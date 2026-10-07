@@ -36,7 +36,9 @@ const state = {
   searchQuery: "",
   editingProductId: null,
   deleteProductId: null,
-  formImages: [] // Array of { id, url, file, isUploading, error, isMain }
+  formImages: [], // Array of { id, url, file, isUploading, error, isMain }
+  formSizes: [],  // Array of strings e.g. ["S", "M", "L"]
+  formColors: []  // Array of { name, value }
 };
 
 // --- DOM References ---
@@ -69,6 +71,22 @@ const DOM = {
   productPrice: $("productPrice"),
   productTitle: $("productTitle"),
   productDescription: $("productDescription"),
+
+  // Sizes & Colors Elements
+  hasSizesNo: $("hasSizesNo"),
+  hasSizesYes: $("hasSizesYes"),
+  sizesConfigBox: $("sizesConfigBox"),
+  sizesChipsList: $("sizesChipsList"),
+  newSizeInput: $("newSizeInput"),
+  addSizeBtn: $("addSizeBtn"),
+  sizePresetsList: $("sizePresetsList"),
+
+  hasColorsNo: $("hasColorsNo"),
+  hasColorsYes: $("hasColorsYes"),
+  colorsConfigBox: $("colorsConfigBox"),
+  colorsListGrid: $("colorsListGrid"),
+  addColorBtn: $("addColorBtn"),
+  colorPresetsList: $("colorPresetsList"),
 
   // Add Category Modal (Nested within Product Form workflow)
   addCategoryModal: $("addCategoryModal"),
@@ -195,6 +213,8 @@ const ProductAPI = {
           title: d.title || "",
           price: typeof d.price === "number" ? d.price : Number(d.price) || 0,
           description: d.description || "",
+          sizes: Array.isArray(d.sizes) ? d.sizes : [],
+          colors: Array.isArray(d.colors) ? d.colors : [],
           images: Array.isArray(d.images) ? d.images : [],
           mainImage: d.mainImage || (Array.isArray(d.images) && d.images[0] ? (d.images[0].url || d.images[0]) : ""),
           createdAt: d.createdAt || "",
@@ -222,6 +242,8 @@ const ProductAPI = {
       title: data.title,
       price: data.price,
       description: data.description || "",
+      sizes: Array.isArray(data.sizes) ? data.sizes : [],
+      colors: Array.isArray(data.colors) ? data.colors : [],
       images: Array.isArray(data.images) ? data.images : [],
       mainImage: data.mainImage || "",
       createdAt: now,
@@ -241,6 +263,8 @@ const ProductAPI = {
       title: data.title,
       price: data.price,
       description: data.description || "",
+      sizes: Array.isArray(data.sizes) ? data.sizes : [],
+      colors: Array.isArray(data.colors) ? data.colors : [],
       images: Array.isArray(data.images) ? data.images : [],
       mainImage: data.mainImage || "",
       updatedAt: now
@@ -536,8 +560,12 @@ function resetProductForm() {
   DOM.productForm.reset();
   state.editingProductId = null;
   state.formImages = [];
+  state.formSizes = [];
+  state.formColors = [];
   clearValidationErrors();
   renderFormImages();
+  renderFormSizes();
+  renderFormColors();
 }
 
 function openProductForm(product = null) {
@@ -557,6 +585,34 @@ function openProductForm(product = null) {
     DOM.productPrice.value = product.price !== undefined ? product.price : "";
     DOM.productTitle.value = product.title || "";
     DOM.productDescription.value = product.description || "";
+
+    // Load Sizes
+    if (Array.isArray(product.sizes) && product.sizes.length > 0) {
+      state.formSizes = [...product.sizes];
+      if (DOM.hasSizesYes) DOM.hasSizesYes.checked = true;
+      if (DOM.sizesConfigBox) DOM.sizesConfigBox.hidden = false;
+    } else {
+      state.formSizes = [];
+      if (DOM.hasSizesNo) DOM.hasSizesNo.checked = true;
+      if (DOM.sizesConfigBox) DOM.sizesConfigBox.hidden = true;
+    }
+
+    // Load Colors
+    if (Array.isArray(product.colors) && product.colors.length > 0) {
+      state.formColors = product.colors.map(c => {
+        if (typeof c === "object" && c !== null) {
+          return { name: c.name || "لون", value: c.value || "#111111" };
+        }
+        return { name: String(c), value: String(c).startsWith("#") ? c : "#111111" };
+      });
+      if (DOM.hasColorsYes) DOM.hasColorsYes.checked = true;
+      if (DOM.colorsConfigBox) DOM.colorsConfigBox.hidden = false;
+    } else {
+      state.formColors = [];
+      if (DOM.hasColorsNo) DOM.hasColorsNo.checked = true;
+      if (DOM.colorsConfigBox) DOM.colorsConfigBox.hidden = true;
+    }
+
     state.formImages = (product.images || []).map(img => ({
       id: img.id || ("img_" + Math.random().toString(36).slice(2, 8)),
       url: typeof img === "string" ? img : img.url,
@@ -570,9 +626,17 @@ function openProductForm(product = null) {
     DOM.saveBtnText.textContent = "حفظ المنتج";
     DOM.productCategory.value = "";
     state.formImages = [];
+    state.formSizes = [];
+    state.formColors = [];
+    if (DOM.hasSizesNo) DOM.hasSizesNo.checked = true;
+    if (DOM.sizesConfigBox) DOM.sizesConfigBox.hidden = true;
+    if (DOM.hasColorsNo) DOM.hasColorsNo.checked = true;
+    if (DOM.colorsConfigBox) DOM.colorsConfigBox.hidden = true;
   }
 
   renderFormImages();
+  renderFormSizes();
+  renderFormColors();
   openModal(DOM.productFormModal);
   DOM.productName.focus();
 }
@@ -580,6 +644,73 @@ function openProductForm(product = null) {
 function closeProductForm() {
   closeModal(DOM.productFormModal);
   resetProductForm();
+}
+
+// --- Sizes Management in Admin Form ---
+function renderFormSizes() {
+  if (!DOM.sizesChipsList) return;
+  if (state.formSizes.length === 0) {
+    DOM.sizesChipsList.innerHTML = `<span style="font-size: 0.82rem; color: #94a3b8;">لم تتم إضافة أحجام بعد. أضف حجماً أو اختر من المقترحات أدناه.</span>`;
+    return;
+  }
+
+  DOM.sizesChipsList.innerHTML = state.formSizes.map((sz, idx) => `
+    <span class="size-chip-admin">
+      <span>${escapeHTML(sz)}</span>
+      <button type="button" class="chip-remove-btn" data-action="remove-size" data-index="${idx}" title="حذف المقاس" aria-label="حذف">✕</button>
+    </span>
+  `).join("");
+}
+
+function addSizeToForm(sizeText) {
+  const val = (sizeText || "").trim();
+  if (!val) return;
+  if (!state.formSizes.includes(val)) {
+    state.formSizes.push(val);
+    renderFormSizes();
+  }
+}
+
+function removeSizeFromForm(index) {
+  state.formSizes.splice(index, 1);
+  renderFormSizes();
+}
+
+// --- Colors Management in Admin Form ---
+function renderFormColors() {
+  if (!DOM.colorsListGrid) return;
+  if (state.formColors.length === 0) {
+    DOM.colorsListGrid.innerHTML = `<div style="font-size: 0.82rem; color: #94a3b8; padding: 6px 0;">لم تتم إضافة ألوان بعد. اضغط "إضافة لون جديد" أو اختر من الألوان الشائعة أدناه.</div>`;
+    return;
+  }
+
+  DOM.colorsListGrid.innerHTML = state.formColors.map((col, idx) => `
+    <div class="color-row-card" data-color-index="${idx}">
+      <div class="color-swatch-picker-wrap" title="انقر لاختيار درجة اللون" style="background-color: ${escapeHTML(col.value)};">
+        <input type="color" class="color-picker-input" data-index="${idx}" value="${escapeHTML(col.value)}" aria-label="اختيار درجة اللون">
+      </div>
+      <input type="text" class="color-name-input" data-index="${idx}" value="${escapeHTML(col.name)}" placeholder="اسم اللون (مثال: أسود، أزرق كحلي)..." maxlength="30" autocomplete="off">
+      <button type="button" class="color-del-btn" data-action="remove-color" data-index="${idx}" title="حذف هذا اللون" aria-label="حذف اللون">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+      </button>
+    </div>
+  `).join("");
+}
+
+function addColorToForm(name = "", value = "#111111") {
+  state.formColors.push({
+    name: name || "",
+    value: value || "#111111"
+  });
+  renderFormColors();
+}
+
+function removeColorFromForm(index) {
+  state.formColors.splice(index, 1);
+  renderFormColors();
 }
 
 function validateProductForm() {
@@ -634,6 +765,23 @@ function collectProductFormData() {
   const selectedCat = state.categories.find(c => c.id === selectedCatId);
   const selectedCatName = selectedCat ? selectedCat.name : "";
 
+  // Check Sizes Toggle
+  const hasSizes = document.querySelector('input[name="hasSizesToggle"]:checked')?.value === "yes";
+  const cleanSizes = hasSizes 
+    ? state.formSizes.map(s => String(s).trim()).filter(Boolean)
+    : [];
+
+  // Check Colors Toggle
+  const hasColors = document.querySelector('input[name="hasColorsToggle"]:checked')?.value === "yes";
+  const cleanColors = hasColors
+    ? state.formColors
+        .filter(c => c && c.name && c.name.trim())
+        .map(c => ({
+          name: c.name.trim(),
+          value: (c.value || "#111111").trim()
+        }))
+    : [];
+
   return {
     name: DOM.productName.value.trim(),
     categoryId: selectedCatId, // SOURCE OF TRUTH
@@ -642,6 +790,8 @@ function collectProductFormData() {
     title: DOM.productTitle.value.trim(),
     price: parseInt(DOM.productPrice.value.trim(), 10),
     description: DOM.productDescription.value.trim(),
+    sizes: cleanSizes,
+    colors: cleanColors,
     images: cleanImages,
     mainImage: mainImage
   };
@@ -1034,6 +1184,111 @@ function initEventListeners() {
         return;
       }
       closeAllModals();
+    }
+  });
+
+  // --- Sizes Options Event Handlers ---
+  document.querySelectorAll('input[name="hasSizesToggle"]').forEach(radio => {
+    radio.addEventListener("change", (e) => {
+      const isYes = e.target.value === "yes";
+      if (DOM.sizesConfigBox) DOM.sizesConfigBox.hidden = !isYes;
+      if (isYes && state.formSizes.length === 0) {
+        DOM.newSizeInput?.focus();
+      }
+    });
+  });
+
+  DOM.addSizeBtn?.addEventListener("click", () => {
+    if (DOM.newSizeInput && DOM.newSizeInput.value.trim()) {
+      addSizeToForm(DOM.newSizeInput.value);
+      DOM.newSizeInput.value = "";
+      DOM.newSizeInput.focus();
+    }
+  });
+
+  DOM.newSizeInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (DOM.newSizeInput.value.trim()) {
+        addSizeToForm(DOM.newSizeInput.value);
+        DOM.newSizeInput.value = "";
+      }
+    }
+  });
+
+  DOM.sizesChipsList?.addEventListener("click", (e) => {
+    const btn = e.target.closest('[data-action="remove-size"]');
+    if (btn) {
+      const idx = parseInt(btn.dataset.index, 10);
+      removeSizeFromForm(idx);
+    }
+  });
+
+  DOM.sizePresetsList?.addEventListener("click", (e) => {
+    const chip = e.target.closest(".preset-chip");
+    if (chip && chip.dataset.val) {
+      addSizeToForm(chip.dataset.val);
+    }
+  });
+
+  // --- Colors Options Event Handlers ---
+  document.querySelectorAll('input[name="hasColorsToggle"]').forEach(radio => {
+    radio.addEventListener("change", (e) => {
+      const isYes = e.target.value === "yes";
+      if (DOM.colorsConfigBox) DOM.colorsConfigBox.hidden = !isYes;
+      if (isYes && state.formColors.length === 0) {
+        addColorToForm("أسود", "#111111");
+      }
+    });
+  });
+
+  DOM.addColorBtn?.addEventListener("click", () => {
+    addColorToForm("", "#111111");
+    setTimeout(() => {
+      const inputs = DOM.colorsListGrid?.querySelectorAll(".color-name-input");
+      if (inputs && inputs.length > 0) inputs[inputs.length - 1].focus();
+    }, 50);
+  });
+
+  DOM.colorsListGrid?.addEventListener("input", (e) => {
+    // Color picker swatch change
+    if (e.target.classList.contains("color-picker-input")) {
+      const idx = parseInt(e.target.dataset.index, 10);
+      const val = e.target.value;
+      if (state.formColors[idx]) {
+        state.formColors[idx].value = val;
+        const swatchWrap = e.target.closest(".color-swatch-picker-wrap");
+        if (swatchWrap) swatchWrap.style.backgroundColor = val;
+      }
+      return;
+    }
+
+    // Color name text change
+    if (e.target.classList.contains("color-name-input")) {
+      const idx = parseInt(e.target.dataset.index, 10);
+      if (state.formColors[idx]) {
+        state.formColors[idx].name = e.target.value;
+      }
+    }
+  });
+
+  DOM.colorsListGrid?.addEventListener("click", (e) => {
+    const delBtn = e.target.closest('[data-action="remove-color"]');
+    if (delBtn) {
+      const idx = parseInt(delBtn.dataset.index, 10);
+      removeColorFromForm(idx);
+    }
+  });
+
+  DOM.colorPresetsList?.addEventListener("click", (e) => {
+    const chip = e.target.closest(".color-preset-chip");
+    if (chip && chip.dataset.name && chip.dataset.val) {
+      const name = chip.dataset.name;
+      const val = chip.dataset.val;
+      // If already added, don't duplicate
+      if (!state.formColors.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+        addColorToForm(name, val);
+      }
     }
   });
 }
