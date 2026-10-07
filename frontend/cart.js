@@ -710,6 +710,9 @@ export function initCartUI() {
   // Expose to window for inline HTML onclick attributes
   window.hadjajCart = {
     cart,
+    getCart: () => cart,
+    getCartQty,
+    getCartTotal,
     addToCart,
     changeCartQty,
     removeFromCart,

@@ -264,6 +264,76 @@
   .sm-card .summary{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px;text-align:right;margin-bottom:18px}
   @media(max-width:520px){.two-col{grid-template-columns:1fr}}
 
+  /* Card Cart Button */
+  .card-action-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
+  .card-cart-btn{
+    display:inline-flex;align-items:center;gap:6px;
+    background:#fff;color:var(--ink);border:1.5px solid var(--line);
+    padding:7px 12px;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;
+    cursor:pointer;transition:all .2s ease;white-space:nowrap;
+  }
+  .card-cart-btn:hover{background:var(--ink);color:#fff;border-color:var(--ink);transform:translateY(-1px)}
+  .card-cart-btn svg{flex-shrink:0;transition:transform .2s}
+  .card-cart-btn:hover svg{transform:scale(1.1)}
+  .card-cart-btn.added{background:#27ae60 !important;color:#fff !important;border-color:#27ae60 !important}
+
+  /* Quick Options Modal & Bottom Sheet */
+  .qo-backdrop{position:fixed;inset:0;background:rgba(20,16,12,0.6);z-index:98;opacity:0;pointer-events:none;transition:opacity .25s ease;backdrop-filter:blur(3px)}
+  .qo-backdrop.show{opacity:1;pointer-events:auto}
+  .qo-modal{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-48%) scale(0.96);
+    width:92%;max-width:440px;background:#fff;border-radius:var(--radius);
+    z-index:99;opacity:0;pointer-events:none;transition:all .25s ease;
+    box-shadow:0 24px 50px rgba(0,0,0,0.22);border:1px solid var(--line);text-align:right;
+  }
+  .qo-modal.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+  .qo-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line)}
+  .qo-prod-info{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+  .qo-prod-info img{width:48px;height:52px;object-fit:cover;border-radius:8px}
+  .qo-prod-info h4{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+  .qo-price{font-size:14px;font-weight:800;color:var(--gold-dark);margin-top:2px}
+  .qo-close{background:none;border:none;font-size:26px;line-height:1;cursor:pointer;color:var(--muted);padding:0 4px}
+  .qo-close:hover{color:var(--ink)}
+  .qo-body{padding:18px 20px}
+  .qo-section{margin-bottom:16px}
+  .qo-label{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:8px}
+  .qo-label .req{color:#c0392b;font-style:normal}
+  .qo-selected-text{color:var(--gold-dark);font-weight:800}
+  .qo-sizes{display:flex;flex-wrap:wrap;gap:8px}
+  .qo-size-chip{
+    min-width:44px;height:38px;padding:0 12px;display:inline-flex;
+    align-items:center;justify-content:center;border:1.5px solid var(--line);
+    border-radius:8px;font-weight:700;font-size:13px;color:var(--ink);
+    cursor:pointer;background:#fff;transition:all .2s;font-family:inherit;
+  }
+  .qo-size-chip:hover{border-color:var(--gold)}
+  .qo-size-chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .qo-colors{display:flex;flex-wrap:wrap;gap:10px}
+  .qo-color-dot{
+    width:32px;height:32px;border-radius:50%;border:2px solid #fff;
+    box-shadow:0 0 0 1.5px var(--line);cursor:pointer;transition:transform .15s;
+    background:none;padding:0;
+  }
+  .qo-color-dot:hover{transform:scale(1.15)}
+  .qo-color-dot.active{box-shadow:0 0 0 2.5px var(--gold);transform:scale(1.12)}
+  .qo-qty-row{display:flex;align-items:center;justify-content:space-between;margin:18px 0;padding:12px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--line)}
+  .qo-subtotal{font-size:14px;color:var(--ink)}
+  .qo-subtotal b{color:var(--gold-dark);font-size:15px}
+  .qo-err{color:#c0392b;font-size:12px;margin-top:6px;display:none}
+  .qo-banner-err{background:#fde8e8;color:#c0392b;padding:9px 12px;border-radius:7px;font-size:12px;font-weight:700;margin-bottom:14px;display:none;text-align:center}
+
+  /* Mobile Bottom Sheet */
+  @media(max-width:600px){
+    .qo-modal{
+      top:auto;bottom:0;left:0;right:0;width:100%;max-width:100%;
+      border-radius:20px 20px 0 0;transform:translateY(100%);
+      max-height:85vh;overflow-y:auto;
+    }
+    .qo-modal.show{transform:translateY(0)}
+    .card-cart-btn span{display:none}
+    .card-cart-btn{padding:7px 9px}
+  }
+
 </style>
 </head>
 <body>
@@ -477,6 +547,57 @@
   </div>
 </div>
 
+<!-- Quick Options Modal (Size & Color Selector for Card 🛒) -->
+<div class="qo-backdrop" id="qoBackdrop"></div>
+<div class="qo-modal" id="qoModal" role="dialog" aria-labelledby="qoTitle">
+  <div class="qo-head">
+    <div class="qo-prod-info">
+      <img id="qoImg" src="img/p1.png" alt="" onerror="this.src='img/p1.png'">
+      <div>
+        <h4 id="qoTitle">اسم المنتج</h4>
+        <div class="qo-price"><span id="qoPrice">0</span> <span>دج</span></div>
+      </div>
+    </div>
+    <button type="button" class="qo-close" id="qoClose" aria-label="إغلاق">&times;</button>
+  </div>
+  
+  <div class="qo-body">
+    <!-- Sizes Section -->
+    <div class="qo-section" id="qoSizesSection">
+      <label class="qo-label">المقاس: <span class="qo-selected-text" id="qoSelectedSizeText"></span> <em class="req">*</em></label>
+      <div class="qo-sizes" id="qoSizesList"></div>
+      <div class="qo-err" id="qoSizeErr">يرجى اختيار المقاس أولاً</div>
+    </div>
+
+    <!-- Colors Section -->
+    <div class="qo-section" id="qoColorsSection">
+      <label class="qo-label">اللون: <span class="qo-selected-text" id="qoSelectedColorText"></span> <em class="req">*</em></label>
+      <div class="qo-colors" id="qoColorsList"></div>
+      <div class="qo-err" id="qoColorErr">يرجى اختيار اللون أولاً</div>
+    </div>
+
+    <!-- Quantity Section -->
+    <div class="qo-qty-row">
+      <label class="qo-label" style="margin-bottom:0">الكمية:</label>
+      <div class="ci-qty" style="direction:ltr">
+        <button type="button" id="qoQtyPlus" aria-label="زيادة">+</button>
+        <span id="qoQtyVal">1</span>
+        <button type="button" id="qoQtyMinus" aria-label="إنقاص">−</button>
+      </div>
+      <div class="qo-subtotal">المجموع: <b id="qoSubtotalVal">0 دج</b></div>
+    </div>
+
+    <!-- Error Banner -->
+    <div class="qo-banner-err" id="qoBannerErr">يرجى اختيار المقاس واللون أولاً</div>
+
+    <!-- Submit Button -->
+    <button type="button" class="btn-order" id="qoSubmitBtn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-left:6px;vertical-align:middle"><path d="M6 7h12l1 13H5L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+      <span>أضف إلى السلة</span>
+    </button>
+  </div>
+</div>
+
 <script type="module">
 import { db } from "./firebase-config.js";
 import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
@@ -565,8 +686,14 @@ function render(){
       </div>
       <div class="card-info">
         <h3>${esc(p.name)}</h3>
-        <div class="price">${p.price} <span>دج</span>${p.oldPrice?`<span class="price-old">${p.oldPrice} دج</span>`:''}</div>
         <div class="dots">${colorsHTML}</div>
+        <div class="card-action-row">
+          <div class="price">${p.price} <span>دج</span>${p.oldPrice?`<span class="price-old">${p.oldPrice} دج</span>`:''}</div>
+          <button type="button" class="card-cart-btn" aria-label="أضف إلى السلة" onclick="event.preventDefault();event.stopPropagation();window.handleCardQuickAdd('${esc(p.id)}', this)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 7h12l1 13H5L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+            <span class="btn-text">أضف للسلة</span>
+          </button>
+        </div>
       </div>
     </a>`;
   }).join('');
@@ -626,6 +753,251 @@ sInput.addEventListener('input', () => {
 
 // Expose favorites function
 window.toggleFav = toggleFav;
+
+// --- Quick Add To Cart Flow (Card 🛒 button) ---
+let currentQoProduct = null;
+let currentQoBtn = null;
+let qoSelectedSize = null;
+let qoSelectedColor = null;
+let qoSelectedColorHex = '#1d1a16';
+let qoQty = 1;
+
+function closeQuickOptions() {
+  document.getElementById('qoModal')?.classList.remove('show');
+  document.getElementById('qoBackdrop')?.classList.remove('show');
+  document.body.classList.remove('modal-open');
+  if (currentQoBtn) currentQoBtn._busy = false;
+  currentQoProduct = null;
+  currentQoBtn = null;
+}
+
+function updateQoSubtotal() {
+  if (!currentQoProduct) return;
+  const subtotalVal = document.getElementById('qoSubtotalVal');
+  if (subtotalVal) {
+    subtotalVal.textContent = (currentQoProduct.price * qoQty).toLocaleString('ar-DZ') + ' دج';
+  }
+}
+
+function openQuickOptions(p, btn) {
+  currentQoProduct = p;
+  currentQoBtn = btn;
+  qoSelectedSize = null;
+  qoSelectedColor = null;
+  qoSelectedColorHex = '#1d1a16';
+  qoQty = 1;
+
+  const modal = document.getElementById('qoModal');
+  const backdrop = document.getElementById('qoBackdrop');
+  const imgEl = document.getElementById('qoImg');
+  const titleEl = document.getElementById('qoTitle');
+  const priceEl = document.getElementById('qoPrice');
+  const sizesSec = document.getElementById('qoSizesSection');
+  const sizesList = document.getElementById('qoSizesList');
+  const sizeText = document.getElementById('qoSelectedSizeText');
+  const colorsSec = document.getElementById('qoColorsSection');
+  const colorsList = document.getElementById('qoColorsList');
+  const colorText = document.getElementById('qoSelectedColorText');
+  const qtyVal = document.getElementById('qoQtyVal');
+  const bannerErr = document.getElementById('qoBannerErr');
+  const sizeErr = document.getElementById('qoSizeErr');
+  const colorErr = document.getElementById('qoColorErr');
+
+  if (bannerErr) bannerErr.style.display = 'none';
+  if (sizeErr) sizeErr.style.display = 'none';
+  if (colorErr) colorErr.style.display = 'none';
+
+  if (imgEl) imgEl.src = p.img || p.mainImage || 'img/p1.png';
+  if (titleEl) titleEl.textContent = p.name;
+  if (priceEl) priceEl.textContent = p.price.toLocaleString('ar-DZ');
+  if (qtyVal) qtyVal.textContent = 1;
+  if (sizeText) sizeText.textContent = '';
+  if (colorText) colorText.textContent = '';
+  updateQoSubtotal();
+
+  // Render sizes
+  const sizes = Array.isArray(p.sizes) ? p.sizes : [];
+  if (sizes.length > 0 && sizesSec && sizesList) {
+    sizesSec.style.display = 'block';
+    sizesList.innerHTML = sizes.map(s => `
+      <button type="button" class="qo-size-chip" data-size="${esc(s)}">${esc(s)}</button>
+    `).join('');
+
+    sizesList.querySelectorAll('.qo-size-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        sizesList.querySelectorAll('.qo-size-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        qoSelectedSize = chip.dataset.size;
+        if (sizeText) sizeText.textContent = `(${qoSelectedSize})`;
+        if (sizeErr) sizeErr.style.display = 'none';
+        if (bannerErr) bannerErr.style.display = 'none';
+      });
+    });
+  } else if (sizesSec) {
+    sizesSec.style.display = 'none';
+    qoSelectedSize = 'افتراضي';
+  }
+
+  // Render colors
+  const colors = Array.isArray(p.colors) ? p.colors : [];
+  if (colors.length > 0 && colorsSec && colorsList) {
+    colorsSec.style.display = 'block';
+    colorsList.innerHTML = colors.map((c, idx) => {
+      const val = typeof c === 'object' ? c.value : c;
+      const nm = typeof c === 'object' ? c.name : (p.colorNames && p.colorNames[idx] ? p.colorNames[idx] : 'لون');
+      return `<button type="button" class="qo-color-dot" style="background:${val}" title="${esc(nm)}" data-name="${esc(nm)}" data-val="${val}"></button>`;
+    }).join('');
+
+    colorsList.querySelectorAll('.qo-color-dot').forEach(dot => {
+      dot.addEventListener('click', () => {
+        colorsList.querySelectorAll('.qo-color-dot').forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+        qoSelectedColor = dot.dataset.name;
+        qoSelectedColorHex = dot.dataset.val;
+        if (colorText) colorText.textContent = `(${qoSelectedColor})`;
+        if (colorErr) colorErr.style.display = 'none';
+        if (bannerErr) bannerErr.style.display = 'none';
+      });
+    });
+  } else if (colorsSec) {
+    colorsSec.style.display = 'none';
+    qoSelectedColor = 'افتراضي';
+  }
+
+  modal?.classList.add('show');
+  backdrop?.classList.add('show');
+  document.body.classList.add('modal-open');
+}
+
+// Bind modal controls
+document.getElementById('qoClose')?.addEventListener('click', closeQuickOptions);
+document.getElementById('qoBackdrop')?.addEventListener('click', closeQuickOptions);
+
+document.getElementById('qoQtyPlus')?.addEventListener('click', () => {
+  qoQty += 1;
+  const qtyEl = document.getElementById('qoQtyVal');
+  if (qtyEl) qtyEl.textContent = qoQty;
+  updateQoSubtotal();
+});
+
+document.getElementById('qoQtyMinus')?.addEventListener('click', () => {
+  if (qoQty > 1) {
+    qoQty -= 1;
+    const qtyEl = document.getElementById('qoQtyVal');
+    if (qtyEl) qtyEl.textContent = qoQty;
+    updateQoSubtotal();
+  }
+});
+
+document.getElementById('qoSubmitBtn')?.addEventListener('click', () => {
+  if (!currentQoProduct) return;
+
+  const hasSizes = Array.isArray(currentQoProduct.sizes) && currentQoProduct.sizes.length > 0;
+  const hasColors = Array.isArray(currentQoProduct.colors) && currentQoProduct.colors.length > 0;
+
+  const needSize = hasSizes && !qoSelectedSize;
+  const needColor = hasColors && !qoSelectedColor;
+
+  const sizeErr = document.getElementById('qoSizeErr');
+  const colorErr = document.getElementById('qoColorErr');
+  const bannerErr = document.getElementById('qoBannerErr');
+
+  if (needSize && needColor) {
+    if (sizeErr) sizeErr.style.display = 'block';
+    if (colorErr) colorErr.style.display = 'block';
+    if (bannerErr) {
+      bannerErr.textContent = 'يرجى اختيار المقاس واللون أولاً';
+      bannerErr.style.display = 'block';
+    }
+    return;
+  }
+  if (needSize) {
+    if (sizeErr) sizeErr.style.display = 'block';
+    if (bannerErr) {
+      bannerErr.textContent = 'يرجى اختيار المقاس أولاً';
+      bannerErr.style.display = 'block';
+    }
+    return;
+  }
+  if (needColor) {
+    if (colorErr) colorErr.style.display = 'block';
+    if (bannerErr) {
+      bannerErr.textContent = 'يرجى اختيار اللون أولاً';
+      bannerErr.style.display = 'block';
+    }
+    return;
+  }
+
+  // Add to cart with all required options
+  window.hadjajCart.addToCart({
+    productId: currentQoProduct.id,
+    name: currentQoProduct.name,
+    price: currentQoProduct.price,
+    image: currentQoProduct.img || currentQoProduct.mainImage || 'img/p1.png',
+    quantity: qoQty,
+    size: qoSelectedSize || 'افتراضي',
+    color: qoSelectedColor || 'افتراضي',
+    colorHex: qoSelectedColorHex || '#1d1a16',
+    availableSizes: currentQoProduct.sizes,
+    availableColors: currentQoProduct.colors
+  });
+
+  // Visual feedback on card button if provided
+  if (currentQoBtn) {
+    currentQoBtn.classList.add('added');
+    const txt = currentQoBtn.querySelector('.btn-text');
+    if (txt) txt.textContent = '✓ تمت الإضافة';
+    setTimeout(() => {
+      currentQoBtn.classList.remove('added');
+      if (txt) txt.textContent = 'أضف للسلة';
+      currentQoBtn._busy = false;
+    }, 1400);
+  }
+
+  closeQuickOptions();
+});
+
+// Card 🛒 click handler
+window.handleCardQuickAdd = function(productId, btn) {
+  if (btn._busy) return;
+  btn._busy = true;
+
+  const p = products.find(item => String(item.id) === String(productId));
+  if (!p) {
+    btn._busy = false;
+    return;
+  }
+
+  const hasSizes = Array.isArray(p.sizes) && p.sizes.length > 0;
+  const hasColors = Array.isArray(p.colors) && p.colors.length > 0;
+
+  // Case A: Product has NO sizes and NO colors -> add directly
+  if (!hasSizes && !hasColors) {
+    window.hadjajCart.addToCart({
+      productId: p.id,
+      name: p.name,
+      price: p.price,
+      image: p.img || p.mainImage || 'img/p1.png',
+      quantity: 1,
+      size: 'افتراضي',
+      color: 'افتراضي',
+      colorHex: '#1d1a16'
+    });
+
+    btn.classList.add('added');
+    const txt = btn.querySelector('.btn-text');
+    if (txt) txt.textContent = '✓ تمت الإضافة';
+    setTimeout(() => {
+      btn.classList.remove('added');
+      if (txt) txt.textContent = 'أضف للسلة';
+      btn._busy = false;
+    }, 1400);
+    return;
+  }
+
+  // Case B: Product HAS sizes or colors -> open Quick Options Modal
+  openQuickOptions(p, btn);
+};
 
 // Initialize Unified Shopping Cart & Checkout
 initCartUI();
