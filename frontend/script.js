@@ -1443,15 +1443,6 @@ function setupEventListeners() {
     }
   }, { passive: true });
 
-  // Newsletter Form Handler in Footer
-  const newsletterForm = $("newsletterForm");
-  if (newsletterForm) {
-    newsletterForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      showToast("🎉 شكراً لاشتراكك في النشرة البريدية الحصرية لـ ClothStore!");
-      newsletterForm.reset();
-    });
-  }
 
   // Global Escape Key Handler
   document.addEventListener("keydown", (e) => {
