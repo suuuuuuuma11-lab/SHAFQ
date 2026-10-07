@@ -175,6 +175,7 @@
   .breadcrumb a:hover{color:var(--gold)}
   .btn-cart{background:#fff;border:1.5px solid var(--ink);color:var(--ink);font-family:inherit;font-size:14px;font-weight:800;padding:12px 22px;border-radius:8px;cursor:pointer;transition:.2s}
   .btn-cart:hover{background:var(--ink);color:#fff}
+  .btn-cart.added{background:#1e7e34 !important;color:#fff !important;border-color:#1e7e34 !important}
 
   /* In-cart options (size & color selector) */
   .ci-options{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0;font-size:12px}
@@ -275,7 +276,7 @@
           <button type="button" onclick="changeQty(-1)">−</button>
         </div>
         <div class="total">المجموع: <b id="total">0 دج</b></div>
-        <button type="button" class="btn-cart" id="addCartBtn">أضف إلى الحقيبة</button>
+        <button type="button" class="btn-cart" id="addCartBtn">🛒 إضافة إلى السلة</button>
       </div>
 
       <hr class="divider">
@@ -807,7 +808,9 @@ if (favBtn) {
 const addCartBtn = document.getElementById('addCartBtn');
 if (addCartBtn) {
   addCartBtn.addEventListener('click', () => {
-    if (!currentProduct) return;
+    if (addCartBtn._busy || !currentProduct) return;
+    addCartBtn._busy = true;
+
     const colorsList = Array.isArray(currentProduct.colors) && currentProduct.colors.length > 0 ? currentProduct.colors : [{ name: "افتراضي", value: "#1d1a16" }];
     const chosenColor = colorsList[selectedColorIndex] || colorsList[0];
     const colorName = typeof chosenColor === 'object' ? chosenColor.name : (currentProduct.colorNames && currentProduct.colorNames[selectedColorIndex] ? currentProduct.colorNames[selectedColorIndex] : 'لون');
@@ -823,8 +826,17 @@ if (addCartBtn) {
       color: colorName,
       colorHex: colorHex,
       availableSizes: Array.isArray(currentProduct.sizes) && currentProduct.sizes.length ? currentProduct.sizes : defaultSizes,
-      availableColors: colorsList
+      availableColors: colorsList,
+      openDrawer: false
     });
+
+    addCartBtn.classList.add('added');
+    addCartBtn.textContent = '✓ تمت الإضافة إلى السلة';
+    setTimeout(() => {
+      addCartBtn.classList.remove('added');
+      addCartBtn.textContent = '🛒 إضافة إلى السلة';
+      addCartBtn._busy = false;
+    }, 1500);
   });
 }
 

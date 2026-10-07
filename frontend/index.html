@@ -101,9 +101,10 @@
     max-width:1280px;margin:26px auto 60px;padding:0 24px;
     display:grid;grid-template-columns:repeat(4,1fr);gap:22px;
   }
-  .card{background:var(--card);border-radius:var(--radius);overflow:hidden;position:relative;cursor:pointer;
-    transition:transform .3s, box-shadow .3s;border:1px solid var(--line)}
+  .card{background:var(--card);border-radius:var(--radius);overflow:hidden;position:relative;
+    transition:transform .3s, box-shadow .3s;border:1px solid var(--line);display:flex;flex-direction:column}
   .card:hover{transform:translateY(-4px);box-shadow:0 14px 34px rgba(29,26,22,.10)}
+  .card-link{display:block;color:inherit;text-decoration:none;flex:1}
   .card-img{position:relative;aspect-ratio:3/3.4;overflow:hidden;background:#efeae1}
   .card-img img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
   .card:hover .card-img img{transform:scale(1.05)}
@@ -120,11 +121,11 @@
     background:#1d1a16;color:#fff;font-size:11px;font-weight:700;
     padding:5px 12px;border-radius:20px;
   }
-  .card-info{padding:14px 16px 18px;text-align:right}
-  .card-info h3{font-size:15px;font-weight:700;margin-bottom:4px}
-  .price{font-size:14px;font-weight:800;color:var(--ink)}
+  .card-info-top{padding:14px 16px 4px;text-align:right}
+  .card-info-top h3{font-size:15px;font-weight:700;margin-bottom:6px;line-height:1.4}
+  .price{font-size:15px;font-weight:800;color:var(--ink);margin-top:8px}
   .price span{font-weight:400;font-size:12px;color:var(--muted)}
-  .dots{display:flex;gap:6px;margin-top:10px}
+  .dots{display:flex;gap:6px;margin-top:8px}
   .dot{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.12);cursor:pointer;transition:transform .15s}
   .dot:hover{transform:scale(1.25)}
   .dot.active{outline:2px solid var(--gold);outline-offset:2px}
@@ -264,18 +265,20 @@
   .sm-card .summary{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px;text-align:right;margin-bottom:18px}
   @media(max-width:520px){.two-col{grid-template-columns:1fr}}
 
-  /* Card Cart Button */
-  .card-action-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
+  /* Prominent Luxury Card Cart Button */
+  .card-btn-wrap{padding:10px 16px 16px;margin-top:auto}
   .card-cart-btn{
-    display:inline-flex;align-items:center;gap:6px;
-    background:#fff;color:var(--ink);border:1.5px solid var(--line);
-    padding:7px 12px;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;
-    cursor:pointer;transition:all .2s ease;white-space:nowrap;
+    width:100%;min-height:44px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    background:var(--ink);color:#fff;border:1.5px solid var(--ink);
+    padding:11px 16px;border-radius:9px;font-family:inherit;font-size:13.5px;font-weight:800;
+    cursor:pointer;transition:all .22s ease;
+    box-shadow:0 2px 6px rgba(29,26,22,.08);
   }
-  .card-cart-btn:hover{background:var(--ink);color:#fff;border-color:var(--ink);transform:translateY(-1px)}
+  .card-cart-btn:hover{background:#2e2923;border-color:#2e2923;transform:translateY(-1px);box-shadow:0 6px 14px rgba(29,26,22,.15)}
   .card-cart-btn svg{flex-shrink:0;transition:transform .2s}
   .card-cart-btn:hover svg{transform:scale(1.1)}
-  .card-cart-btn.added{background:#27ae60 !important;color:#fff !important;border-color:#27ae60 !important}
+  .card-cart-btn.added{background:#1e7e34 !important;color:#fff !important;border-color:#1e7e34 !important;box-shadow:0 4px 12px rgba(30,126,52,.25) !important}
 
   /* Quick Options Modal & Bottom Sheet */
   .qo-backdrop{position:fixed;inset:0;background:rgba(20,16,12,0.6);z-index:98;opacity:0;pointer-events:none;transition:opacity .25s ease;backdrop-filter:blur(3px)}
@@ -322,7 +325,7 @@
   .qo-err{color:#c0392b;font-size:12px;margin-top:6px;display:none}
   .qo-banner-err{background:#fde8e8;color:#c0392b;padding:9px 12px;border-radius:7px;font-size:12px;font-weight:700;margin-bottom:14px;display:none;text-align:center}
 
-  /* Mobile Bottom Sheet */
+  /* Mobile Bottom Sheet & Card Button */
   @media(max-width:600px){
     .qo-modal{
       top:auto;bottom:0;left:0;right:0;width:100%;max-width:100%;
@@ -330,8 +333,8 @@
       max-height:85vh;overflow-y:auto;
     }
     .qo-modal.show{transform:translateY(0)}
-    .card-cart-btn span{display:none}
-    .card-cart-btn{padding:7px 9px}
+    .card-btn-wrap{padding:8px 12px 14px}
+    .card-cart-btn{min-height:42px;font-size:13px;padding:9px 12px}
   }
 
 </style>
@@ -601,7 +604,7 @@
 <script type="module">
 import { db } from "./firebase-config.js";
 import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
-import { initCartUI, toast as cartToast } from "./cart.js";
+import { initCartUI, toast as cartToast, resolveColorHex } from "./cart.js";
 
 // Safe HTML escape (including quotes and single quotes)
 const esc = s => String(s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -670,32 +673,36 @@ function render(){
     const isLiked = favs.has(p.id);
 
     const colorsHTML = (p.colors || []).map((c, j) => {
-      const hex = typeof c === 'object' ? c.value : c;
+      const val = typeof c === 'object' ? (c.value || c.hex) : c;
       const nm = typeof c === 'object' ? c.name : (p.colorNames && p.colorNames[j] ? p.colorNames[j] : '');
-      return `<span class="dot ${j===0?'active':''}" style="background:${hex}" title="${esc(nm)}" onclick="event.preventDefault();this.parentNode.querySelectorAll('.dot').forEach(d=>d.classList.remove('active'));this.classList.add('active')"></span>`;
+      const hex = resolveColorHex(val || nm);
+      const isLight = hex.toLowerCase() === '#ffffff' || hex.toLowerCase() === '#fff' || hex === '#fdfcfa';
+      return `<span class="dot ${j===0?'active':''}" style="background:${hex};${isLight?'border:1.5px solid #d1cbbf':''}" title="${esc(nm || hex)}"></span>`;
     }).join('');
 
     return `
-    <a class="card" href="product.html?id=${encodeURIComponent(p.id)}">
-      <div class="card-img">
-        ${badgeHTML}
-        <button class="fav ${isLiked?'liked':''}" aria-label="مفضلة" onclick="event.preventDefault();toggleFav('${p.id}',this)">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7.5-4.7-9.5-9.2C.9 8.4 3 4.5 6.8 4.5c2 0 3.6 1.1 4.6 2.7h1.2c1-1.6 2.6-2.7 4.6-2.7 3.8 0 5.9 3.9 4.3 7.3C19.5 16.3 12 21 12 21z"/></svg>
-        </button>
-        <img src="${esc(mainImg)}" alt="${esc(p.name)}" loading="lazy" onerror="this.src='img/p1.png'">
-      </div>
-      <div class="card-info">
-        <h3>${esc(p.name)}</h3>
-        <div class="dots">${colorsHTML}</div>
-        <div class="card-action-row">
-          <div class="price">${p.price} <span>دج</span>${p.oldPrice?`<span class="price-old">${p.oldPrice} دج</span>`:''}</div>
-          <button type="button" class="card-cart-btn" aria-label="أضف إلى السلة" onclick="event.preventDefault();event.stopPropagation();window.handleCardQuickAdd('${esc(p.id)}', this)">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 7h12l1 13H5L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
-            <span class="btn-text">أضف للسلة</span>
+    <div class="card">
+      <a class="card-link" href="product.html?id=${encodeURIComponent(p.id)}" aria-label="${esc(p.name)}">
+        <div class="card-img">
+          ${badgeHTML}
+          <button type="button" class="fav ${isLiked?'liked':''}" aria-label="مفضلة" onclick="event.preventDefault();event.stopPropagation();toggleFav('${p.id}',this)">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7.5-4.7-9.5-9.2C.9 8.4 3 4.5 6.8 4.5c2 0 3.6 1.1 4.6 2.7h1.2c1-1.6 2.6-2.7 4.6-2.7 3.8 0 5.9 3.9 4.3 7.3C19.5 16.3 12 21 12 21z"/></svg>
           </button>
+          <img src="${esc(mainImg)}" alt="${esc(p.name)}" loading="lazy" onerror="this.src='img/p1.png'">
         </div>
+        <div class="card-info-top">
+          <h3>${esc(p.name)}</h3>
+          <div class="dots">${colorsHTML}</div>
+          <div class="price">${p.price} <span>دج</span>${p.oldPrice?`<span class="price-old">${p.oldPrice} دج</span>`:''}</div>
+        </div>
+      </a>
+      <div class="card-btn-wrap">
+        <button type="button" class="card-cart-btn" aria-label="إضافة إلى السلة" onclick="window.handleCardQuickAdd('${esc(p.id)}', this)">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 7h12l1 13H5L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+          <span class="btn-text">إضافة إلى السلة</span>
+        </button>
       </div>
-    </a>`;
+    </div>`;
   }).join('');
 }
 
@@ -843,9 +850,11 @@ function openQuickOptions(p, btn) {
   if (colors.length > 0 && colorsSec && colorsList) {
     colorsSec.style.display = 'block';
     colorsList.innerHTML = colors.map((c, idx) => {
-      const val = typeof c === 'object' ? c.value : c;
+      const val = typeof c === 'object' ? (c.value || c.hex) : c;
       const nm = typeof c === 'object' ? c.name : (p.colorNames && p.colorNames[idx] ? p.colorNames[idx] : 'لون');
-      return `<button type="button" class="qo-color-dot" style="background:${val}" title="${esc(nm)}" data-name="${esc(nm)}" data-val="${val}"></button>`;
+      const hex = resolveColorHex(val || nm);
+      const isLight = hex.toLowerCase() === '#ffffff' || hex.toLowerCase() === '#fff';
+      return `<button type="button" class="qo-color-dot" style="background:${hex};${isLight?'border:2px solid #ccc':''}" title="${esc(nm)}" data-name="${esc(nm)}" data-val="${hex}"></button>`;
     }).join('');
 
     colorsList.querySelectorAll('.qo-color-dot').forEach(dot => {
@@ -889,8 +898,9 @@ document.getElementById('qoQtyMinus')?.addEventListener('click', () => {
   }
 });
 
+let isQoSubmitting = false;
 document.getElementById('qoSubmitBtn')?.addEventListener('click', () => {
-  if (!currentQoProduct) return;
+  if (isQoSubmitting || !currentQoProduct) return;
 
   const hasSizes = Array.isArray(currentQoProduct.sizes) && currentQoProduct.sizes.length > 0;
   const hasColors = Array.isArray(currentQoProduct.colors) && currentQoProduct.colors.length > 0;
@@ -928,7 +938,11 @@ document.getElementById('qoSubmitBtn')?.addEventListener('click', () => {
     return;
   }
 
-  // Add to cart with all required options
+  isQoSubmitting = true;
+  const submitBtn = document.getElementById('qoSubmitBtn');
+  if (submitBtn) submitBtn.disabled = true;
+
+  // Add to cart with all required options (do not force drawer open over the page)
   window.hadjajCart.addToCart({
     productId: currentQoProduct.id,
     name: currentQoProduct.name,
@@ -939,22 +953,27 @@ document.getElementById('qoSubmitBtn')?.addEventListener('click', () => {
     color: qoSelectedColor || 'افتراضي',
     colorHex: qoSelectedColorHex || '#1d1a16',
     availableSizes: currentQoProduct.sizes,
-    availableColors: currentQoProduct.colors
+    availableColors: currentQoProduct.colors,
+    openDrawer: false
   });
 
   // Visual feedback on card button if provided
   if (currentQoBtn) {
     currentQoBtn.classList.add('added');
     const txt = currentQoBtn.querySelector('.btn-text');
-    if (txt) txt.textContent = '✓ تمت الإضافة';
+    if (txt) txt.textContent = '✓ تمت الإضافة إلى السلة';
     setTimeout(() => {
       currentQoBtn.classList.remove('added');
-      if (txt) txt.textContent = 'أضف للسلة';
+      if (txt) txt.textContent = 'إضافة إلى السلة';
       currentQoBtn._busy = false;
-    }, 1400);
+    }, 1500);
   }
 
   closeQuickOptions();
+  setTimeout(() => {
+    isQoSubmitting = false;
+    if (submitBtn) submitBtn.disabled = false;
+  }, 250);
 });
 
 // Card 🛒 click handler
@@ -981,17 +1000,18 @@ window.handleCardQuickAdd = function(productId, btn) {
       quantity: 1,
       size: 'افتراضي',
       color: 'افتراضي',
-      colorHex: '#1d1a16'
+      colorHex: '#1d1a16',
+      openDrawer: false
     });
 
     btn.classList.add('added');
     const txt = btn.querySelector('.btn-text');
-    if (txt) txt.textContent = '✓ تمت الإضافة';
+    if (txt) txt.textContent = '✓ تمت الإضافة إلى السلة';
     setTimeout(() => {
       btn.classList.remove('added');
-      if (txt) txt.textContent = 'أضف للسلة';
+      if (txt) txt.textContent = 'إضافة إلى السلة';
       btn._busy = false;
-    }, 1400);
+    }, 1500);
     return;
   }
 

@@ -33,6 +33,32 @@ export const ALGERIA_WILAYAS = [
 
 export const DEFAULT_SIZES = ["S", "M", "L", "XL", "XXL"];
 
+// Arabic Color Name to Hex Code Resolver
+export const ARABIC_COLOR_MAP = {
+  "أسود": "#18181b", "اسود": "#18181b", "black": "#18181b",
+  "أبيض": "#ffffff", "ابيض": "#ffffff", "white": "#ffffff",
+  "رمادي": "#71717a", "رمادي فاتح": "#d4d4d8", "رمادي غامق": "#3f3f46", "gray": "#71717a", "grey": "#71717a",
+  "كحلي": "#1e293b", "ازرق داكن": "#1e3a8a", "أزرق داكن": "#1e3a8a", "navy": "#1e293b",
+  "أزرق": "#2563eb", "ازرق": "#2563eb", "أزرق فاتح": "#38bdf8", "blue": "#2563eb",
+  "بني": "#78350f", "بني فاتح": "#92400e", "brown": "#78350f",
+  "بيج": "#e6d5b8", "beige": "#e6d5b8",
+  "خردلي": "#d97706", "mustard": "#d97706",
+  "أخضر": "#16a34a", "اخضر": "#16a34a", "زيتي": "#4d5b36", "green": "#16a34a", "olive": "#4d5b36",
+  "أحمر": "#dc2626", "احمر": "#dc2626", "red": "#dc2626",
+  "عنابي": "#881337", "بورغندي": "#701a31", "maroon": "#881337", "burgundy": "#701a31",
+  "وردي": "#f472b6", "pink": "#f472b6",
+  "بنفسجي": "#7c3aed", "purple": "#7c3aed",
+  "برتقالي": "#ea580c", "orange": "#ea580c",
+  "أصفر": "#eab308", "اصفر": "#eab308", "yellow": "#eab308"
+};
+
+export function resolveColorHex(val) {
+  if (!val) return "#1d1a16";
+  const str = String(val).trim();
+  if (str.startsWith("#") || str.startsWith("rgb") || str.startsWith("hsl")) return str;
+  return ARABIC_COLOR_MAP[str] || ARABIC_COLOR_MAP[str.toLowerCase()] || "#1d1a16";
+}
+
 // Safe HTML Escape
 export const esc = s => String(s || "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
 
@@ -132,7 +158,8 @@ export function addToCart({
   color = "افتراضي",
   colorHex = "#1d1a16",
   availableSizes = DEFAULT_SIZES,
-  availableColors = []
+  availableColors = [],
+  openDrawer = false
 }) {
   const pid = String(productId || "");
   const cleanPrice = typeof price === "number" ? price : Number(price) || 0;
@@ -167,8 +194,10 @@ export function addToCart({
 
   saveCart();
   renderCartDrawer();
-  openCartDrawer();
-  toast(`تمت إضافة "${name}" إلى الحقيبة`);
+  if (openDrawer) {
+    openCartDrawer();
+  }
+  toast(`تمت إضافة "${name}" إلى السلة`);
 }
 
 /**
@@ -709,7 +738,7 @@ export function initCartUI() {
 
   // Expose to window for inline HTML onclick attributes
   window.hadjajCart = {
-    cart,
+    get cart() { return cart; },
     getCart: () => cart,
     getCartQty,
     getCartTotal,
@@ -722,7 +751,9 @@ export function initCartUI() {
     openCartDrawer,
     closeCartDrawer,
     openCheckoutModal,
-    closeCheckoutModal
+    closeCheckoutModal,
+    resolveColorHex,
+    ARABIC_COLOR_MAP
   };
 
   // Keep legacy global names pointing to unified module
