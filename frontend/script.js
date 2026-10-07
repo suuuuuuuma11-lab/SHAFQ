@@ -8,14 +8,14 @@
    - Instant Live Search & Favorites Management
    ========================================================================== */
 
-import { db } from "../dashboard/firebase-config.js";
-import { 
-  collection, 
-  getDocs, 
+import { db } from "./firebase-config.js";
+import {
+  collection,
+  getDocs,
   getDocsFromCache,
   getDocsFromServer,
-  query, 
-  orderBy 
+  query,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
 // --- Telegram Configuration ---
@@ -41,6 +41,154 @@ const HERO_SLIDES = [
   "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1600&q=85",
   "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1600&q=85",
   "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1600&q=85"
+];
+
+// --- Premium Reference Products (shown when Firestore is empty or offline) ---
+const REFERENCE_PRODUCTS = [
+  {
+    id: "ref_white_classic",
+    name: "قميص كلاسيك فاخر",
+    category: "القمصان",
+    categoryId: "shirts",
+    price: 299,
+    priceDisplay: "299 ر.س",
+    badge: "الأكثر مبيعًا",
+    description: "قميص أبيض كلاسيكي مصنوع من أجود أقطان مصر، قصة أنيقة تناسب جميع المناسبات بتفاصيل دقيقة ومريحة.",
+    images: ["images/shirt_white.jpg"],
+    colors: [
+      { name: "أبيض", value: "#F5F5F0" },
+      { name: "كريمي", value: "#EDE8DC" },
+      { name: "رمادي فاتح", value: "#C8C8C4" }
+    ],
+    sizes: ["S", "M", "L", "XL", "XXL"],
+    specs: ["قطن مصري 100% فاخر", "قصة كلاسيكية مريحة", "أزرار صدف طبيعية"]
+  },
+  {
+    id: "ref_black_classic",
+    name: "قميص كلاسيك أسود",
+    category: "القمصان",
+    categoryId: "shirts",
+    price: 320,
+    priceDisplay: "320 ر.س",
+    badge: null,
+    description: "قميص أسود راقٍ بخامة فاخرة ومقاومة للتجعد، مثالي للمناسبات الرسمية والسهرات الخاصة.",
+    images: ["images/shirt_black.jpg"],
+    colors: [
+      { name: "أسود", value: "#1A1A1A" },
+      { name: "كحلي", value: "#1C2B4A" },
+      { name: "رمادي داكن", value: "#3D3D3D" }
+    ],
+    sizes: ["S", "M", "L", "XL", "XXL"],
+    specs: ["خامة تقاوم التجعد", "قصة نحيلة أنيقة", "مناسب للمناسبات الرسمية"]
+  },
+  {
+    id: "ref_light_blue",
+    name: "قميص بأزرار أنيقة",
+    category: "القمصان",
+    categoryId: "shirts",
+    price: 320,
+    priceDisplay: "320 ر.س",
+    badge: "جديد",
+    description: "قميص أزرق سماوي بأزرار صدف طبيعية وقصة عصرية، يمنحك إطلالة راقية في أي مناسبة.",
+    images: ["images/shirt_blue.jpg"],
+    colors: [
+      { name: "أزرق فاتح", value: "#A8C8E8" },
+      { name: "أبيض", value: "#F5F5F0" },
+      { name: "رمادي", value: "#B0B0B0" }
+    ],
+    sizes: ["S", "M", "L", "XL"],
+    specs: ["أزرار صدف طبيعية", "قطن أكسفورد فاخر", "قصة سليم فيت"]
+  },
+  {
+    id: "ref_ivory",
+    name: "قميص كلاسيك بيج",
+    category: "القمصان",
+    categoryId: "shirts",
+    price: 340,
+    priceDisplay: "340 ر.س",
+    badge: null,
+    description: "قميص كريمي دافئ بخامة لينن فاخرة مزوّجة بالقطن، مثالي للأجواء المفتوحة والمناسبات الراقية النهارية.",
+    images: ["images/shirt_olive.jpg"],
+    colors: [
+      { name: "زيتي", value: "#5A6A4A" },
+      { name: "كاكي", value: "#8B7D5A" },
+      { name: "بيج", value: "#C4B49A" }
+    ],
+    sizes: ["M", "L", "XL", "XXL"],
+    specs: ["لينن وقطن مدمج", "تهوية ممتازة", "مقاوم للتجعد"]
+  },
+  {
+    id: "ref_olive",
+    name: "قميص كتان فاخر",
+    category: "القمصان",
+    categoryId: "shirts",
+    price: 360,
+    priceDisplay: "360 ر.س",
+    badge: null,
+    description: "قميص كتان زيتي داكن بقصة كلاسيكية مريحة، يجمع بين الأناقة والعملية في تصميم واحد متميز.",
+    images: ["images/shirt_linen.jpg"],
+    colors: [
+      { name: "زيتي داكن", value: "#3D4A30" },
+      { name: "بني خاكي", value: "#7A6A4A" },
+      { name: "رمادي", value: "#6A6A68" }
+    ],
+    sizes: ["S", "M", "L", "XL", "XXL"],
+    specs: ["كتان بلجيكي أصيل", "خياطة يدوية دقيقة", "مريح على الجلد"]
+  },
+  {
+    id: "ref_striped",
+    name: "قميص مخطط أنيق",
+    category: "القمصان",
+    categoryId: "shirts",
+    price: 290,
+    priceDisplay: "290 ر.س",
+    badge: null,
+    description: "قميص مخطط بخطوط رفيعة كلاسيكية على خلفية بيضاء، قصة سليم تناسب الإطلالة المهنية والكاجوال.",
+    images: ["images/shirt_striped.jpg"],
+    colors: [
+      { name: "أبيض/أزرق", value: "#A8C8E8" },
+      { name: "أبيض/رمادي", value: "#C0C0C0" }
+    ],
+    sizes: ["S", "M", "L", "XL"],
+    specs: ["قطن بيما أمريكي", "خطوط ملونة دقيقة", "سهل العناية والغسيل"]
+  },
+  {
+    id: "ref_navy",
+    name: "قميص كحلي فاخر",
+    category: "القمصان",
+    categoryId: "shirts",
+    price: 340,
+    priceDisplay: "340 ر.س",
+    badge: null,
+    description: "قميص كحلي عميق بتصميم كلاسيكي أنيق، خامة استثنائية وقصة مثالية تجعله الاختيار الأول للمناسبات.",
+    images: ["images/shirt_navy.jpg"],
+    colors: [
+      { name: "كحلي", value: "#1C2B4A" },
+      { name: "أسود", value: "#1A1A1A" },
+      { name: "رمادي داكن", value: "#3D3D3D" }
+    ],
+    sizes: ["M", "L", "XL", "XXL"],
+    specs: ["قطن مصري ممشوط", "قصة كلاسيكية رجالية", "خياطة ثلاثية التثبيت"]
+  },
+  {
+    id: "ref_cotton",
+    name: "قميص قطن فاخر",
+    category: "القمصان",
+    categoryId: "shirts",
+    price: 320,
+    priceDisplay: "320 ر.س",
+    badge: null,
+    description: "قميص قطن فاخر بلمسة ناعمة ومريحة، مثالي للإطلالة اليومية الراقية سواء في العمل أو الخروجات.",
+    images: ["images/shirt_cotton.jpg"],
+    colors: [
+      { name: "أبيض", value: "#F5F5F0" },
+      { name: "كريمي", value: "#EDE8DC" },
+      { name: "رمادي", value: "#B0B0B0" },
+      { name: "أزرق", value: "#A8C8E8" }
+    ],
+    sizes: ["S", "M", "L", "XL", "XXL"],
+    specs: ["قطن سوبر 120 فاخر", "ناعم وقابل للتنفس", "مقاوم للبكتيريا"]
+  }
 ];
 
 // --- DOM References ---
@@ -127,7 +275,7 @@ function loadCartFromStorage() {
 function saveCartToStorage() {
   try {
     localStorage.setItem("clothstore_cart_items", JSON.stringify(state.cart));
-  } catch (_) {}
+  } catch (_) { }
 }
 
 function loadFavoritesFromStorage() {
@@ -142,7 +290,7 @@ function loadFavoritesFromStorage() {
 function saveFavoritesToStorage() {
   try {
     localStorage.setItem("clothstore_favorites", JSON.stringify([...state.favorites]));
-  } catch (_) {}
+  } catch (_) { }
 }
 
 // --- Formatting Helpers ---
@@ -261,18 +409,18 @@ function parseProductsSnapshot(snapshot) {
     // Parse optional product colors (empty array if none)
     const parsedColors = Array.isArray(p.colors)
       ? p.colors.map(col => {
-          if (typeof col === "string") {
-            const trimmed = col.trim();
-            return { name: trimmed, value: trimmed.startsWith("#") ? trimmed : "#111111" };
-          }
-          if (col && typeof col === "object") {
-            return {
-              name: String(col.name || "لون").trim(),
-              value: String(col.value || "#111111").trim()
-            };
-          }
-          return null;
-        }).filter(Boolean)
+        if (typeof col === "string") {
+          const trimmed = col.trim();
+          return { name: trimmed, value: trimmed.startsWith("#") ? trimmed : "#111111" };
+        }
+        if (col && typeof col === "object") {
+          return {
+            name: String(col.name || "لون").trim(),
+            value: String(col.value || "#111111").trim()
+          };
+        }
+        return null;
+      }).filter(Boolean)
       : [];
 
     liveList.push({
@@ -420,15 +568,21 @@ async function loadStoreData() {
     renderCategoriesUI();
 
     if (state.products.length === 0) {
-      renderEmptyState("لا توجد منتجات حاليًا");
+      state.products = [...REFERENCE_PRODUCTS];
+      syncCategoriesFromProducts();
+      renderCategoriesUI();
+      renderProducts();
     } else {
       renderProducts();
     }
   } catch (serverErr) {
     console.warn("Firestore server fetch failed:", serverErr?.message || serverErr);
-    // If cache already provided products, keep them visible gracefully
+    // If cache or server didn't provide products, display premium reference collection
     if (state.products.length === 0) {
-      renderErrorState();
+      state.products = [...REFERENCE_PRODUCTS];
+      syncCategoriesFromProducts();
+      renderCategoriesUI();
+      renderProducts();
     }
   }
 }
@@ -473,8 +627,8 @@ function renderCategoriesUI() {
       DOM.categoriesGrid.innerHTML = `<div class="categories-empty-state"><p class="store-state-desc">لا توجد أقسام متوفرة حالياً</p></div>`;
     } else {
       DOM.categoriesGrid.innerHTML = state.categories.map(cat => {
-        const matchingProduct = state.products.find(p => 
-          (p.categoryId && p.categoryId === cat.id) || 
+        const matchingProduct = state.products.find(p =>
+          (p.categoryId && p.categoryId === cat.id) ||
           (p.category && (p.category.trim().toLowerCase() === cat.name.trim().toLowerCase() || p.category === cat.slug))
         );
         const imgUrl = cat.image || (matchingProduct && matchingProduct.images && matchingProduct.images[0]) || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=500&q=80";
@@ -566,8 +720,8 @@ function renderProducts() {
     if (p.category && p.category.trim().toLowerCase() === state.activeFilter.trim().toLowerCase()) return true;
 
     // Check matching category object from state.categories
-    const targetCat = state.categories.find(c => 
-      c.id === state.activeFilter || 
+    const targetCat = state.categories.find(c =>
+      c.id === state.activeFilter ||
       c.name.trim().toLowerCase() === state.activeFilter.trim().toLowerCase() ||
       c.slug === state.activeFilter
     );
@@ -584,7 +738,9 @@ function renderProducts() {
   });
 
   if (state.products.length === 0) {
-    renderEmptyState("لا توجد منتجات حاليًا");
+    // Use premium reference products as fallback when Firestore is empty
+    state.products = [...REFERENCE_PRODUCTS];
+    renderProducts();
     return;
   }
 
@@ -615,6 +771,21 @@ function renderProducts() {
     const isAboveFold = index < 4;
     const loadingAttr = isAboveFold ? 'loading="eager" fetchpriority="high"' : 'loading="lazy" decoding="async"';
 
+    // Badge: only 'الأكثر مبيعًا' or 'جديد' — sparse and meaningful
+    const badgeHtml = p.badge
+      ? `<span class="product-badge product-badge--${p.badge === 'جديد' ? 'new' : 'popular'}">${escapeHtml(p.badge)}</span>`
+      : "";
+
+    // Color swatches (max 4 visible)
+    const swatchesHtml = Array.isArray(p.colors) && p.colors.length > 0
+      ? `<div class="product-swatches-row">${p.colors.slice(0, 4).map(col => {
+        const val = typeof col === 'object' ? (col.value || '#888') : col;
+        const nm = typeof col === 'object' ? (col.name || '') : col;
+        return `<span class="swatch-dot" style="background-color:${escapeHtml(val)};" title="${escapeHtml(nm)}"></span>`;
+      }).join("")
+      }</div>`
+      : "";
+
     return `
       <article class="product-card" data-product-id="${escapeHtml(p.id)}">
         <!-- Thumbnail Wrap -->
@@ -624,14 +795,14 @@ function renderProducts() {
             src="${escapeHtml(optimizedThumb)}" 
             alt="${escapeHtml(p.name)}" 
             width="400" 
-            height="500" 
+            height="533" 
             ${loadingAttr}
-            onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80';"
+            onerror="this.onerror=null;this.src='images/shirt_white.jpg';"
           >
-          
+          ${badgeHtml}
           <!-- Favorite Heart Button -->
           <button class="btn-favorite ${isFav ? "active" : ""}" type="button" data-action="toggle-fav" data-id="${escapeHtml(p.id)}" title="${isFav ? "إزالة من المفضلة" : "إضافة للمفضلة"}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="17" height="17">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
             </svg>
           </button>
@@ -639,21 +810,12 @@ function renderProducts() {
 
         <!-- Body -->
         <div class="product-info-body">
-          <span class="product-cat-label">${escapeHtml(getCategoryLabel(p.category))}</span>
+          <span class="product-cat-label">${escapeHtml(p.category || getCategoryLabel(p.categoryId))}</span>
           <h3 class="product-name" data-action="view-details" data-id="${escapeHtml(p.id)}">${escapeHtml(p.name)}</h3>
-          
           <div class="product-price-row">
             <span class="product-price">${escapeHtml(p.priceDisplay || formatPrice(p.price))}</span>
           </div>
-
-          <button class="btn-add-cart" type="button" data-action="quick-add-cart" data-id="${escapeHtml(p.id)}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-              <line x1="3" y1="6" x2="21" y2="6"/>
-              <path d="M16 10a4 4 0 0 1-8 0"/>
-            </svg>
-            <span>إضافة للسلة</span>
-          </button>
+          ${swatchesHtml}
         </div>
       </article>
     `;
@@ -685,15 +847,15 @@ function openProductDetails(product) {
       </div>
       <div class="color-swatches" id="colorSwatchesWrap">
         ${product.colors.map(col => {
-          const name = typeof col === 'object' ? (col.name || 'لون') : col;
-          const val = typeof col === 'object' ? (col.value || '#111111') : (col.startsWith('#') ? col : '#111111');
-          return `
+    const name = typeof col === 'object' ? (col.name || 'لون') : col;
+    const val = typeof col === 'object' ? (col.value || '#111111') : (col.startsWith('#') ? col : '#111111');
+    return `
             <button class="color-swatch-chip" type="button" data-color-name="${escapeHtml(name)}" data-color-val="${escapeHtml(val)}" title="${escapeHtml(name)}">
               <span class="color-swatch-dot" style="background-color: ${escapeHtml(val)};"></span>
               <span class="color-name-text">${escapeHtml(name)}</span>
             </button>
           `;
-        }).join("")}
+  }).join("")}
       </div>
       <span class="option-validation-msg" id="colorValidationMsg" style="display: none;">يرجى اختيار اللون</span>
     </div>
@@ -952,12 +1114,12 @@ function openCheckoutModal(singleProduct = null) {
       <strong>عدد المنتجات:</strong> ${checkoutItems.reduce((s, i) => s + i.quantity, 0)} قطع
       <div style="font-size: 0.8rem; color: var(--color-text-sub); margin-top: 4px; display: flex; flex-direction: column; gap: 3px;">
         ${checkoutItems.map(i => {
-          const opts = [];
-          if (i.size) opts.push(`المقاس: ${escapeHtml(i.size)}`);
-          if (i.color) opts.push(`اللون: ${escapeHtml(i.color.name || i.color)}`);
-          const optStr = opts.length > 0 ? ` (${opts.join(' | ')})` : '';
-          return `<span>• ${escapeHtml(i.name)}${optStr} × ${i.quantity}</span>`;
-        }).join("")}
+    const opts = [];
+    if (i.size) opts.push(`المقاس: ${escapeHtml(i.size)}`);
+    if (i.color) opts.push(`اللون: ${escapeHtml(i.color.name || i.color)}`);
+    const optStr = opts.length > 0 ? ` (${opts.join(' | ')})` : '';
+    return `<span>• ${escapeHtml(i.name)}${optStr} × ${i.quantity}</span>`;
+  }).join("")}
       </div>
     </div>
     <div>
@@ -1034,7 +1196,7 @@ async function sendOrderToTelegram(formData) {
     try {
       const errJson = await response.json();
       errorMsg = errJson.description;
-    } catch (_) {}
+    } catch (_) { }
     throw new Error(errorMsg || "تعذر إرسال الطلب حالياً.");
   }
 }

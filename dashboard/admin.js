@@ -1,1313 +1,1238 @@
 /* ==========================================================================
-   ClothStore — Admin Dashboard Logic
-   Firebase Firestore + Cloudinary Unsigned Uploads + Firebase Authentication
-   Clean, Modular & Production-Ready Vanilla JavaScript
+   ALNOOR SHIRTS — Admin Dashboard Logic
+   Pure Vanilla JavaScript with LocalStorage Persistence,
+   Live Previews, Cloudinary Upload Support & Frontend Code Exporter
    ========================================================================== */
 
-import { auth, db, uploadImageToCloudinary } from "./firebase-config.js";
-import { 
-  onAuthStateChanged, 
-  signOut 
-} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  orderBy 
-} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+import { auth, uploadImageToCloudinary } from "./firebase-config.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 
-// --- Configuration ---
-const CONFIG = {
-  ITEMS_PER_PAGE: 5,
-  MAX_IMAGE_SIZE: 5 * 1024 * 1024,
-  ACCEPTED_TYPES: ["image/jpeg", "image/jpg", "image/png", "image/webp"],
-  TOAST_DURATION: 3000
-};
+// --- Storage Keys & Utilities ---
+const LS_P = "alnoor_admin_products";
+const LS_C = "alnoor_admin_cats";
 
-// --- Application State ---
-const state = {
-  products: [],
-  categories: [],
-  currentPage: 1,
-  searchQuery: "",
-  editingProductId: null,
-  deleteProductId: null,
-  formImages: [], // Array of { id, url, file, isUploading, error, isMain }
-  formSizes: [],  // Array of strings e.g. ["S", "M", "L"]
-  formColors: []  // Array of { name, value }
-};
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
-// --- DOM References ---
+const esc = (s) =>
+  String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
 const $ = (id) => document.getElementById(id);
 
-const DOM = {
-  // Action bar & Search
-  searchInput: $("searchInput"),
-  searchClear: $("searchClear"),
-  openAddModalBtn: $("openAddModalBtn"),
-
-  // Products & Pagination
-  productsContainer: $("productsContainer"),
-  paginationContainer: $("paginationContainer"),
-
-  // Product Form Modal
-  productFormModal: $("productFormModal"),
-  formModalTitle: $("formModalTitle"),
-  closeFormModalBtn: $("closeFormModalBtn"),
-  cancelFormBtn: $("cancelFormBtn"),
-  productForm: $("productForm"),
-  saveProductBtn: $("saveProductBtn"),
-  saveBtnText: $("saveBtnText"),
-  saveBtnLoader: $("saveBtnLoader"),
-
-  // Form Fields
-  productName: $("productName"),
-  productCategory: $("productCategory"),
-  openAddCategoryModalBtn: $("openAddCategoryModalBtn"),
-  productPrice: $("productPrice"),
-  productTitle: $("productTitle"),
-  productDescription: $("productDescription"),
-
-  // Sizes & Colors Elements
-  hasSizesNo: $("hasSizesNo"),
-  hasSizesYes: $("hasSizesYes"),
-  sizesConfigBox: $("sizesConfigBox"),
-  sizesChipsList: $("sizesChipsList"),
-  newSizeInput: $("newSizeInput"),
-  addSizeBtn: $("addSizeBtn"),
-  sizePresetsList: $("sizePresetsList"),
-
-  hasColorsNo: $("hasColorsNo"),
-  hasColorsYes: $("hasColorsYes"),
-  colorsConfigBox: $("colorsConfigBox"),
-  colorsListGrid: $("colorsListGrid"),
-  addColorBtn: $("addColorBtn"),
-  colorPresetsList: $("colorPresetsList"),
-
-  // Add Category Modal (Nested within Product Form workflow)
-  addCategoryModal: $("addCategoryModal"),
-  closeCategoryModalBtn: $("closeCategoryModalBtn"),
-  cancelCategoryModalBtn: $("cancelCategoryModalBtn"),
-  categoryForm: $("categoryForm"),
-  newCategoryName: $("newCategoryName"),
-  newCategoryNameError: $("newCategoryNameError"),
-  saveCategoryBtn: $("saveCategoryBtn"),
-  saveCategoryBtnText: $("saveCategoryBtnText"),
-  saveCategoryBtnLoader: $("saveCategoryBtnLoader"),
-
-  // Dropzone & Thumbnails
-  dropzone: $("dropzone"),
-  imageInput: $("imageInput"),
-  imagesGrid: $("imagesGrid"),
-  addThumbBtn: $("addThumbBtn"),
-
-  // Delete Modal
-  deleteModal: $("deleteModal"),
-  deleteProductName: $("deleteProductName"),
-  closeDeleteModalBtn: $("closeDeleteModalBtn"),
-  cancelDeleteBtn: $("cancelDeleteBtn"),
-  confirmDeleteBtn: $("confirmDeleteBtn"),
-  deleteBtnText: $("deleteBtnText"),
-  deleteBtnLoader: $("deleteBtnLoader"),
-
-  // Lightbox & Toast
-  imageLightbox: $("imageLightbox"),
-  lightboxImage: $("lightboxImage"),
-  closeLightbox: $("closeLightbox"),
-  toastContainer: $("toastContainer"),
-
-  // Header & Auth
-  adminUserEmail: $("adminUserEmail"),
-  logoutBtn: $("logoutBtn")
-};
-
-// --- Helpers ---
-function generateSlug(text) {
-  return text
-    .trim()
-    .toLowerCase()
-    .replace(/[\s\-_]+/g, "-")
-    .replace(/[^\p{L}\p{N}\-]+/gu, "")
-    .replace(/^-+|-+$/g, "") || ("cat-" + Date.now().toString(36));
-}
-
-// --- Category API Layer (Firestore /categories) ---
-const CategoryAPI = {
-  async getAll() {
-    try {
-      const colRef = collection(db, "categories");
-      const q = query(colRef, orderBy("createdAt", "desc"));
-      const snapshot = await getDocs(q);
-      const list = [];
-      snapshot.forEach((docSnap) => {
-        const d = docSnap.data();
-        list.push({
-          id: docSnap.id,
-          name: d.name || "",
-          slug: d.slug || "",
-          image: d.image || "",
-          createdAt: d.createdAt || "",
-          updatedAt: d.updatedAt || ""
-        });
-      });
-      return list;
-    } catch (e) {
-      console.warn("Falling back to unordered categories query:", e);
-      try {
-        const colRef = collection(db, "categories");
-        const snapshot = await getDocs(colRef);
-        const list = [];
-        snapshot.forEach((docSnap) => {
-          const d = docSnap.data();
-          list.push({
-            id: docSnap.id,
-            name: d.name || "",
-            slug: d.slug || "",
-            image: d.image || "",
-            createdAt: d.createdAt || "",
-            updatedAt: d.updatedAt || ""
-          });
-        });
-        return list;
-      } catch (err) {
-        console.error("Firestore categories getAll error:", err);
-        return [];
-      }
-    }
+// --- Default Demo Data (Matches Storefront 100%) ---
+const DEMO_CATS = [
+  {
+    id: "c1",
+    name: "كلاسيك",
+    msg: "الأناقة الخالدة بلمسة عصرية تليق بك في كل مناسبة",
+    banner: { type: "color", c1: "#1d1a16", c2: "#b99a6b", img: "" },
+    desc: "",
+    active: true
   },
-
-  async create(name) {
-    const colRef = collection(db, "categories");
-    const now = new Date().toISOString();
-    const slug = generateSlug(name);
-    const catData = {
-      name: name.trim(),
-      slug: slug,
-      createdAt: now,
-      updatedAt: now
-    };
-    const docRef = await addDoc(colRef, catData);
-    return { id: docRef.id, ...catData };
-  }
-};
-
-// --- Product API Layer (Firestore /products) ---
-const ProductAPI = {
-  async getAll() {
-    try {
-      const colRef = collection(db, "products");
-      const q = query(colRef, orderBy("createdAt", "desc"));
-      const snapshot = await getDocs(q);
-      const list = [];
-      snapshot.forEach((docSnap) => {
-        const d = docSnap.data();
-        list.push({
-          id: docSnap.id,
-          name: d.name || "",
-          categoryId: d.categoryId || d.category || "",
-          category: d.category || "",
-          title: d.title || "",
-          price: typeof d.price === "number" ? d.price : Number(d.price) || 0,
-          description: d.description || "",
-          sizes: Array.isArray(d.sizes) ? d.sizes : [],
-          colors: Array.isArray(d.colors) ? d.colors : [],
-          images: Array.isArray(d.images) ? d.images : [],
-          mainImage: d.mainImage || (Array.isArray(d.images) && d.images[0] ? (d.images[0].url || d.images[0]) : ""),
-          createdAt: d.createdAt || "",
-          updatedAt: d.updatedAt || ""
-        });
-      });
-      return list;
-    } catch (e) {
-      console.error("Firestore getAll error:", e);
-      throw e;
-    }
+  {
+    id: "c2",
+    name: "كاجوال",
+    msg: "راحة يومية بأسلوب شبابي جريء",
+    banner: { type: "color", c1: "#31405f", c2: "#1f2a44", img: "" },
+    desc: "",
+    active: true
   },
+  {
+    id: "c3",
+    name: "فاخر",
+    msg: "خامات نادرة وقصّات استثنائية لإطلالة لا تُنسى",
+    banner: { type: "color", c1: "#3f4030", c2: "#b99a6b", img: "" },
+    desc: "",
+    active: true
+  }
+];
 
-  getById(id) {
-    return state.products.find((p) => String(p.id) === String(id)) || null;
+const DEMO_PRODUCTS = [
+  {
+    id: "p1",
+    name: "قميص كلاسيك فاخر",
+    price: 299,
+    oldPrice: 380,
+    img: "img/p1.png",
+    badge: "الأكثر مبيعاً",
+    colors: ["#f5f2ea", "#dcd5c8", "#b99a6b"],
+    colorNames: ["أبيض عاجي", "بيج فاتح", "ذهبي"],
+    sizes: ["S", "M", "L", "XL"],
+    stock: 25,
+    status: "active",
+    desc: "قميص قطني 100% بقصّة عصرية وخياطة متقنة.",
+    categoryId: "c1"
   },
-
-  async create(data) {
-    const colRef = collection(db, "products");
-    const now = new Date().toISOString();
-    const docData = {
-      name: data.name,
-      categoryId: data.categoryId, // SOURCE OF TRUTH
-      category: data.categoryName || data.category || "",
-      title: data.title,
-      price: data.price,
-      description: data.description || "",
-      sizes: Array.isArray(data.sizes) ? data.sizes : [],
-      colors: Array.isArray(data.colors) ? data.colors : [],
-      images: Array.isArray(data.images) ? data.images : [],
-      mainImage: data.mainImage || "",
-      createdAt: now,
-      updatedAt: now
-    };
-    const docRef = await addDoc(colRef, docData);
-    return { id: docRef.id, ...docData };
+  {
+    id: "p2",
+    name: "قميص كلاسيك أسود",
+    price: 320,
+    oldPrice: null,
+    img: "img/p2.png",
+    badge: "",
+    colors: ["#1d1a16", "#3a352f", "#6b6357"],
+    colorNames: ["أسود", "رمادي داكن", "بني"],
+    sizes: ["S", "M", "L", "XL", "XXL"],
+    stock: 18,
+    status: "active",
+    desc: "",
+    categoryId: "c1"
   },
-
-  async update(id, data) {
-    const docRef = doc(db, "products", String(id));
-    const now = new Date().toISOString();
-    const updateData = {
-      name: data.name,
-      categoryId: data.categoryId, // SOURCE OF TRUTH
-      category: data.categoryName || data.category || "",
-      title: data.title,
-      price: data.price,
-      description: data.description || "",
-      sizes: Array.isArray(data.sizes) ? data.sizes : [],
-      colors: Array.isArray(data.colors) ? data.colors : [],
-      images: Array.isArray(data.images) ? data.images : [],
-      mainImage: data.mainImage || "",
-      updatedAt: now
-    };
-    await updateDoc(docRef, updateData);
-    return { id, ...updateData };
+  {
+    id: "p3",
+    name: "قميص بأزرار أنيقة",
+    price: 320,
+    oldPrice: 365,
+    img: "img/p3.png",
+    badge: "",
+    colors: ["#a9c8e8", "#7fa8cf", "#dce8f5"],
+    colorNames: ["أزرق سماوي", "أزرق متوسط", "أزرق فاتح"],
+    sizes: ["S", "M", "L", "XL"],
+    stock: 30,
+    status: "active",
+    desc: "",
+    categoryId: "c3"
   },
-
-  async delete(id) {
-    const docRef = doc(db, "products", String(id));
-    await deleteDoc(docRef);
-    return true;
+  {
+    id: "p4",
+    name: "قميص كلاسيك بيج",
+    price: 340,
+    oldPrice: null,
+    img: "img/p4.png",
+    badge: "",
+    colors: ["#e8ddcb", "#c9b8a0", "#8a8277"],
+    colorNames: ["بيج", "رملي", "رمادي"],
+    sizes: ["M", "L", "XL"],
+    stock: 12,
+    status: "active",
+    desc: "",
+    categoryId: "c1"
+  },
+  {
+    id: "p5",
+    name: "قميص كتان فاخر",
+    price: 360,
+    oldPrice: 430,
+    img: "img/p5.png",
+    badge: "حصري",
+    colors: ["#5a5b45", "#3f4030", "#7c7d63"],
+    colorNames: ["زيتوني", "زيتوني داكن", "أخضر فاتح"],
+    sizes: ["S", "M", "L", "XL"],
+    stock: 8,
+    status: "active",
+    desc: "",
+    categoryId: "c3"
+  },
+  {
+    id: "p6",
+    name: "قميص مخطط أنيق",
+    price: 290,
+    oldPrice: 350,
+    img: "img/p6.png",
+    badge: "",
+    colors: ["#c5d3ea", "#8fa8cc", "#ffffff"],
+    colorNames: ["أزرق مخطط", "أزرق داكن", "أبيض مخطط"],
+    sizes: ["S", "M", "L", "XL", "XXL"],
+    stock: 22,
+    status: "active",
+    desc: "",
+    categoryId: "c2"
+  },
+  {
+    id: "p7",
+    name: "قميص كحلي فاخر",
+    price: 340,
+    oldPrice: null,
+    img: "img/p7.png",
+    badge: "",
+    colors: ["#1f2a44", "#31405f", "#6b7a99"],
+    colorNames: ["كحلي", "كحلي فاتح", "رمادي أزرق"],
+    sizes: ["S", "M", "L", "XL"],
+    stock: 15,
+    status: "active",
+    desc: "",
+    categoryId: "c3"
+  },
+  {
+    id: "p8",
+    name: "قميص قطن فاخر",
+    price: 320,
+    oldPrice: null,
+    img: "img/p8.png",
+    badge: "",
+    colors: ["#f5f2ea", "#ffffff", "#dcd5c8"],
+    colorNames: ["عاجي", "أبيض", "بيج فاتح"],
+    sizes: ["S", "M", "L", "XL"],
+    stock: 0,
+    status: "active",
+    desc: "",
+    categoryId: "c2"
   }
-};
+];
 
-// --- Utility Functions ---
-function escapeHTML(str) {
-  if (!str) return "";
-  const d = document.createElement("div");
-  d.textContent = str;
-  return d.innerHTML;
-}
-
-function getCategoryLabel(productOrCatId) {
-  if (!productOrCatId) return "—";
-  let catId = "";
-  let catNameFallback = "";
-  if (typeof productOrCatId === "object") {
-    catId = productOrCatId.categoryId || productOrCatId.category || "";
-    catNameFallback = productOrCatId.category || "";
-  } else {
-    catId = String(productOrCatId);
-  }
-
-  const match = state.categories.find(c => c.id === catId || c.slug === catId || c.name === catId);
-  if (match) return match.name;
-  if (catNameFallback) return catNameFallback;
-  return catId || "—";
-}
-
-function renderCategoryDropdown(selectedCategoryId = "") {
-  if (!DOM.productCategory) return;
-
-  const currentVal = selectedCategoryId !== undefined && selectedCategoryId !== "" ? selectedCategoryId : DOM.productCategory.value;
-
-  if (!state.categories || state.categories.length === 0) {
-    DOM.productCategory.innerHTML = `
-      <option value="">لا توجد تصنيفات — أضف تصنيفًا جديدًا</option>
-    `;
-    return;
-  }
-
-  const optionsHTML = state.categories.map(c => `
-    <option value="${escapeHTML(c.id)}" ${c.id === currentVal ? "selected" : ""}>
-      ${escapeHTML(c.name)}
-    </option>
-  `).join("");
-
-  DOM.productCategory.innerHTML = `
-    <option value="">اختر التصنيف</option>
-    ${optionsHTML}
-  `;
-
-  if (currentVal) {
-    DOM.productCategory.value = currentVal;
-  }
-}
-
-function getMainImage(product) {
-  if (product.mainImage) return product.mainImage;
-  if (!product.images || product.images.length === 0) {
-    return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
-  }
-  const main = product.images.find(img => img.isMain);
-  return main ? (main.url || main) : (product.images[0].url || product.images[0]);
-}
-
-function ensureMainImage(images) {
-  if (images.length > 0 && !images.some(img => img.isMain)) {
-    images[0].isMain = true;
-  }
-  return images;
-}
-
-// --- Modal Utilities ---
-function openModal(modalElement) {
-  if (!modalElement) return;
-  modalElement.classList.add("show");
-  modalElement.setAttribute("aria-hidden", "false");
-  document.body.classList.add("modal-open");
-}
-
-function closeModal(modalElement) {
-  if (!modalElement) return;
-  modalElement.classList.remove("show");
-  modalElement.setAttribute("aria-hidden", "true");
-
-  const anyOpen = document.querySelector(".modal-overlay.show, .lightbox.show");
-  if (!anyOpen) {
-    document.body.classList.remove("modal-open");
+// --- Application State ---
+function loadStorage(key, fallback) {
+  try {
+    const val = JSON.parse(localStorage.getItem(key));
+    return Array.isArray(val) && val.length ? val : JSON.parse(JSON.stringify(fallback));
+  } catch (e) {
+    return JSON.parse(JSON.stringify(fallback));
   }
 }
 
-function closeAllModals() {
-  document.querySelectorAll(".modal-overlay.show, .lightbox.show").forEach(closeModal);
+let products = loadStorage(LS_P, DEMO_PRODUCTS);
+let cats = loadStorage(LS_C, DEMO_CATS);
+
+let editingProductId = null;
+let editingCatId = null;
+let productImgData = "";
+let catImgData = "";
+let bannerMode = "color";
+let confirmCb = null;
+
+function saveAll() {
+  localStorage.setItem(LS_P, JSON.stringify(products));
+  localStorage.setItem(LS_C, JSON.stringify(cats));
+  refresh();
 }
 
 // --- Toast System ---
-function showToast(message, type = "success") {
-  const toast = document.createElement("div");
-  toast.className = `toast ${type}`;
-  toast.innerHTML = `<span>${escapeHTML(message)}</span>`;
-  DOM.toastContainer.appendChild(toast);
-
-  setTimeout(() => {
-    toast.classList.add("removing");
-    setTimeout(() => toast.remove(), 250);
-  }, CONFIG.TOAST_DURATION);
+function toast(msg, ok = true) {
+  const t = $("toast");
+  if (!t) return;
+  t.textContent = msg;
+  t.className = "show " + (ok ? "ok" : "err");
+  clearTimeout(t._h);
+  t._h = setTimeout(() => {
+    t.className = "";
+  }, 2600);
 }
 
-// --- Search & Filtering (Pure Derived) ---
-function getFilteredProducts() {
-  const q = state.searchQuery.trim().toLowerCase();
-  if (!q) return state.products;
+// --- View Switching ---
+function switchView(viewName, btn) {
+  document.querySelectorAll(".view").forEach((el) => el.classList.remove("on"));
+  const targetView = $("view-" + viewName);
+  if (targetView) targetView.classList.add("on");
 
-  return state.products.filter(p =>
-    p.name.toLowerCase().includes(q) ||
-    (p.title || "").toLowerCase().includes(q) ||
-    getCategoryLabel(p).toLowerCase().includes(q)
+  document.querySelectorAll(".side-btn").forEach((b) => b.classList.remove("active"));
+  if (btn) {
+    btn.classList.add("active");
+  } else {
+    const defaultBtn = document.querySelector(`[data-view="${viewName}"]`);
+    if (defaultBtn) defaultBtn.classList.add("active");
+  }
+}
+
+// --- Global Stats & Refresh ---
+function refresh() {
+  const cntProducts = $("cntProducts");
+  const cntCats = $("cntCats");
+  const stProducts = $("stProducts");
+  const stCats = $("stCats");
+  const stSale = $("stSale");
+  const stStock = $("stStock");
+
+  if (cntProducts) cntProducts.textContent = products.length;
+  if (cntCats) cntCats.textContent = cats.length;
+  if (stProducts) stProducts.textContent = products.length;
+  if (stCats) stCats.textContent = cats.length;
+
+  if (stSale) {
+    stSale.textContent = products.filter((p) => p.oldPrice && p.oldPrice > p.price).length;
+  }
+  if (stStock) {
+    stStock.textContent = products.reduce((sum, p) => sum + (+p.stock || 0), 0);
+  }
+
+  fillCatSelects();
+  renderProductsTable();
+  renderCatsGrid();
+}
+
+// --- Category Select Dropdowns ---
+function fillCatSelects() {
+  const pCat = $("pCategory");
+  const fCat = $("prodFilterCat");
+
+  const opts =
+    '<option value="">— اختر التصنيف —</option>' +
+    cats.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+
+  if (pCat) pCat.innerHTML = opts;
+
+  if (fCat) {
+    fCat.innerHTML =
+      '<option value="">كل التصنيفات</option>' +
+      cats.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+  }
+}
+
+// --- Product Form Handlers & Live Previews ---
+function updateDiscPreview() {
+  const pr = +$("pPrice").value;
+  const old = +$("pOldPrice").value;
+  const pv = $("discPreview");
+  if (!pv) return;
+
+  if (old && pr && old > pr) {
+    pv.textContent = "🔥 خصم " + Math.round((1 - pr / old) * 100) + "%";
+    pv.classList.add("show");
+  } else {
+    pv.classList.remove("show");
+  }
+  clearErr("pOldPrice");
+  clearErr("pPrice");
+}
+
+function showProductImg() {
+  const uploader = $("pUploader");
+  if (!uploader) return;
+  uploader.classList.add("has-img");
+  uploader.innerHTML = `<img src="${productImgData}" alt="صورة المنتج">`;
+}
+
+function clearProductImage() {
+  productImgData = "";
+  const fileInput = $("pImgFile");
+  if (fileInput) fileInput.value = "";
+  const uploader = $("pUploader");
+  if (uploader) {
+    uploader.classList.remove("has-img");
+    uploader.innerHTML =
+      '<div class="up-txt" id="pUpTxt"><b>اضغط لرفع صورة المنتج</b>PNG أو JPG — يُفضّل 800×900 بكسل</div>';
+  }
+}
+
+function toggleImgUrl() {
+  const u = $("pImgUrl");
+  if (!u) return;
+  u.style.display = u.style.display === "none" ? "block" : "none";
+  if (u.style.display === "block") u.focus();
+}
+
+// Image File Upload with Cloudinary Support
+async function handleProductImageFile(file) {
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    toast("الملف المختار ليس صورة صالحة", false);
+    return;
+  }
+  if (file.size > 4 * 1024 * 1024) {
+    toast("حجم الصورة كبير (الحد الأقصى 4MB)", false);
+    return;
+  }
+
+  // Instant local preview
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    productImgData = ev.target.result;
+    showProductImg();
+    clearErr("pImg");
+  };
+  reader.readAsDataURL(file);
+
+  // Background upload to Cloudinary for permanent CDN link
+  try {
+    toast("جاري رفع الصورة إلى السحابة...", true);
+    const secureUrl = await uploadImageToCloudinary(file);
+    if (secureUrl) {
+      productImgData = secureUrl;
+      showProductImg();
+      toast("تم حفظ الصورة على السحابة بنجاح ✓", true);
+    }
+  } catch (err) {
+    console.info("Cloudinary upload fallback to local data URL:", err.message);
+  }
+}
+
+// Colors Editor
+function addColorLine(hex = "#b99a6b", name = "") {
+  const list = $("colorsList");
+  if (!list) return;
+
+  const row = document.createElement("div");
+  row.className = "color-item";
+  row.innerHTML = `
+    <input type="color" value="${hex}">
+    <input type="text" placeholder="اسم اللون كما يظهر للزائر — مثال: أبيض عاجي" value="${esc(name)}" maxlength="30">
+    <span class="hex">${hex}</span>
+    <button type="button" class="color-del" title="حذف اللون">×</button>
+  `;
+
+  row.querySelector("input[type=color]").addEventListener("input", (e) => {
+    row.querySelector(".hex").textContent = e.target.value;
+    clearErr("colors");
+  });
+
+  row.querySelector("input[type=text]").addEventListener("input", () => clearErr("colors"));
+
+  row.querySelector(".color-del").addEventListener("click", () => {
+    if (document.querySelectorAll("#colorsList .color-item").length <= 1) {
+      toast("يجب أن يبقى لون واحد على الأقل للمنتج", false);
+      return;
+    }
+    row.remove();
+  });
+
+  list.appendChild(row);
+}
+
+function getColors() {
+  const out = [];
+  document.querySelectorAll("#colorsList .color-item").forEach((r) => {
+    const hex = r.querySelector("input[type=color]").value;
+    const name = r.querySelector("input[type=text]").value.trim();
+    out.push({ hex, name });
+  });
+  return out;
+}
+
+// Error Helpers
+function setErr(id) {
+  const targetId = id === "pImg" ? "e-pImg" : id === "colors" ? "e-colors" : "e-" + id;
+  const el = $(targetId);
+  if (el && el.parentElement) el.parentElement.classList.add("error");
+}
+
+function markErr(inputId) {
+  const el = $(inputId);
+  if (el) {
+    const field = el.closest(".field");
+    if (field) field.classList.add("error");
+  }
+}
+
+function clearErr(id) {
+  const m = $("e-" + id);
+  if (m) {
+    const field = m.closest(".field");
+    if (field) field.classList.remove("error");
+  }
+}
+
+// Reset Product Form
+function resetProductForm() {
+  const form = $("productForm");
+  if (form) form.reset();
+
+  const badgeSeg = $("badgeSeg");
+  if (badgeSeg) {
+    badgeSeg.querySelectorAll("button").forEach((btn, i) => btn.classList.toggle("on", i === 0));
+  }
+  const badgeCustom = $("pBadgeCustom");
+  if (badgeCustom) badgeCustom.style.display = "none";
+
+  const imgUrl = $("pImgUrl");
+  if (imgUrl) {
+    imgUrl.style.display = "none";
+    imgUrl.value = "";
+  }
+
+  document.querySelectorAll("#sizesRow input").forEach((c, i) => {
+    c.checked = i < 4;
+  });
+
+  clearProductImage();
+
+  const colorsList = $("colorsList");
+  if (colorsList) colorsList.innerHTML = "";
+  addColorLine("#f5f2ea", "أبيض عاجي");
+  addColorLine("#1d1a16", "أسود");
+
+  const disc = $("discPreview");
+  if (disc) disc.classList.remove("show");
+
+  editingProductId = null;
+  const modeTag = $("prodFormMode");
+  if (modeTag) modeTag.textContent = "نموذج إضافة";
+
+  const submitBtn = $("pSubmitBtn");
+  if (submitBtn) {
+    submitBtn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      إضافة المنتج للمتجر
+    `;
+  }
+
+  const cancelBtn = $("pCancelEdit");
+  if (cancelBtn) cancelBtn.style.display = "none";
+}
+
+// Edit Product
+function editProduct(id) {
+  const p = products.find((x) => x.id === id);
+  if (!p) return;
+
+  editingProductId = id;
+  $("pName").value = p.name;
+  $("pCategory").value = p.categoryId;
+  $("pPrice").value = p.price;
+  $("pOldPrice").value = p.oldPrice || "";
+  updateDiscPreview();
+
+  productImgData = p.img;
+  showProductImg();
+
+  // Badges
+  const isCustom = p.badge && !["الأكثر مبيعاً", "جديد", "حصري"].includes(p.badge);
+  const badgeSeg = $("badgeSeg");
+  if (badgeSeg) {
+    badgeSeg.querySelectorAll("button").forEach((b) => {
+      b.classList.toggle("on", b.dataset.v === (isCustom ? "custom" : p.badge || ""));
+    });
+  }
+  const badgeCustom = $("pBadgeCustom");
+  if (badgeCustom) {
+    badgeCustom.style.display = isCustom ? "block" : "none";
+    if (isCustom) badgeCustom.value = p.badge;
+  }
+
+  // Sizes
+  document.querySelectorAll("#sizesRow input").forEach((c) => {
+    c.checked = Array.isArray(p.sizes) && p.sizes.includes(c.value);
+  });
+
+  $("pStock").value = p.stock !== undefined ? p.stock : 20;
+  $("pDesc").value = p.desc || "";
+
+  const statusRadio = document.querySelector(`input[name="pStatus"][value="${p.status || "active"}"]`);
+  if (statusRadio) statusRadio.checked = true;
+
+  // Colors
+  const colorsList = $("colorsList");
+  if (colorsList) colorsList.innerHTML = "";
+  if (Array.isArray(p.colors) && p.colors.length) {
+    p.colors.forEach((c, i) => addColorLine(c, p.colorNames ? p.colorNames[i] || "" : ""));
+  } else {
+    addColorLine("#1d1a16", "أسود");
+  }
+
+  const modeTag = $("prodFormMode");
+  if (modeTag) modeTag.textContent = "وضع التعديل";
+
+  const submitBtn = $("pSubmitBtn");
+  if (submitBtn) {
+    submitBtn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+        <path d="M20 6L9 17l-5-5"/>
+      </svg>
+      حفظ التعديلات
+    `;
+  }
+
+  const cancelBtn = $("pCancelEdit");
+  if (cancelBtn) cancelBtn.style.display = "inline-flex";
+
+  switchView("dash", document.querySelector('[data-view="dash"]'));
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  toast('تعديل "' + p.name + '" — قم بتعديل البيانات واضغط حفظ');
+}
+
+function cancelProductEdit() {
+  resetProductForm();
+  toast("تم إلغاء التعديل");
+}
+
+// Delete Product Flow
+function askDeleteProduct(id) {
+  const p = products.find((x) => x.id === id);
+  if (!p) return;
+
+  confirmBox(
+    "حذف المنتج",
+    `سيتم حذف "${esc(p.name)}" نهائياً من المتجر. لا يمكن التراجع عن هذا الإجراء.`,
+    () => {
+      products = products.filter((x) => x.id !== id);
+      saveAll();
+      toast("تم حذف المنتج بنجاح ✓");
+    }
   );
 }
 
-function getCurrentPageSlice(filteredList) {
-  const start = (state.currentPage - 1) * CONFIG.ITEMS_PER_PAGE;
-  return filteredList.slice(start, start + CONFIG.ITEMS_PER_PAGE);
-}
+// Products Table Render
+function renderProductsTable() {
+  const searchInput = $("prodSearch");
+  const filterCat = $("prodFilterCat");
+  const filterStatus = $("prodFilterStatus");
+  const tbody = $("productsTbody");
+  const emptyState = $("prodEmpty");
 
-// --- Rendering ---
-function renderStateMessage(iconSvg, title, desc) {
-  DOM.productsContainer.innerHTML = `
-    <div class="state-message-box">
-      <div class="state-icon">${iconSvg}</div>
-      <div class="state-title">${escapeHTML(title)}</div>
-      <p class="state-desc">${escapeHTML(desc)}</p>
-    </div>
-  `;
-  DOM.paginationContainer.innerHTML = "";
-}
+  if (!tbody) return;
 
-function renderTableRowHTML(p) {
-  const mainImg = getMainImage(p);
-  return `
-    <tr data-id="${escapeHTML(String(p.id))}">
-      <td>
-        <div class="table-img-box">
-          <img src="${escapeHTML(mainImg)}" alt="${escapeHTML(p.name)}" loading="lazy">
-        </div>
-      </td>
-      <td class="td-name">${escapeHTML(p.name)}</td>
-      <td class="td-category">${escapeHTML(getCategoryLabel(p))}</td>
-      <td class="td-title">${escapeHTML(p.title || "—")}</td>
-      <td class="td-price">${p.price} دج</td>
-      <td class="td-actions">
-        <div class="table-actions-cell">
-          <button class="action-btn-edit" type="button" data-action="edit" data-id="${escapeHTML(String(p.id))}" title="تعديل">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-            </svg>
-          </button>
-          <button class="action-btn-delete" type="button" data-action="delete" data-id="${escapeHTML(String(p.id))}" title="حذف">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="3 6 5 6 21 6"/>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-            </svg>
-          </button>
-        </div>
-      </td>
-    </tr>
-  `;
-}
+  const q = searchInput ? searchInput.value.trim().toLowerCase() : "";
+  const fc = filterCat ? filterCat.value : "";
+  const fs = filterStatus ? filterStatus.value : "";
 
-function renderMobileCardHTML(p) {
-  const mainImg = getMainImage(p);
-  return `
-    <div class="mobile-product-card" data-id="${escapeHTML(String(p.id))}">
-      <img class="mobile-card-thumb" src="${escapeHTML(mainImg)}" alt="${escapeHTML(p.name)}">
-      <div class="mobile-card-content">
-        <div class="mobile-card-row-top">
-          <span class="mobile-card-name">${escapeHTML(p.name)}</span>
-        </div>
-        <div class="mobile-card-meta">${escapeHTML(getCategoryLabel(p))} • ${escapeHTML(p.title || "")}</div>
-        <div class="mobile-card-row-bottom">
-          <span class="mobile-card-price">${p.price} دج</span>
-          <div class="table-actions-cell">
-            <button class="action-btn-edit" type="button" data-action="edit" data-id="${escapeHTML(String(p.id))}" title="تعديل">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+  let list = products.slice();
+
+  if (q) list = list.filter((p) => p.name.toLowerCase().includes(q));
+  if (fc) list = list.filter((p) => p.categoryId === fc);
+  if (fs === "active") list = list.filter((p) => p.status === "active" && +p.stock > 0);
+  if (fs === "hidden") list = list.filter((p) => p.status === "hidden");
+  if (fs === "sale") list = list.filter((p) => p.oldPrice && p.oldPrice > p.price);
+  if (fs === "out") list = list.filter((p) => +p.stock === 0);
+
+  if (emptyState) emptyState.style.display = list.length ? "none" : "block";
+
+  tbody.innerHTML = list
+    .map((p) => {
+      const cat = cats.find((c) => c.id === p.categoryId);
+      const disc =
+        p.oldPrice && p.oldPrice > p.price ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
+
+      const stockTag =
+        +p.stock === 0
+          ? '<span class="tag red">نفدت الكمية</span>'
+          : +p.stock < 10
+          ? `<span class="tag red">متبقي ${p.stock}</span>`
+          : `<span class="tag green">متوفر (${p.stock})</span>`;
+
+      const statusTag = p.status === "hidden" ? '<span class="tag gray">مخفي</span>' : "";
+
+      const colorsDots = (p.colors || [])
+        .map((c) => `<span class="c-dot" style="background:${c}"></span>`)
+        .join("");
+
+      return `<tr>
+        <td>
+          <div class="t-prod">
+            <img src="${esc(p.img)}" alt="${esc(p.name)}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'46\\' height=\\'52\\' viewBox=\\'0 0 24 24\\'><rect width=\\'24\\' height=\\'24\\' fill=\\'%23e7e1d7\\'/></svg>'">
+            <div>
+              <div class="n">${esc(p.name)}</div>
+              <div class="c">${cat ? esc(cat.name) : "بدون تصنيف"}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <b>${p.price} دج</b>
+          ${
+            p.oldPrice
+              ? `<br><span style="font-size:11px;color:var(--muted);text-decoration:line-through">${p.oldPrice} دج</span> <span class="tag red">-${disc}%</span>`
+              : ""
+          }
+        </td>
+        <td>
+          <div class="t-colors">
+            ${colorsDots}
+            <span style="font-size:11px;color:var(--muted);margin-right:6px">${(p.colors || []).length} ألوان</span>
+          </div>
+        </td>
+        <td>${stockTag}</td>
+        <td>
+          ${p.badge ? `<span class="tag gold">${esc(p.badge)}</span> ` : ""}
+          ${statusTag}
+        </td>
+        <td>
+          <div class="row-actions">
+            <button class="icon-btn edit" title="تعديل" onclick="editProduct('${p.id}')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 3a2.8 2.8 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+              </svg>
             </button>
-            <button class="action-btn-delete" type="button" data-action="delete" data-id="${escapeHTML(String(p.id))}" title="حذف">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4"/></svg>
+            <button class="icon-btn del" title="حذف" onclick="askDeleteProduct('${p.id}')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M8 6V4h8v2m1 0v14a2 2 0 01-2 2H9a2 2 0 01-2-2V6"/>
+              </svg>
             </button>
           </div>
-        </div>
-      </div>
-    </div>
-  `;
+        </td>
+      </tr>`;
+    })
+    .join("");
 }
 
-function renderProducts() {
-  if (state.products.length === 0) {
-    renderStateMessage(
-      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
-      "لا توجد منتجات حتى الآن",
-      "اضغط على زر \"إضافة منتج\" لإضافة أول منتج لمتجرك."
-    );
-    return;
-  }
+// --- Category Form & Banners ---
+function updateBannerPreview() {
+  const nameInput = $("cName");
+  const msgInput = $("cMsg");
+  const name = (nameInput ? nameInput.value.trim() : "") || "اسم التصنيف";
+  const msg = (msgInput ? msgInput.value.trim() : "") || "رسالتك التسويقية تظهر هنا…";
 
-  const filtered = getFilteredProducts();
+  const pvName = $("pvName");
+  const pvMsg = $("pvMsg");
+  if (pvName) pvName.textContent = name;
+  if (pvMsg) pvMsg.textContent = msg;
 
-  if (filtered.length === 0) {
-    renderStateMessage(
-      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
-      "لم يتم العثور على منتجات",
-      `لا توجد نتائج مطابقة لبحثك "${state.searchQuery}".`
-    );
-    return;
-  }
+  const pv = $("bannerPreview");
+  if (!pv) return;
 
-  const pageItems = getCurrentPageSlice(filtered);
+  const c1 = $("cColor1") ? $("cColor1").value : "#1d1a16";
+  const c2 = $("cColor2") ? $("cColor2").value : "#b99a6b";
 
-  const tableHTML = `
-    <table class="products-table">
-      <thead>
-        <tr>
-          <th class="th-img">الصورة</th>
-          <th class="th-name">اسم المنتج</th>
-          <th class="th-category">التصنيف</th>
-          <th class="th-title">العنوان</th>
-          <th class="th-price">السعر</th>
-          <th class="th-actions">الإجراءات</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${pageItems.map(renderTableRowHTML).join("")}
-      </tbody>
-    </table>
-  `;
-
-  const mobileHTML = `
-    <div class="mobile-products-grid">
-      ${pageItems.map(renderMobileCardHTML).join("")}
-    </div>
-  `;
-
-  DOM.productsContainer.innerHTML = tableHTML + mobileHTML;
-  renderPagination(filtered.length);
-}
-
-function renderPagination(totalItems) {
-  const totalPages = Math.max(1, Math.ceil(totalItems / CONFIG.ITEMS_PER_PAGE));
-  const start = totalItems === 0 ? 0 : (state.currentPage - 1) * CONFIG.ITEMS_PER_PAGE + 1;
-  const end = Math.min(state.currentPage * CONFIG.ITEMS_PER_PAGE, totalItems);
-
-  let pages = "";
-  for (let i = 1; i <= totalPages; i++) {
-    pages += `<button class="pg-btn ${i === state.currentPage ? "active" : ""}" type="button" data-page="${i}">${i}</button>`;
-  }
-
-  DOM.paginationContainer.innerHTML = `
-    <span class="pagination-text">عرض ${start} - ${end} من ${totalItems} منتجات</span>
-    <div class="pagination-btns">
-      <button class="pg-btn" type="button" data-page="${state.currentPage - 1}" ${state.currentPage <= 1 ? "disabled" : ""} aria-label="السابق">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
-      </button>
-      ${pages}
-      <button class="pg-btn" type="button" data-page="${state.currentPage + 1}" ${state.currentPage >= totalPages ? "disabled" : ""} aria-label="التالي">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
-      </button>
-    </div>
-  `;
-}
-
-// --- Product Form Handling & Validation ---
-function clearValidationErrors() {
-  DOM.productForm.querySelectorAll(".has-error").forEach(el => el.classList.remove("has-error"));
-  DOM.productForm.querySelectorAll(".field-error-msg").forEach(el => el.textContent = "");
-  DOM.dropzone.classList.remove("has-error");
-  $("imagesError").textContent = "";
-}
-
-function resetProductForm() {
-  DOM.productForm.reset();
-  state.editingProductId = null;
-  state.formImages = [];
-  state.formSizes = [];
-  state.formColors = [];
-  clearValidationErrors();
-  renderFormImages();
-  renderFormSizes();
-  renderFormColors();
-}
-
-function openProductForm(product = null) {
-  clearValidationErrors();
-  DOM.productForm.reset();
-
-  const selectedCatId = product ? (product.categoryId || product.category || "") : "";
-  renderCategoryDropdown(selectedCatId);
-
-  if (product) {
-    state.editingProductId = product.id;
-    DOM.formModalTitle.textContent = "تعديل المنتج";
-    DOM.saveBtnText.textContent = "حفظ التعديلات";
-
-    DOM.productName.value = product.name || "";
-    DOM.productCategory.value = selectedCatId;
-    DOM.productPrice.value = product.price !== undefined ? product.price : "";
-    DOM.productTitle.value = product.title || "";
-    DOM.productDescription.value = product.description || "";
-
-    // Load Sizes
-    if (Array.isArray(product.sizes) && product.sizes.length > 0) {
-      state.formSizes = [...product.sizes];
-      if (DOM.hasSizesYes) DOM.hasSizesYes.checked = true;
-      if (DOM.sizesConfigBox) DOM.sizesConfigBox.hidden = false;
-    } else {
-      state.formSizes = [];
-      if (DOM.hasSizesNo) DOM.hasSizesNo.checked = true;
-      if (DOM.sizesConfigBox) DOM.sizesConfigBox.hidden = true;
-    }
-
-    // Load Colors
-    if (Array.isArray(product.colors) && product.colors.length > 0) {
-      state.formColors = product.colors.map(c => {
-        if (typeof c === "object" && c !== null) {
-          return { name: c.name || "لون", value: c.value || "#111111" };
-        }
-        return { name: String(c), value: String(c).startsWith("#") ? c : "#111111" };
-      });
-      if (DOM.hasColorsYes) DOM.hasColorsYes.checked = true;
-      if (DOM.colorsConfigBox) DOM.colorsConfigBox.hidden = false;
-    } else {
-      state.formColors = [];
-      if (DOM.hasColorsNo) DOM.hasColorsNo.checked = true;
-      if (DOM.colorsConfigBox) DOM.colorsConfigBox.hidden = true;
-    }
-
-    state.formImages = (product.images || []).map(img => ({
-      id: img.id || ("img_" + Math.random().toString(36).slice(2, 8)),
-      url: typeof img === "string" ? img : img.url,
-      isMain: Boolean(img.isMain),
-      isUploading: false,
-      error: false
-    }));
+  if (bannerMode === "image" && catImgData) {
+    pv.style.background = "#1d1a16";
+    pv.querySelector("img")?.remove();
+    const im = document.createElement("img");
+    im.src = catImgData;
+    pv.insertBefore(im, pv.firstChild);
   } else {
-    state.editingProductId = null;
-    DOM.formModalTitle.textContent = "إضافة منتج";
-    DOM.saveBtnText.textContent = "حفظ المنتج";
-    DOM.productCategory.value = "";
-    state.formImages = [];
-    state.formSizes = [];
-    state.formColors = [];
-    if (DOM.hasSizesNo) DOM.hasSizesNo.checked = true;
-    if (DOM.sizesConfigBox) DOM.sizesConfigBox.hidden = true;
-    if (DOM.hasColorsNo) DOM.hasColorsNo.checked = true;
-    if (DOM.colorsConfigBox) DOM.colorsConfigBox.hidden = true;
-  }
-
-  renderFormImages();
-  renderFormSizes();
-  renderFormColors();
-  openModal(DOM.productFormModal);
-  DOM.productName.focus();
-}
-
-function closeProductForm() {
-  closeModal(DOM.productFormModal);
-  resetProductForm();
-}
-
-// --- Sizes Management in Admin Form ---
-function renderFormSizes() {
-  if (!DOM.sizesChipsList) return;
-  if (state.formSizes.length === 0) {
-    DOM.sizesChipsList.innerHTML = `<span style="font-size: 0.82rem; color: #94a3b8;">لم تتم إضافة أحجام بعد. أضف حجماً أو اختر من المقترحات أدناه.</span>`;
-    return;
-  }
-
-  DOM.sizesChipsList.innerHTML = state.formSizes.map((sz, idx) => `
-    <span class="size-chip-admin">
-      <span>${escapeHTML(sz)}</span>
-      <button type="button" class="chip-remove-btn" data-action="remove-size" data-index="${idx}" title="حذف المقاس" aria-label="حذف">✕</button>
-    </span>
-  `).join("");
-}
-
-function addSizeToForm(sizeText) {
-  const val = (sizeText || "").trim();
-  if (!val) return;
-  if (!state.formSizes.includes(val)) {
-    state.formSizes.push(val);
-    renderFormSizes();
+    pv.querySelector("img")?.remove();
+    pv.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
   }
 }
 
-function removeSizeFromForm(index) {
-  state.formSizes.splice(index, 1);
-  renderFormSizes();
-}
+function resetCatForm() {
+  const form = $("categoryForm");
+  if (form) form.reset();
 
-// --- Colors Management in Admin Form ---
-function renderFormColors() {
-  if (!DOM.colorsListGrid) return;
-  if (state.formColors.length === 0) {
-    DOM.colorsListGrid.innerHTML = `<div style="font-size: 0.82rem; color: #94a3b8; padding: 6px 0;">لم تتم إضافة ألوان بعد. اضغط "إضافة لون جديد" أو اختر من الألوان الشائعة أدناه.</div>`;
-    return;
+  if ($("cColor1")) $("cColor1").value = "#1d1a16";
+  if ($("cColor2")) $("cColor2").value = "#b99a6b";
+
+  bannerMode = "color";
+  const bannerSeg = $("bannerSeg");
+  if (bannerSeg) {
+    bannerSeg.querySelectorAll("button").forEach((btn, i) => btn.classList.toggle("on", i === 0));
   }
 
-  DOM.colorsListGrid.innerHTML = state.formColors.map((col, idx) => `
-    <div class="color-row-card" data-color-index="${idx}">
-      <div class="color-swatch-picker-wrap" title="انقر لاختيار درجة اللون" style="background-color: ${escapeHTML(col.value)};">
-        <input type="color" class="color-picker-input" data-index="${idx}" value="${escapeHTML(col.value)}" aria-label="اختيار درجة اللون">
-      </div>
-      <input type="text" class="color-name-input" data-index="${idx}" value="${escapeHTML(col.name)}" placeholder="اسم اللون (مثال: أسود، أزرق كحلي)..." maxlength="30" autocomplete="off">
-      <button type="button" class="color-del-btn" data-action="remove-color" data-index="${idx}" title="حذف هذا اللون" aria-label="حذف اللون">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-          <polyline points="3 6 5 6 21 6"/>
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-        </svg>
-      </button>
-    </div>
-  `).join("");
+  if ($("bannerColorBox")) $("bannerColorBox").style.display = "block";
+  if ($("bannerImgBox")) $("bannerImgBox").style.display = "none";
+
+  catImgData = "";
+  if ($("cImgFile")) $("cImgFile").value = "";
+
+  const uploader = $("cUploader");
+  if (uploader) {
+    uploader.classList.remove("has-img");
+    uploader.innerHTML =
+      '<div class="up-txt" id="cUpTxt"><b>اضغط لرفع صورة البنر</b>عرض 1600×500 بكسل يُفضل</div>';
+  }
+
+  editingCatId = null;
+  const modeTag = $("catFormMode");
+  if (modeTag) modeTag.textContent = "نموذج إضافة";
+
+  const cancelBtn = $("cCancelEdit");
+  if (cancelBtn) cancelBtn.style.display = "none";
+
+  updateBannerPreview();
 }
 
-function addColorToForm(name = "", value = "#111111") {
-  state.formColors.push({
-    name: name || "",
-    value: value || "#111111"
+function editCat(id) {
+  const c = cats.find((x) => x.id === id);
+  if (!c) return;
+
+  editingCatId = id;
+  $("cName").value = c.name;
+  $("cMsg").value = c.msg;
+  $("cDesc").value = c.desc || "";
+
+  bannerMode = (c.banner && c.banner.type) || "color";
+  const bannerSeg = $("bannerSeg");
+  if (bannerSeg) {
+    bannerSeg.querySelectorAll("button").forEach((b) => {
+      b.classList.toggle("on", b.dataset.v === bannerMode);
+    });
+  }
+
+  if ($("bannerColorBox")) $("bannerColorBox").style.display = bannerMode === "color" ? "block" : "none";
+  if ($("bannerImgBox")) $("bannerImgBox").style.display = bannerMode === "image" ? "block" : "none";
+
+  if (bannerMode === "color") {
+    if ($("cColor1")) $("cColor1").value = c.banner.c1 || "#1d1a16";
+    if ($("cColor2")) $("cColor2").value = c.banner.c2 || "#b99a6b";
+    catImgData = "";
+  } else {
+    catImgData = c.banner.img || "";
+    const uploader = $("cUploader");
+    if (uploader) {
+      uploader.classList.add("has-img");
+      uploader.innerHTML = `<img src="${catImgData}" alt="" style="height:150px">`;
+    }
+  }
+
+  const modeTag = $("catFormMode");
+  if (modeTag) modeTag.textContent = "وضع التعديل";
+
+  const cancelBtn = $("cCancelEdit");
+  if (cancelBtn) cancelBtn.style.display = "inline-flex";
+
+  updateBannerPreview();
+  switchView("dash", document.querySelector('[data-view="dash"]'));
+
+  const catForm = $("categoryForm");
+  if (catForm) {
+    window.scrollTo({ top: catForm.offsetTop - 100, behavior: "smooth" });
+  }
+
+  toast('تعديل تصنيف "' + c.name + '" — عدّل البيانات ثم اضغط حفظ');
+}
+
+function cancelCatEdit() {
+  resetCatForm();
+  toast("تم إلغاء التعديل");
+}
+
+function askDeleteCat(id) {
+  const c = cats.find((x) => x.id === id);
+  if (!c) return;
+
+  const count = products.filter((p) => p.categoryId === id).length;
+  const extra = count
+    ? `<br><b style="color:var(--red)">تحذير: يوجد ${count} منتج مرتبط بهذا التصنيف — سيبقى بدون تصنيف.</b>`
+    : "";
+
+  confirmBox("حذف التصنيف", `سيتم حذف تصنيف "${esc(c.name)}" نهائياً.${extra}`, () => {
+    cats = cats.filter((x) => x.id !== id);
+    saveAll();
+    toast("تم حذف التصنيف بنجاح ✓");
   });
-  renderFormColors();
 }
 
-function removeColorFromForm(index) {
-  state.formColors.splice(index, 1);
-  renderFormColors();
+function renderCatsGrid() {
+  const grid = $("catsGrid");
+  const empty = $("catEmpty");
+  if (!grid) return;
+
+  if (empty) empty.style.display = cats.length ? "none" : "block";
+
+  grid.innerHTML = cats
+    .map((c) => {
+      const n = products.filter((p) => p.categoryId === c.id).length;
+      const isImg = c.banner && c.banner.type === "image" && c.banner.img;
+      const bg = isImg ? `<img src="${esc(c.banner.img)}" alt="">` : "";
+      const style = isImg
+        ? ""
+        : `style="background:linear-gradient(135deg,${(c.banner && c.banner.c1) || "#1d1a16"},${(c.banner && c.banner.c2) || "#b99a6b"})"`;
+
+      return `<div class="cat-card">
+        <div class="cat-banner" ${style}>
+          ${bg}
+          <div class="cb-txt">
+            <div class="cb-k">ALNOOR COLLECTION</div>
+            <div class="cb-n">${esc(c.name)}</div>
+          </div>
+        </div>
+        <div class="cat-body">
+          <div class="m">“${esc(c.msg)}”</div>
+          <div class="cat-meta">
+            <span class="tag ${n ? "blue" : "gray"}">${n} منتج</span>
+            <div class="row-actions">
+              <button class="icon-btn edit" title="تعديل" onclick="editCat('${c.id}')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 3a2.8 2.8 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                </svg>
+              </button>
+              <button class="icon-btn del" title="حذف" onclick="askDeleteCat('${c.id}')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18M8 6V4h8v2m1 0v14a2 2 0 01-2 2H9a2 2 0 01-2-2V6"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    })
+    .join("");
 }
 
-function validateProductForm() {
-  clearValidationErrors();
-  let isValid = true;
+// --- Generic Confirmation Modal ---
+function confirmBox(title, text, cb) {
+  const cfTitle = $("cfTitle");
+  const cfText = $("cfText");
+  const modal = $("confirmModal");
 
-  const setFieldError = (inputEl, errorId, message) => {
-    inputEl?.closest(".form-field-group")?.classList.add("has-error");
-    const errSpan = $(errorId);
-    if (errSpan) errSpan.textContent = message;
-    isValid = false;
-  };
-
-  if (!DOM.productName.value.trim()) {
-    setFieldError(DOM.productName, "nameError", "اسم المنتج مطلوب");
-  }
-  if (!DOM.productCategory.value) {
-    setFieldError(DOM.productCategory, "categoryError", "يرجى اختيار التصنيف");
-  }
-  if (!DOM.productTitle.value.trim()) {
-    setFieldError(DOM.productTitle, "titleError", "العنوان مطلوب");
-  }
-
-  const price = parseInt(DOM.productPrice.value.trim(), 10);
-  if (isNaN(price) || price < 0) {
-    setFieldError(DOM.productPrice, "priceError", "يرجى إدخال سعر صحيح");
-  }
-
-  const validImages = state.formImages.filter(img => !img.error);
-  if (validImages.length === 0) {
-    DOM.dropzone.classList.add("has-error");
-    $("imagesError").textContent = "يرجى إضافة صورة واحدة على الأقل";
-    isValid = false;
-  }
-
-  return isValid;
+  if (cfTitle) cfTitle.textContent = title;
+  if (cfText) cfText.innerHTML = text;
+  confirmCb = cb;
+  if (modal) modal.classList.add("open");
 }
 
-function collectProductFormData() {
-  const cleanImages = state.formImages
-    .filter(img => !img.error && !img.isUploading)
-    .map(img => ({
-      id: img.id,
-      url: img.url,
-      isMain: Boolean(img.isMain)
-    }));
+// --- Exporter for Storefront Code ---
+function buildExport() {
+  const pl = products.map((p) => {
+    const o = {
+      name: p.name,
+      price: p.price,
+      img: p.img,
+      colors: p.colors || [],
+      colorNames: p.colorNames || []
+    };
+    if (p.oldPrice && p.oldPrice > p.price) o.oldPrice = p.oldPrice;
+    if (p.badge) o.badge = p.badge;
+    return o;
+  });
 
-  ensureMainImage(cleanImages);
-  const mainImage = cleanImages.find(img => img.isMain)?.url || (cleanImages[0]?.url || "");
+  const cl = cats.map((c) => ({
+    name: c.name,
+    msg: c.msg,
+    banner: c.banner,
+    desc: c.desc || ""
+  }));
 
-  const selectedCatId = DOM.productCategory.value;
-  const selectedCat = state.categories.find(c => c.id === selectedCatId);
-  const selectedCatName = selectedCat ? selectedCat.name : "";
-
-  // Check Sizes Toggle
-  const hasSizes = document.querySelector('input[name="hasSizesToggle"]:checked')?.value === "yes";
-  const cleanSizes = hasSizes 
-    ? state.formSizes.map(s => String(s).trim()).filter(Boolean)
-    : [];
-
-  // Check Colors Toggle
-  const hasColors = document.querySelector('input[name="hasColorsToggle"]:checked')?.value === "yes";
-  const cleanColors = hasColors
-    ? state.formColors
-        .filter(c => c && c.name && c.name.trim())
-        .map(c => ({
-          name: c.name.trim(),
-          value: (c.value || "#111111").trim()
-        }))
-    : [];
-
-  return {
-    name: DOM.productName.value.trim(),
-    categoryId: selectedCatId, // SOURCE OF TRUTH
-    categoryName: selectedCatName,
-    category: selectedCatName || selectedCatId, // backwards compatibility
-    title: DOM.productTitle.value.trim(),
-    price: parseInt(DOM.productPrice.value.trim(), 10),
-    description: DOM.productDescription.value.trim(),
-    sizes: cleanSizes,
-    colors: cleanColors,
-    images: cleanImages,
-    mainImage: mainImage
-  };
+  return (
+    "/* ===== الصق هذا الكود في index.html / product.html ===== */\n" +
+    "const categories = " +
+    JSON.stringify(cl, null, 2) +
+    ";\n\n" +
+    "const products = " +
+    JSON.stringify(pl, null, 2) +
+    ";"
+  );
 }
 
-async function saveProduct(e) {
-  e.preventDefault();
+function openExport() {
+  const codeBox = $("exportCode");
+  const modal = $("exportModal");
+  if (codeBox) codeBox.textContent = buildExport();
+  if (modal) modal.classList.add("open");
+}
 
-  if (state.formImages.some(img => img.isUploading)) {
-    showToast("جاري رفع الصور إلى السحابة، يرجى الانتظار...", "warning");
-    return;
-  }
+function copyExport() {
+  const codeBox = $("exportCode");
+  if (!codeBox) return;
+  navigator.clipboard
+    .writeText(codeBox.textContent)
+    .then(() => toast("تم نسخ الكود بنجاح ✓"))
+    .catch(() => toast("تعذّر النسخ", false));
+}
 
-  if (state.formImages.some(img => img.error)) {
-    showToast("يرجى إزالة الصور التي تعذر رفعها أو إعادة اختيارها", "warning");
-    return;
-  }
+function downloadExport() {
+  const codeBox = $("exportCode");
+  if (!codeBox) return;
+  const b = new Blob([codeBox.textContent], { type: "text/javascript" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(b);
+  a.download = "alnoor-data.js";
+  a.click();
+  toast("تم تنزيل الملف ✓");
+}
 
-  if (!validateProductForm()) return;
-
-  DOM.saveProductBtn.disabled = true;
-  DOM.saveBtnText.hidden = true;
-  DOM.saveBtnLoader.hidden = false;
-
-  const productData = collectProductFormData();
-  const isEdit = Boolean(state.editingProductId);
-
-  try {
-    if (isEdit) {
-      await ProductAPI.update(state.editingProductId, productData);
-      showToast("تم تحديث المنتج بنجاح", "success");
-    } else {
-      await ProductAPI.create(productData);
-      showToast("تمت إضافة المنتج بنجاح", "success");
+function askReset() {
+  confirmBox(
+    "إعادة تعيين كل البيانات",
+    "سيتم حذف كل المنتجات والتصنيفات المضافة واستعادة البيانات التجريبية الأصلية.",
+    () => {
+      localStorage.removeItem(LS_P);
+      localStorage.removeItem(LS_C);
+      products = JSON.parse(JSON.stringify(DEMO_PRODUCTS));
+      cats = JSON.parse(JSON.stringify(DEMO_CATS));
+      saveAll();
+      resetProductForm();
+      resetCatForm();
+      toast("تمت إعادة تعيين البيانات بنجاح");
     }
-    closeProductForm();
-    await loadProducts();
-  } catch (error) {
-    console.error("Save product error:", error);
-    showToast("حدث خطأ أثناء حفظ المنتج في قاعدة البيانات", "error");
-  } finally {
-    DOM.saveProductBtn.disabled = false;
-    DOM.saveBtnText.hidden = false;
-    DOM.saveBtnLoader.hidden = true;
-  }
+  );
 }
 
-// --- Category Management (Inside Product Form Workflow) ---
-function openCategoryModal() {
-  if (DOM.newCategoryName) {
-    DOM.newCategoryName.value = "";
-    DOM.newCategoryName.closest(".form-field-group")?.classList.remove("has-error");
-    if (DOM.newCategoryNameError) DOM.newCategoryNameError.textContent = "";
-  }
-  openModal(DOM.addCategoryModal);
-  setTimeout(() => DOM.newCategoryName?.focus(), 120);
-}
-
-function closeCategoryModal() {
-  closeModal(DOM.addCategoryModal);
-}
-
-async function handleCreateCategory(e) {
-  e.preventDefault();
-  const name = DOM.newCategoryName ? DOM.newCategoryName.value.trim() : "";
-
-  if (!name) {
-    DOM.newCategoryName?.closest(".form-field-group")?.classList.add("has-error");
-    if (DOM.newCategoryNameError) DOM.newCategoryNameError.textContent = "يرجى إدخال اسم التصنيف";
-    DOM.newCategoryName?.focus();
-    return;
+// --- Event Listeners Setup ---
+function initEvents() {
+  // Product Badge Segmented Control
+  const badgeSeg = $("badgeSeg");
+  if (badgeSeg) {
+    badgeSeg.addEventListener("click", (e) => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      badgeSeg.querySelectorAll("button").forEach((x) => x.classList.remove("on"));
+      b.classList.add("on");
+      const badgeCustom = $("pBadgeCustom");
+      if (badgeCustom) {
+        badgeCustom.style.display = b.dataset.v === "custom" ? "block" : "none";
+      }
+    });
   }
 
-  // Check if a category with this name already exists in state.categories
-  const existing = state.categories.find(c => c.name.toLowerCase() === name.toLowerCase());
-  if (existing) {
-    renderCategoryDropdown(existing.id);
-    DOM.productCategory.value = existing.id;
-    DOM.productCategory.closest(".form-field-group")?.classList.remove("has-error");
-    const catErr = $("categoryError");
-    if (catErr) catErr.textContent = "";
+  // Price & Old Price live listeners
+  $("pPrice")?.addEventListener("input", updateDiscPreview);
+  $("pOldPrice")?.addEventListener("input", updateDiscPreview);
 
-    closeCategoryModal();
-    showToast(`التصنيف "${existing.name}" موجود بالفعل وتم تحديده.`, "info");
-    return;
-  }
-
-  DOM.saveCategoryBtn.disabled = true;
-  DOM.saveCategoryBtnText.hidden = true;
-  DOM.saveCategoryBtnLoader.hidden = false;
-
-  try {
-    const newCat = await CategoryAPI.create(name);
-    state.categories.unshift(newCat);
-
-    // Refresh category dropdown automatically and select newly created category
-    renderCategoryDropdown(newCat.id);
-    DOM.productCategory.value = newCat.id;
-
-    // Clear any validation error on the product form's category field
-    DOM.productCategory.closest(".form-field-group")?.classList.remove("has-error");
-    const catErr = $("categoryError");
-    if (catErr) catErr.textContent = "";
-
-    // Close category modal smoothly while keeping product form completely intact
-    closeCategoryModal();
-    showToast(`تم إنشاء التصنيف "${newCat.name}" بنجاح!`, "success");
-  } catch (err) {
-    console.error("Create category error:", err);
-    if (err.code === "permission-denied" || (err.message && err.message.includes("insufficient permissions"))) {
-      showToast("صلاحيات Firebase: يرجى إضافة قاعدة categories في Firebase Console", "error");
-    } else {
-      showToast("حدث خطأ أثناء حفظ التصنيف، يرجى المحاولة مجدداً.", "error");
+  // Product Image File Input
+  $("pImgFile")?.addEventListener("change", (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleProductImageFile(e.target.files[0]);
     }
-  } finally {
-    DOM.saveCategoryBtn.disabled = false;
-    DOM.saveCategoryBtnText.hidden = false;
-    DOM.saveCategoryBtnLoader.hidden = true;
-  }
-}
+  });
 
-async function loadCategories() {
-  try {
-    state.categories = await CategoryAPI.getAll();
-    renderCategoryDropdown();
-  } catch (err) {
-    console.error("Load categories error:", err);
-    state.categories = [];
-    renderCategoryDropdown();
-  }
-}
+  // Product Image Direct URL
+  $("pImgUrl")?.addEventListener("input", () => {
+    const v = $("pImgUrl").value.trim();
+    if (/^https?:\/\/.+\.(png|jpe?g|webp|gif|svg)(\?.*)?$/i.test(v)) {
+      productImgData = v;
+      showProductImg();
+      clearErr("pImg");
+    }
+  });
 
-// --- Image Management with Cloudinary Uploads ---
-function handleImageFiles(files) {
-  Array.from(files).forEach(file => {
-    if (!CONFIG.ACCEPTED_TYPES.includes(file.type)) {
-      showToast(`نوع الملف غير مدعوم: ${file.name}`, "warning");
+  // Validation auto-clearers
+  ["pName", "pCategory", "pPrice", "pOldPrice", "pStock", "cName", "cMsg"].forEach((id) => {
+    const el = $(id);
+    if (el) {
+      el.addEventListener("input", () => clearErr(id));
+      el.addEventListener("change", () => clearErr(id));
+    }
+  });
+
+  // Product Form Submit
+  $("productForm")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const name = $("pName").value.trim();
+    const catId = $("pCategory").value;
+    const price = +$("pPrice").value;
+    const oldPrice = $("pOldPrice").value.trim() ? +$("pOldPrice").value : null;
+
+    const badgeBtn = $("badgeSeg")?.querySelector(".on");
+    const badge =
+      badgeBtn && badgeBtn.dataset.v === "custom"
+        ? ($("pBadgeCustom")?.value || "").trim()
+        : badgeBtn?.dataset.v || "";
+
+    const stock = $("pStock") ? $("pStock").value : 20;
+    const statusRadio = document.querySelector('input[name="pStatus"]:checked');
+    const status = statusRadio ? statusRadio.value : "active";
+    const desc = $("pDesc") ? $("pDesc").value.trim() : "";
+    const sizes = [...document.querySelectorAll("#sizesRow input:checked")].map((i) => i.value);
+    const colors = getColors();
+
+    let ok = true;
+    if (name.length < 3) {
+      markErr("pName");
+      ok = false;
+    }
+    if (products.some((p) => p.name.toLowerCase() === name.toLowerCase() && p.id !== editingProductId)) {
+      markErr("pName");
+      toast("يوجد منتج بنفس الاسم مسبقاً", false);
+      ok = false;
+    }
+    if (!catId) {
+      markErr("pCategory");
+      ok = false;
+    }
+    if (!productImgData) {
+      setErr("pImg");
+      ok = false;
+    }
+    if (!price || price <= 0) {
+      markErr("pPrice");
+      ok = false;
+    }
+    if (oldPrice !== null && (!oldPrice || oldPrice <= price)) {
+      markErr("pOldPrice");
+      ok = false;
+    }
+    if (stock === "" || +stock < 0) {
+      markErr("pStock");
+      ok = false;
+    }
+    if (!sizes.length) {
+      if ($("e-sizes")) $("e-sizes").style.display = "block";
+      ok = false;
+    } else {
+      if ($("e-sizes")) $("e-sizes").style.display = "none";
+    }
+    if (!colors.length || colors.some((c) => !c.name)) {
+      setErr("colors");
+      ok = false;
+    }
+
+    if (!ok) {
+      toast("يرجى مراجعة الحقول المعلّمة بالأحمر", false);
       return;
     }
-    if (file.size > CONFIG.MAX_IMAGE_SIZE) {
-      showToast(`حجم الصورة يتعدى 5MB: ${file.name}`, "warning");
-      return;
-    }
 
-    const tempId = "img_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    const localPreviewUrl = URL.createObjectURL(file);
-
-    const imgObj = {
-      id: tempId,
-      url: localPreviewUrl,
-      file: file,
-      isUploading: true,
-      error: false,
-      isMain: state.formImages.length === 0
+    const data = {
+      name,
+      categoryId: catId,
+      price,
+      oldPrice,
+      img: productImgData,
+      badge,
+      colors: colors.map((c) => c.hex),
+      colorNames: colors.map((c) => c.name),
+      sizes,
+      stock: +stock,
+      status,
+      desc
     };
 
-    state.formImages.push(imgObj);
-    renderFormImages();
-
-    // Trigger direct unsigned upload to Cloudinary
-    uploadImageToCloudinary(file)
-      .then((secureUrl) => {
-        imgObj.url = secureUrl;
-        imgObj.isUploading = false;
-        imgObj.file = null;
-        renderFormImages();
-      })
-      .catch((err) => {
-        console.error("Cloudinary upload error:", err);
-        imgObj.isUploading = false;
-        imgObj.error = true;
-        showToast(`تعذر رفع الصورة "${file.name}": ${err.message}`, "error");
-        renderFormImages();
-      });
-  });
-
-  $("imagesError").textContent = "";
-  DOM.dropzone.classList.remove("has-error");
-}
-
-function renderFormImages() {
-  DOM.imagesGrid.innerHTML = state.formImages.map(img => `
-    <div class="thumb-preview-item ${img.isMain ? "is-main" : ""} ${img.isUploading ? "is-uploading" : ""}" data-img-id="${img.id}" title="${img.isMain ? "الصورة الرئيسية" : "اضغط للتعيين كرئيسية"}">
-      <img src="${escapeHTML(img.url)}" alt="صورة المعاينة">
-      ${img.isUploading ? '<div class="thumb-upload-spinner"></div>' : ""}
-      <button class="thumb-delete-badge" type="button" data-del-img="${img.id}" title="حذف الصورة">×</button>
-    </div>
-  `).join("");
-}
-
-function removeImage(imgId) {
-  state.formImages = state.formImages.filter(i => i.id !== imgId);
-  ensureMainImage(state.formImages);
-  renderFormImages();
-}
-
-function setMainImage(imgId) {
-  state.formImages.forEach(img => {
-    img.isMain = img.id === imgId;
-  });
-  renderFormImages();
-}
-
-// --- Delete Flow ---
-function openDeleteModal(productId) {
-  const product = ProductAPI.getById(productId);
-  if (!product) return;
-
-  state.deleteProductId = productId;
-  DOM.deleteProductName.textContent = `"${product.name}"`;
-  openModal(DOM.deleteModal);
-}
-
-function closeDeleteModal() {
-  closeModal(DOM.deleteModal);
-  state.deleteProductId = null;
-}
-
-async function confirmDelete() {
-  if (!state.deleteProductId) return;
-
-  DOM.confirmDeleteBtn.disabled = true;
-  DOM.deleteBtnText.hidden = true;
-  DOM.deleteBtnLoader.hidden = false;
-
-  try {
-    await ProductAPI.delete(state.deleteProductId);
-    showToast("تم حذف المنتج بنجاح", "success");
-    closeDeleteModal();
-    await loadProducts();
-  } catch (error) {
-    console.error("Delete product error:", error);
-    showToast("تعذر حذف المنتج من قاعدة البيانات", "error");
-  } finally {
-    DOM.confirmDeleteBtn.disabled = false;
-    DOM.deleteBtnText.hidden = false;
-    DOM.deleteBtnLoader.hidden = true;
-  }
-}
-
-// --- Data Loading & Event Listeners ---
-async function loadProducts() {
-  try {
-    state.products = await ProductAPI.getAll();
-    renderProducts();
-  } catch (error) {
-    console.error("Load products error:", error);
-    showToast("تعذر تحميل المنتجات من قاعدة البيانات", "error");
-    renderStateMessage(
-      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
-      "خطأ في الاتصال بقاعدة البيانات",
-      "يرجى التحقق من إعدادات Firebase والاتصال بالإنترنت."
-    );
-  }
-}
-
-function initEventListeners() {
-  // Add Product modal open
-  DOM.openAddModalBtn.addEventListener("click", () => openProductForm(null));
-
-  // Form modal close & cancel
-  DOM.closeFormModalBtn.addEventListener("click", closeProductForm);
-  DOM.cancelFormBtn.addEventListener("click", closeProductForm);
-  DOM.productFormModal.addEventListener("click", (e) => {
-    if (e.target === DOM.productFormModal) closeProductForm();
-  });
-
-  // Form submit
-  DOM.productForm.addEventListener("submit", saveProduct);
-
-  // Search input & clear
-  DOM.searchInput.addEventListener("input", () => {
-    state.searchQuery = DOM.searchInput.value;
-    state.currentPage = 1;
-    DOM.searchClear.hidden = !state.searchQuery;
-    renderProducts();
-  });
-
-  DOM.searchClear.addEventListener("click", () => {
-    state.searchQuery = "";
-    DOM.searchInput.value = "";
-    DOM.searchClear.hidden = true;
-    state.currentPage = 1;
-    renderProducts();
-    DOM.searchInput.focus();
-  });
-
-  // Table & mobile card action delegation
-  DOM.productsContainer.addEventListener("click", (e) => {
-    const imgEl = e.target.closest(".table-img-box img, .mobile-card-thumb");
-    if (imgEl) {
-      DOM.lightboxImage.src = imgEl.src;
-      openModal(DOM.imageLightbox);
-      return;
-    }
-
-    const editBtn = e.target.closest('[data-action="edit"]');
-    if (editBtn) {
-      const id = editBtn.dataset.id;
-      const product = ProductAPI.getById(id);
-      if (product) openProductForm(product);
-      return;
-    }
-
-    const delBtn = e.target.closest('[data-action="delete"]');
-    if (delBtn) {
-      const id = delBtn.dataset.id;
-      openDeleteModal(id);
-      return;
-    }
-  });
-
-  // Lightbox close
-  DOM.closeLightbox.addEventListener("click", () => closeModal(DOM.imageLightbox));
-  DOM.imageLightbox.addEventListener("click", (e) => {
-    if (e.target === DOM.imageLightbox) closeModal(DOM.imageLightbox);
-  });
-
-  // Pagination delegation
-  DOM.paginationContainer.addEventListener("click", (e) => {
-    const pageBtn = e.target.closest("[data-page]");
-    if (pageBtn && !pageBtn.disabled) {
-      const page = parseInt(pageBtn.dataset.page, 10);
-      if (page > 0 && page !== state.currentPage) {
-        state.currentPage = page;
-        renderProducts();
+    if (editingProductId) {
+      const idx = products.findIndex((p) => p.id === editingProductId);
+      if (idx !== -1) {
+        products[idx] = { ...products[idx], ...data };
+        toast("تم تحديث المنتج بنجاح ✓");
       }
+    } else {
+      products.unshift({ id: uid(), ...data });
+      toast('تمت إضافة "' + name + '" للمتجر بنجاح ✓');
     }
+
+    saveAll();
+    resetProductForm();
   });
 
-  // Image dropzone & file picker
-  DOM.dropzone.addEventListener("click", () => DOM.imageInput.click());
-  DOM.addThumbBtn.addEventListener("click", () => DOM.imageInput.click());
-  DOM.imageInput.addEventListener("change", (e) => {
-    if (e.target.files && e.target.files.length > 0) {
-      handleImageFiles(e.target.files);
-      DOM.imageInput.value = "";
-    }
-  });
-
-  // Thumbnail grid delegation
-  DOM.imagesGrid.addEventListener("click", (e) => {
-    const delBtn = e.target.closest("[data-del-img]");
-    if (delBtn) {
-      e.stopPropagation();
-      removeImage(delBtn.dataset.delImg);
-      return;
-    }
-    const item = e.target.closest(".thumb-preview-item");
-    if (item && item.dataset.imgId) {
-      setMainImage(item.dataset.imgId);
-    }
-  });
-
-  // Delete modal actions
-  DOM.confirmDeleteBtn.addEventListener("click", confirmDelete);
-  DOM.cancelDeleteBtn.addEventListener("click", closeDeleteModal);
-  DOM.closeDeleteModalBtn.addEventListener("click", closeDeleteModal);
-  DOM.deleteModal.addEventListener("click", (e) => {
-    if (e.target === DOM.deleteModal) closeDeleteModal();
-  });
-
-  // Logout button action
-  if (DOM.logoutBtn) {
-    DOM.logoutBtn.addEventListener("click", async () => {
-      try {
-        await signOut(auth);
-        window.location.replace("login.html");
-      } catch (err) {
-        console.error("Sign out error:", err);
-        showToast("تعذر تسجيل الخروج", "error");
-      }
+  // Banner Segmented Control
+  const bannerSeg = $("bannerSeg");
+  if (bannerSeg) {
+    bannerSeg.addEventListener("click", (e) => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      bannerSeg.querySelectorAll("button").forEach((x) => x.classList.remove("on"));
+      b.classList.add("on");
+      bannerMode = b.dataset.v;
+      if ($("bannerColorBox")) $("bannerColorBox").style.display = bannerMode === "color" ? "block" : "none";
+      if ($("bannerImgBox")) $("bannerImgBox").style.display = bannerMode === "image" ? "block" : "none";
+      updateBannerPreview();
     });
   }
 
-  // Category Modal actions
-  DOM.openAddCategoryModalBtn?.addEventListener("click", openCategoryModal);
-  DOM.closeCategoryModalBtn?.addEventListener("click", closeCategoryModal);
-  DOM.cancelCategoryModalBtn?.addEventListener("click", closeCategoryModal);
-  DOM.categoryForm?.addEventListener("submit", handleCreateCategory);
-  DOM.addCategoryModal?.addEventListener("click", (e) => {
-    if (e.target === DOM.addCategoryModal) closeCategoryModal();
-  });
+  ["cName", "cMsg"].forEach((id) => $(id)?.addEventListener("input", updateBannerPreview));
+  $("cColor1")?.addEventListener("input", updateBannerPreview);
+  $("cColor2")?.addEventListener("input", updateBannerPreview);
 
-  // Global Escape key handler (handles nested modal cleanly)
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      if (DOM.addCategoryModal?.classList.contains("show")) {
-        closeCategoryModal();
-        return;
-      }
-      closeAllModals();
+  // Category Banner Image File Input
+  $("cImgFile")?.addEventListener("change", async (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    if (!f.type.startsWith("image/")) {
+      toast("الملف المختار ليس صورة صالحة", false);
+      return;
     }
-  });
-
-  // --- Sizes Options Event Handlers ---
-  document.querySelectorAll('input[name="hasSizesToggle"]').forEach(radio => {
-    radio.addEventListener("change", (e) => {
-      const isYes = e.target.value === "yes";
-      if (DOM.sizesConfigBox) DOM.sizesConfigBox.hidden = !isYes;
-      if (isYes && state.formSizes.length === 0) {
-        DOM.newSizeInput?.focus();
-      }
-    });
-  });
-
-  DOM.addSizeBtn?.addEventListener("click", () => {
-    if (DOM.newSizeInput && DOM.newSizeInput.value.trim()) {
-      addSizeToForm(DOM.newSizeInput.value);
-      DOM.newSizeInput.value = "";
-      DOM.newSizeInput.focus();
-    }
-  });
-
-  DOM.newSizeInput?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (DOM.newSizeInput.value.trim()) {
-        addSizeToForm(DOM.newSizeInput.value);
-        DOM.newSizeInput.value = "";
-      }
-    }
-  });
-
-  DOM.sizesChipsList?.addEventListener("click", (e) => {
-    const btn = e.target.closest('[data-action="remove-size"]');
-    if (btn) {
-      const idx = parseInt(btn.dataset.index, 10);
-      removeSizeFromForm(idx);
-    }
-  });
-
-  DOM.sizePresetsList?.addEventListener("click", (e) => {
-    const chip = e.target.closest(".preset-chip");
-    if (chip && chip.dataset.val) {
-      addSizeToForm(chip.dataset.val);
-    }
-  });
-
-  // --- Colors Options Event Handlers ---
-  document.querySelectorAll('input[name="hasColorsToggle"]').forEach(radio => {
-    radio.addEventListener("change", (e) => {
-      const isYes = e.target.value === "yes";
-      if (DOM.colorsConfigBox) DOM.colorsConfigBox.hidden = !isYes;
-      if (isYes && state.formColors.length === 0) {
-        addColorToForm("أسود", "#111111");
-      }
-    });
-  });
-
-  DOM.addColorBtn?.addEventListener("click", () => {
-    addColorToForm("", "#111111");
-    setTimeout(() => {
-      const inputs = DOM.colorsListGrid?.querySelectorAll(".color-name-input");
-      if (inputs && inputs.length > 0) inputs[inputs.length - 1].focus();
-    }, 50);
-  });
-
-  DOM.colorsListGrid?.addEventListener("input", (e) => {
-    // Color picker swatch change
-    if (e.target.classList.contains("color-picker-input")) {
-      const idx = parseInt(e.target.dataset.index, 10);
-      const val = e.target.value;
-      if (state.formColors[idx]) {
-        state.formColors[idx].value = val;
-        const swatchWrap = e.target.closest(".color-swatch-picker-wrap");
-        if (swatchWrap) swatchWrap.style.backgroundColor = val;
-      }
+    if (f.size > 4 * 1024 * 1024) {
+      toast("حجم البنر كبير (الحد الأقصى 4MB)", false);
       return;
     }
 
-    // Color name text change
-    if (e.target.classList.contains("color-name-input")) {
-      const idx = parseInt(e.target.dataset.index, 10);
-      if (state.formColors[idx]) {
-        state.formColors[idx].name = e.target.value;
+    const r = new FileReader();
+    r.onload = (ev) => {
+      catImgData = ev.target.result;
+      const uploader = $("cUploader");
+      if (uploader) {
+        uploader.classList.add("has-img");
+        uploader.innerHTML = `<img src="${catImgData}" alt="" style="height:150px">`;
       }
-    }
+      updateBannerPreview();
+      clearErr("cBanner");
+    };
+    r.readAsDataURL(f);
+
+    try {
+      const secureUrl = await uploadImageToCloudinary(f);
+      if (secureUrl) {
+        catImgData = secureUrl;
+        updateBannerPreview();
+      }
+    } catch (_) {}
   });
 
-  DOM.colorsListGrid?.addEventListener("click", (e) => {
-    const delBtn = e.target.closest('[data-action="remove-color"]');
-    if (delBtn) {
-      const idx = parseInt(delBtn.dataset.index, 10);
-      removeColorFromForm(idx);
+  // Category Form Submit
+  $("categoryForm")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = $("cName") ? $("cName").value.trim() : "";
+    const msg = $("cMsg") ? $("cMsg").value.trim() : "";
+    const desc = $("cDesc") ? $("cDesc").value.trim() : "";
+
+    let ok = true;
+    if (name.length < 2) {
+      markErr("cName");
+      ok = false;
     }
+    if (cats.some((c) => c.name.toLowerCase() === name.toLowerCase() && c.id !== editingCatId)) {
+      markErr("cName");
+      toast("يوجد تصنيف بنفس الاسم مسبقاً", false);
+      ok = false;
+    }
+    if (msg.length < 5) {
+      markErr("cMsg");
+      ok = false;
+    }
+    if (bannerMode === "image" && !catImgData) {
+      setErr("cBanner");
+      ok = false;
+    }
+
+    if (!ok) {
+      toast("يرجى مراجعة الحقول المعلّمة بالأحمر", false);
+      return;
+    }
+
+    const banner =
+      bannerMode === "color"
+        ? {
+            type: "color",
+            c1: $("cColor1") ? $("cColor1").value : "#1d1a16",
+            c2: $("cColor2") ? $("cColor2").value : "#b99a6b",
+            img: ""
+          }
+        : {
+            type: "image",
+            c1: "#1d1a16",
+            c2: "#1d1a16",
+            img: catImgData
+          };
+
+    if (editingCatId) {
+      const idx = cats.findIndex((c) => c.id === editingCatId);
+      if (idx !== -1) {
+        cats[idx] = { ...cats[idx], name, msg, banner, desc };
+        toast("تم تحديث التصنيف بنجاح ✓");
+      }
+    } else {
+      cats.push({ id: uid(), name, msg, banner, desc, active: true });
+      toast('تمت إضافة تصنيف "' + name + '" بنجاح ✓');
+    }
+
+    saveAll();
+    resetCatForm();
   });
 
-  DOM.colorPresetsList?.addEventListener("click", (e) => {
-    const chip = e.target.closest(".color-preset-chip");
-    if (chip && chip.dataset.name && chip.dataset.val) {
-      const name = chip.dataset.name;
-      const val = chip.dataset.val;
-      // If already added, don't duplicate
-      if (!state.formColors.some(c => c.name.toLowerCase() === name.toLowerCase())) {
-        addColorToForm(name, val);
-      }
-    }
+  // Confirmation Modal Listeners
+  $("cfYes")?.addEventListener("click", () => {
+    $("confirmModal")?.classList.remove("open");
+    if (confirmCb) confirmCb();
+  });
+
+  $("confirmModal")?.addEventListener("click", (e) => {
+    if (e.target.id === "confirmModal") e.target.classList.remove("open");
+  });
+
+  $("exportModal")?.addEventListener("click", (e) => {
+    if (e.target.id === "exportModal") e.target.classList.remove("open");
   });
 }
 
-// --- Initialization & Auth Guard ---
-initEventListeners();
+// --- Expose Global Functions for Inline HTML Attributes ---
+window.switchView = switchView;
+window.openExport = openExport;
+window.copyExport = copyExport;
+window.downloadExport = downloadExport;
+window.askReset = askReset;
+window.editProduct = editProduct;
+window.askDeleteProduct = askDeleteProduct;
+window.cancelProductEdit = cancelProductEdit;
+window.clearProductImage = clearProductImage;
+window.toggleImgUrl = toggleImgUrl;
+window.addColorLine = addColorLine;
+window.editCat = editCat;
+window.askDeleteCat = askDeleteCat;
+window.cancelCatEdit = cancelCatEdit;
+window.renderProductsTable = renderProductsTable;
 
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    // Unauthenticated user -> redirect to login.html
-    window.location.replace("login.html");
-    return;
+// --- Firebase Authentication Guard (Optional / Non-blocking) ---
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    const adminPill = document.querySelector(".admin-pill");
+    if (adminPill) {
+      adminPill.title = user.email || "مدير النظام";
+    }
   }
-
-  // Authenticated admin user
-  if (DOM.adminUserEmail) {
-    DOM.adminUserEmail.textContent = user.email || "Admin";
-  }
-  document.body.classList.remove("auth-loading");
-  await loadCategories();
-  await loadProducts();
 });
+
+// --- Initialize Everything on DOM Ready ---
+document.addEventListener("DOMContentLoaded", () => {
+  initEvents();
+  addColorLine("#f5f2ea", "أبيض عاجي");
+  addColorLine("#1d1a16", "أسود");
+  updateBannerPreview();
+  refresh();
+});
+
+// Immediate execution fallback if already parsed
+initEvents();
+addColorLine("#f5f2ea", "أبيض عاجي");
+addColorLine("#1d1a16", "أسود");
+updateBannerPreview();
+refresh();
