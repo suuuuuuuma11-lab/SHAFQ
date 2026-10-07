@@ -3,55 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
-  <meta name="theme-color" content="#0D1211">
+  <meta name="theme-color" content="#0D1914">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="description" content="ClothStore — متجر الأزياء الفاخرة والعصرية في الجزائر. تسوق أحدث التشكيلات مع خدمة الدفع عند الاستلام والتوصيل السريع.">
-  <title>ClothStore | متجر الأزياء الفاخرة</title>
+  <meta name="description" content="ClothStore — متجر الأزياء الفاخرة والعصرية. إطلالات عصرية لكل لحظة، خامات مختارة بعناية، والدفع عند الاستلام.">
+  <title>ClothStore ✦ | إطلالات عصرية لكل لحظة</title>
 
-  <!-- Google Fonts: Cairo -->
+  <!-- Google Fonts: Alexandria & IBM Plex Sans Arabic -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=fashion_v5">
+  <link rel="stylesheet" href="style.css?v=clothstore_luxury_v2">
 </head>
 <body>
 
   <!-- =========================================================================
-       1. STICKY HEADER (OPTIMIZED FOR MOBILE & DESKTOP)
+       1. SITE HEADER (MATCHES DARK MINIMAL LUXURY NAVBAR IN REFERENCE)
        ========================================================================= -->
   <header class="site-header" id="siteHeader">
     <div class="header-inner">
       
-      <!-- Mobile Menu Toggle (Start/Right on mobile in RTL) -->
-      <button class="header-icon-btn mobile-menu-btn" type="button" id="mobileMenuBtn" aria-label="فتح القائمة الرئيسية" title="القائمة">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-          <line x1="3" y1="12" x2="21" y2="12"/>
-          <line x1="3" y1="6" x2="21" y2="6"/>
-          <line x1="3" y1="18" x2="21" y2="18"/>
-        </svg>
-      </button>
-
-      <!-- Center / Brand Logo -->
+      <!-- Right / Start: Brand Logo -->
       <div class="header-brand">
         <a class="brand-link" href="#" aria-label="ClothStore الصفحة الرئيسية">
-          <svg class="brand-hanger-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M32 16 C32 10 38 8 38 14 C38 18 32 20 32 26" />
-            <path d="M32 26 L10 42 C8 43.5 9 46 11.5 46 L52.5 46 C55 46 56 43.5 54 42 Z" />
-          </svg>
           <span class="brand-title">ClothStore</span>
+          <svg class="brand-sparkle" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/>
+          </svg>
         </a>
       </div>
 
-      <!-- Center: Main Navigation Links (Desktop only) -->
+      <!-- Center: Main Navigation Links -->
       <nav class="header-nav" aria-label="التنقل الرئيسي">
         <a class="nav-item active" href="#hero">الرئيسية</a>
         <a class="nav-item" href="#productsSection">المنتجات</a>
         <a class="nav-item" href="#categoriesSection">الأقسام</a>
       </nav>
 
-      <!-- Left / End: Header Actions -->
+      <!-- Left / End: Actions (Search, Cart, Mobile Toggle) -->
       <div class="header-actions">
         <!-- Search Trigger -->
         <button class="header-icon-btn" type="button" id="searchBtn" title="بحث عن منتج" aria-label="بحث">
@@ -61,7 +51,7 @@
           </svg>
         </button>
 
-        <!-- Cart Trigger with Live Counter Badge -->
+        <!-- Cart Trigger with Badge -->
         <button class="header-icon-btn cart-trigger-btn" type="button" id="cartBtn" title="سلة المشتريات" aria-label="سلة المشتريات">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
@@ -71,216 +61,149 @@
           <span class="cart-badge" id="cartCountBadge">0</span>
         </button>
 
+        <!-- Mobile Menu Toggle Button -->
+        <button class="header-icon-btn mobile-menu-btn" type="button" id="mobileMenuBtn" aria-label="القائمة">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
       </div>
 
     </div>
   </header>
 
-  <!-- Mobile Navigation Overlay & Drawer -->
+  <!-- Mobile Drawer Overlay & Drawer -->
   <div class="drawer-overlay" id="mobileDrawerOverlay" aria-hidden="true"></div>
   <aside class="mobile-drawer" id="mobileDrawer" aria-hidden="true" role="dialog" aria-label="القائمة الرئيسية">
     <div class="mobile-drawer-header">
       <div class="header-brand">
-        <svg class="brand-hanger-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.2">
-          <path d="M32 16 C32 10 38 8 38 14 C38 18 32 20 32 26" />
-          <path d="M32 26 L10 42 C8 43.5 9 46 11.5 46 L52.5 46 C55 46 56 43.5 54 42 Z" />
-        </svg>
         <span class="brand-title">ClothStore</span>
+        <svg class="brand-sparkle" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/>
+        </svg>
       </div>
       <button class="drawer-close-btn" type="button" id="closeMobileDrawerBtn" aria-label="إغلاق القائمة">✕</button>
     </div>
 
     <nav class="mobile-drawer-nav">
-      <a class="mobile-nav-link" href="#hero">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        <span>الرئيسية</span>
-      </a>
-      <a class="mobile-nav-link" href="#productsSection">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-        <span>المنتجات</span>
-      </a>
-      <a class="mobile-nav-link" href="#categoriesSection">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        <span>الأقسام</span>
-      </a>
-      <a class="mobile-nav-link" href="../dashboard/admin.html">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <span>لوحة التحكم</span>
-      </a>
+      <a class="mobile-nav-link" href="#hero">الرئيسية</a>
+      <a class="mobile-nav-link" href="#productsSection">المنتجات</a>
+      <a class="mobile-nav-link" href="#categoriesSection">الأقسام</a>
+      <a class="mobile-nav-link" href="../dashboard/admin.html">لوحة التحكم</a>
     </nav>
 
-    <!-- Mobile Drawer Quick Category Filters -->
     <div class="mobile-drawer-categories">
       <span class="drawer-section-title">تسوق سريع حسب الفئة</span>
       <div class="drawer-cat-tags" id="drawerCatTags">
         <button class="drawer-cat-pill active" type="button" data-cat="all">الكل</button>
       </div>
     </div>
-
-    <!-- Reassurance / Footer in Drawer -->
-    <div class="mobile-drawer-footer">
-      <div class="drawer-trust-badge">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-        <span>الدفع عند الاستلام — توصيل 58 ولاية</span>
-      </div>
-    </div>
   </aside>
 
   <!-- =========================================================================
-       2. HERO SECTION (EDITORIAL BILLBOARD)
+       2. HERO SECTION (EDITORIAL BILLBOARD MATCHING REFERENCE)
        ========================================================================= -->
   <section class="hero-section" id="hero">
-    <div class="hero-banner">
-      <!-- Background Image with Overlay -->
-      <div class="hero-image-wrap">
-        <img 
-          class="hero-img" 
-          id="heroImg" 
-          src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1600&q=85" 
-          alt="أحدث صيحات أزياء ClothStore"
-        >
-        <div class="hero-overlay"></div>
-      </div>
+    <div class="hero-backdrop-wrap">
+      <img class="hero-img" id="heroImg" src="images/hero.jpg" alt="ClothStore إطلالات عصرية لكل لحظة">
+      <div class="hero-overlay"></div>
+    </div>
 
-      <!-- Hero Content Panel -->
+    <!-- Vertical Accent Ribbon on the far right (Matches Reference) -->
+    <div class="hero-vertical-accent" aria-hidden="true">
+      <span class="hero-vertical-line"></span>
+      <span class="hero-vertical-text">New Cod ✦ ClothStore</span>
+    </div>
+
+    <div class="site-container hero-container">
       <div class="hero-content">
-        <span class="hero-badge">تشكيلة 2026 الحصرية</span>
-        <h1 class="hero-title">أناقة راقية في كل تفصيل</h1>
-        <p class="hero-subtitle">تصاميم حصرية مختارة بعناية فائقة لتمنحك إطلالة فريدة تجمع بين الفخامة والراحة العصرية.</p>
+        <span class="hero-kicker">اكتشف أسلوبك</span>
+        <h1 class="hero-title">
+          <span>إطلالات عصرية</span>
+          <span>لكل لحظة</span>
+        </h1>
+        <p class="hero-desc">مجموعة مختارة بعناية من أحدث التصاميم، لتمنحك الراحة والأناقة في كل يوم</p>
+        
         <div class="hero-cta-wrap">
-          <a class="btn-hero-cta" href="#productsSection">
-            <span>تسوق التشكيلة</span>
-            <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <a class="btn-hero-action" href="#productsSection">
+            <span>تسوق الآن</span>
+            <svg class="hero-arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
               <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
           </a>
-          <a class="hero-secondary-link" href="#categoriesSection">
-            <span>تصفح الأقسام</span>
-          </a>
         </div>
       </div>
-
-      <!-- Slider Arrows -->
-      <button class="hero-nav-btn prev" type="button" id="heroPrevBtn" aria-label="الشريحة السابقة">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
-      </button>
-      <button class="hero-nav-btn next" type="button" id="heroNextBtn" aria-label="الشريحة التالية">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-      </button>
-
-      <!-- Slider Indicator Dots -->
-      <div class="hero-dots" id="heroDots">
-        <span class="hero-dot active" data-slide="0"></span>
-        <span class="hero-dot" data-slide="1"></span>
-        <span class="hero-dot" data-slide="2"></span>
-      </div>
     </div>
+
+    <!-- Slider Bars (Bottom-Left - Matches Reference) -->
+    <div class="hero-slider-bars" id="heroDots" aria-hidden="true">
+      <span class="hero-bar-item active" data-slide="0"></span>
+      <span class="hero-bar-item" data-slide="1"></span>
+      <span class="hero-bar-item" data-slide="2"></span>
+    </div>
+
+    <!-- Slider Navigation Arrows (Accessible / Hidden by default or styled) -->
+    <button class="hero-nav-arrow prev" type="button" id="heroPrevBtn" aria-label="الشريحة السابقة" style="display:none;"></button>
+    <button class="hero-nav-arrow next" type="button" id="heroNextBtn" aria-label="الشريحة التالية" style="display:none;"></button>
   </section>
 
   <!-- =========================================================================
-       3. TRUST / BENEFITS STRIP
-       ========================================================================= -->
-  <section class="benefits-section" aria-label="مزايا التسوق من متجرنا">
-    <div class="site-container">
-      <div class="benefits-grid">
-        
-        <div class="benefit-item">
-          <div class="benefit-icon-box">
-            <!-- Truck Icon -->
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="1" y="3" width="15" height="13"/>
-              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
-              <circle cx="5.5" cy="18.5" r="2.5"/>
-              <circle cx="18.5" cy="18.5" r="2.5"/>
-            </svg>
-          </div>
-          <div class="benefit-text">
-            <strong class="benefit-title">توصيل سريع</strong>
-            <span class="benefit-sub">لجميع أنحاء الجزائر</span>
-          </div>
-        </div>
-
-        <div class="benefit-item">
-          <div class="benefit-icon-box">
-            <!-- Shield / Check Icon -->
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              <polyline points="9 12 11 14 15 10"/>
-            </svg>
-          </div>
-          <div class="benefit-text">
-            <strong class="benefit-title">دفع عند الاستلام</strong>
-            <span class="benefit-sub">بكل أمان وراحة</span>
-          </div>
-        </div>
-
-        <div class="benefit-item">
-          <div class="benefit-icon-box">
-            <!-- Quality Badge Icon -->
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="8" r="6"/>
-              <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
-            </svg>
-          </div>
-          <div class="benefit-text">
-            <strong class="benefit-title">جودة عالية</strong>
-            <span class="benefit-sub">منتجات أصلية مضمونة</span>
-          </div>
-        </div>
-
-        <div class="benefit-item">
-          <div class="benefit-icon-box">
-            <!-- Support Headphones Icon -->
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
-              <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
-            </svg>
-          </div>
-          <div class="benefit-text">
-            <strong class="benefit-title">دعم العملاء</strong>
-            <span class="benefit-sub">خدمة على مدار الساعة</span>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- =========================================================================
-       4. CATEGORIES SECTION ("تسوق حسب الفئة")
+       3. CATEGORIES SECTION ("تسوق حسب الفئة" / "اكتشف أقسامنا")
        ========================================================================= -->
   <section class="categories-section" id="categoriesSection">
     <div class="site-container">
       
-      <div class="section-header">
-        <h2 class="section-title">تسوق حسب الفئة</h2>
-        <a class="section-link" href="#productsSection" id="viewAllCategoriesBtn">
-          <span>عرض الكل</span>
-          <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-        </a>
+      <div class="section-heading-box">
+        <span class="section-kicker">تسوق حسب الفئة</span>
+        <h2 class="section-title">اكتشف أقسامنا</h2>
       </div>
 
       <div class="categories-grid" id="categoriesGrid">
-        <!-- Immediate Skeleton Loading State -->
-        <div class="category-card category-card-skeleton" aria-hidden="true">
-          <div class="category-img-box skeleton-thumb"><div class="skeleton-shimmer"></div></div>
-          <div class="skeleton-line"></div>
+        <!-- Default Reference Categories Rendered Instantly, Synced with JS -->
+        <div class="category-card" data-category-id="cat_women" data-category-name="النساء" role="button" tabindex="0">
+          <div class="category-img-box">
+            <img src="images/cat_women.jpg" alt="النساء" loading="lazy">
+            <div class="category-gradient"></div>
+          </div>
+          <div class="category-bottom-bar">
+            <svg class="cat-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <span class="category-name">النساء</span>
+          </div>
         </div>
-        <div class="category-card category-card-skeleton" aria-hidden="true">
-          <div class="category-img-box skeleton-thumb"><div class="skeleton-shimmer"></div></div>
-          <div class="skeleton-line"></div>
+
+        <div class="category-card" data-category-id="cat_men" data-category-name="الرجال" role="button" tabindex="0">
+          <div class="category-img-box">
+            <img src="images/cat_men.jpg" alt="الرجال" loading="lazy">
+            <div class="category-gradient"></div>
+          </div>
+          <div class="category-bottom-bar">
+            <svg class="cat-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <span class="category-name">الرجال</span>
+          </div>
         </div>
-        <div class="category-card category-card-skeleton" aria-hidden="true">
-          <div class="category-img-box skeleton-thumb"><div class="skeleton-shimmer"></div></div>
-          <div class="skeleton-line"></div>
+
+        <div class="category-card" data-category-id="cat_casual" data-category-name="الملابس الكاجوال" role="button" tabindex="0">
+          <div class="category-img-box">
+            <img src="images/cat_casual.jpg" alt="الملابس الكاجوال" loading="lazy">
+            <div class="category-gradient"></div>
+          </div>
+          <div class="category-bottom-bar">
+            <svg class="cat-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <span class="category-name">الملابس الكاجوال</span>
+          </div>
         </div>
-        <div class="category-card category-card-skeleton" aria-hidden="true">
-          <div class="category-img-box skeleton-thumb"><div class="skeleton-shimmer"></div></div>
-          <div class="skeleton-line"></div>
-        </div>
-        <div class="category-card category-card-skeleton" aria-hidden="true">
-          <div class="category-img-box skeleton-thumb"><div class="skeleton-shimmer"></div></div>
-          <div class="skeleton-line"></div>
+
+        <div class="category-card" data-category-id="cat_accessories" data-category-name="الإكسسوارات" role="button" tabindex="0">
+          <div class="category-img-box">
+            <img src="images/cat_accessories.jpg" alt="الإكسسوارات" loading="lazy">
+            <div class="category-gradient"></div>
+          </div>
+          <div class="category-bottom-bar">
+            <svg class="cat-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <span class="category-name">الإكسسوارات</span>
+          </div>
         </div>
       </div>
 
@@ -288,108 +211,125 @@
   </section>
 
   <!-- =========================================================================
-       5. FEATURED / LATEST PRODUCTS ("أحدث المنتجات")
+       4. LATEST PRODUCTS SECTION ("أحدث المنتجات" / "تشكيلتنا الجديدة")
        ========================================================================= -->
   <section class="products-section" id="productsSection">
     <div class="site-container">
       
-      <div class="section-header">
-        <h2 class="section-title">أحدث المنتجات</h2>
-        <div class="category-tabs" id="categoryTabs" role="tablist">
-          <button class="cat-tab active" type="button" data-filter="all">الكل</button>
+      <div class="section-header-split">
+        <div class="heading-text-group">
+          <span class="section-kicker">أحدث المنتجات</span>
+          <h2 class="section-title">تشكيلتنا الجديدة</h2>
         </div>
+        <a class="view-all-link" href="#productsSection" id="viewAllCategoriesBtn">
+          <span>عرض الكل</span>
+          <svg class="arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </a>
+      </div>
+
+      <!-- Hidden Category Tabs (Used programmatically for filters) -->
+      <div class="category-tabs" id="categoryTabs" role="tablist" style="display: none;">
+        <button class="cat-tab active" type="button" data-filter="all">الكل</button>
       </div>
 
       <!-- Products Grid (4 Columns Desktop / 2 Mobile) -->
       <div class="products-grid" id="productsGrid" aria-live="polite">
-        <!-- Immediate Skeleton Loading State (Matches Actual Product Card Geometry) -->
-        <article class="product-card product-card-skeleton" aria-hidden="true">
-          <div class="product-thumb-wrap skeleton-thumb"><div class="skeleton-shimmer"></div></div>
-          <div class="product-info-body">
-            <div class="skeleton-line skeleton-cat-line"></div>
-            <div class="skeleton-line skeleton-title-line-1"></div>
-            <div class="skeleton-line skeleton-title-line-2"></div>
-            <div class="product-price-row"><div class="skeleton-line skeleton-price-line"></div></div>
-            <div class="skeleton-btn"></div>
-          </div>
-        </article>
-        <article class="product-card product-card-skeleton" aria-hidden="true">
-          <div class="product-thumb-wrap skeleton-thumb"><div class="skeleton-shimmer"></div></div>
-          <div class="product-info-body">
-            <div class="skeleton-line skeleton-cat-line"></div>
-            <div class="skeleton-line skeleton-title-line-1"></div>
-            <div class="skeleton-line skeleton-title-line-2"></div>
-            <div class="product-price-row"><div class="skeleton-line skeleton-price-line"></div></div>
-            <div class="skeleton-btn"></div>
-          </div>
-        </article>
-        <article class="product-card product-card-skeleton" aria-hidden="true">
-          <div class="product-thumb-wrap skeleton-thumb"><div class="skeleton-shimmer"></div></div>
-          <div class="product-info-body">
-            <div class="skeleton-line skeleton-cat-line"></div>
-            <div class="skeleton-line skeleton-title-line-1"></div>
-            <div class="skeleton-line skeleton-title-line-2"></div>
-            <div class="product-price-row"><div class="skeleton-line skeleton-price-line"></div></div>
-            <div class="skeleton-btn"></div>
-          </div>
-        </article>
-        <article class="product-card product-card-skeleton" aria-hidden="true">
-          <div class="product-thumb-wrap skeleton-thumb"><div class="skeleton-shimmer"></div></div>
-          <div class="product-info-body">
-            <div class="skeleton-line skeleton-cat-line"></div>
-            <div class="skeleton-line skeleton-title-line-1"></div>
-            <div class="skeleton-line skeleton-title-line-2"></div>
-            <div class="product-price-row"><div class="skeleton-line skeleton-price-line"></div></div>
-            <div class="skeleton-btn"></div>
-          </div>
-        </article>
-        <article class="product-card product-card-skeleton" aria-hidden="true">
-          <div class="product-thumb-wrap skeleton-thumb"><div class="skeleton-shimmer"></div></div>
-          <div class="product-info-body">
-            <div class="skeleton-line skeleton-cat-line"></div>
-            <div class="skeleton-line skeleton-title-line-1"></div>
-            <div class="skeleton-line skeleton-title-line-2"></div>
-            <div class="product-price-row"><div class="skeleton-line skeleton-price-line"></div></div>
-            <div class="skeleton-btn"></div>
-          </div>
-        </article>
-        <article class="product-card product-card-skeleton" aria-hidden="true">
-          <div class="product-thumb-wrap skeleton-thumb"><div class="skeleton-shimmer"></div></div>
-          <div class="product-info-body">
-            <div class="skeleton-line skeleton-cat-line"></div>
-            <div class="skeleton-line skeleton-title-line-1"></div>
-            <div class="skeleton-line skeleton-title-line-2"></div>
-            <div class="product-price-row"><div class="skeleton-line skeleton-price-line"></div></div>
-            <div class="skeleton-btn"></div>
-          </div>
-        </article>
-        <article class="product-card product-card-skeleton" aria-hidden="true">
-          <div class="product-thumb-wrap skeleton-thumb"><div class="skeleton-shimmer"></div></div>
-          <div class="product-info-body">
-            <div class="skeleton-line skeleton-cat-line"></div>
-            <div class="skeleton-line skeleton-title-line-1"></div>
-            <div class="skeleton-line skeleton-title-line-2"></div>
-            <div class="product-price-row"><div class="skeleton-line skeleton-price-line"></div></div>
-            <div class="skeleton-btn"></div>
-          </div>
-        </article>
-        <article class="product-card product-card-skeleton" aria-hidden="true">
-          <div class="product-thumb-wrap skeleton-thumb"><div class="skeleton-shimmer"></div></div>
-          <div class="product-info-body">
-            <div class="skeleton-line skeleton-cat-line"></div>
-            <div class="skeleton-line skeleton-title-line-1"></div>
-            <div class="skeleton-line skeleton-title-line-2"></div>
-            <div class="product-price-row"><div class="skeleton-line skeleton-price-line"></div></div>
-            <div class="skeleton-btn"></div>
-          </div>
-        </article>
+        <!-- Rendered instantly via script.js and matches reference products -->
       </div>
 
     </div>
   </section>
 
   <!-- =========================================================================
-       6. PRODUCT DETAILS MODAL (MATCHES TOP-RIGHT OF REFERENCE)
+       5. QUALITY & FABRICS BANNER ("خامات مختارة بعناية")
+       ========================================================================= -->
+  <section class="promo-banner-section" aria-label="خامات مختارة بعناية">
+    <div class="site-container">
+      <div class="promo-banner-card">
+        
+        <div class="promo-banner-content">
+          <span class="promo-kicker">جودة وتألقة دائماً</span>
+          <h2 class="promo-title">خامات مختارة بعناية</h2>
+          <p class="promo-desc">نحرص على اختيار أفضل الخامات لتمنحك راحة تدوم وأناقة تدوم أكثر</p>
+          <a class="btn-promo-action" href="#productsSection">
+            <span>اكتشف المزيد</span>
+            <svg class="arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </a>
+        </div>
+
+        <div class="promo-banner-visual">
+          <img src="images/banner_tag_coat.jpg" alt="خامات مختارة بعناية - ClothStore" loading="lazy">
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       6. SITE FOOTER (MATCHES CLEAN EDITORIAL FOOTER IN REFERENCE)
+       ========================================================================= -->
+  <footer class="site-footer">
+    <div class="site-container">
+      <div class="footer-layout">
+        
+        <!-- Left: Social Channels -->
+        <div class="footer-social-group">
+          <a href="#" class="social-icon-btn" aria-label="Instagram" title="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+            </svg>
+          </a>
+          <a href="#" class="social-icon-btn" aria-label="TikTok" title="TikTok">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.29 0 .58.04.86.12V9.4a6.33 6.33 0 0 0-.86-.06 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.58a8.28 8.28 0 0 0 4.84 1.56V6.69z"/>
+            </svg>
+          </a>
+          <a href="#" class="social-icon-btn" aria-label="X (Twitter)" title="X">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </a>
+          <a href="#" class="social-icon-btn" aria-label="YouTube" title="YouTube">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/>
+              <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="currentColor"/>
+            </svg>
+          </a>
+        </div>
+
+        <!-- Center: Brand Logo & Slogan -->
+        <div class="footer-center-brand">
+          <a class="footer-brand-title" href="#">
+            <span>ClothStore</span>
+            <svg class="brand-sparkle" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z"/>
+            </svg>
+          </a>
+          <span class="footer-slogan">More than just clothes</span>
+        </div>
+
+        <!-- Right: Links & Copyright -->
+        <div class="footer-right-info">
+          <nav class="footer-links-row">
+            <a href="#hero">الرئيسية</a>
+            <span class="link-bullet">|</span>
+            <a href="#productsSection">المنتجات</a>
+            <span class="link-bullet">|</span>
+            <a href="#categoriesSection">الأقسام</a>
+          </nav>
+          <span class="footer-copyright-text">© جميع الحقوق محفوظة لـ ClothStore 2026</span>
+        </div>
+
+      </div>
+    </div>
+  </footer>
+
+  <!-- =========================================================================
+       7. PRODUCT DETAILS MODAL
        ========================================================================= -->
   <div class="modal-backdrop" id="productModal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="modal-dialog product-modal-dialog">
@@ -403,7 +343,7 @@
   </div>
 
   <!-- =========================================================================
-       7. SLIDE-IN CART DRAWER (MATCHES BOTTOM-MIDDLE OF REFERENCE)
+       8. SLIDE-IN CART DRAWER
        ========================================================================= -->
   <div class="drawer-overlay" id="cartDrawerOverlay" aria-hidden="true"></div>
   <aside class="cart-drawer" id="cartDrawer" aria-hidden="true" role="dialog" aria-label="سلة المشتريات">
@@ -430,7 +370,7 @@
 
       <button class="btn-primary-action btn-checkout" type="button" id="proceedCheckoutBtn">
         <span>متابعة الدفع</span>
-        <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <svg class="arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       </button>
 
       <div class="cart-cod-guarantee">
@@ -445,7 +385,7 @@
   </aside>
 
   <!-- =========================================================================
-       8. CASH ON DELIVERY CHECKOUT MODAL
+       9. CASH ON DELIVERY CHECKOUT MODAL
        ========================================================================= -->
   <div class="modal-backdrop" id="checkoutModal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="modal-dialog checkout-modal-dialog">
@@ -512,7 +452,7 @@
   </div>
 
   <!-- =========================================================================
-       9. INSTANT SEARCH OVERLAY
+       10. INSTANT SEARCH OVERLAY
        ========================================================================= -->
   <div class="search-overlay" id="searchOverlay" aria-hidden="true">
     <div class="search-box-card">
@@ -520,19 +460,17 @@
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-        <input type="search" id="liveSearchInput" placeholder="ابحث عن قميص، هودي، حذاء، بنطلون..." autocomplete="off">
+        <input type="search" id="liveSearchInput" placeholder="ابحث عن جاكيت، هودي، كنزة صوف، بنطال..." autocomplete="off">
         <button class="search-close-btn" type="button" id="closeSearchBtn">✕</button>
       </div>
       <div class="search-results-list" id="searchResultsList"></div>
     </div>
   </div>
 
-
-
   <!-- Global Toast Message -->
   <div class="toast-notify" id="toastNotify" role="status" aria-live="polite"></div>
 
   <!-- Scripts -->
-  <script type="module" src="script.js?v=fashion_v5"></script>
+  <script type="module" src="script.js?v=clothstore_luxury_v2"></script>
 </body>
 </html>

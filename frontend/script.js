@@ -22,10 +22,113 @@ import {
 const TELEGRAM_BOT_TOKEN = "8916406368:AAFIJTPkAykiL54hn_mmbv6AqGax6lvq08U";
 const TELEGRAM_CHAT_ID = "6609345622";
 
+// --- Reference / Default Showcase Data (Exact Match with Reference Mockup) ---
+const REFERENCE_CATEGORIES = [
+  {
+    id: "cat_women",
+    name: "النساء",
+    slug: "women",
+    image: "images/cat_women.jpg"
+  },
+  {
+    id: "cat_men",
+    name: "الرجال",
+    slug: "men",
+    image: "images/cat_men.jpg"
+  },
+  {
+    id: "cat_casual",
+    name: "الملابس الكاجوال",
+    slug: "casual",
+    image: "images/cat_casual.jpg"
+  },
+  {
+    id: "cat_accessories",
+    name: "الإكسسوارات",
+    slug: "accessories",
+    image: "images/cat_accessories.jpg"
+  }
+];
+
+const REFERENCE_PRODUCTS = [
+  {
+    id: "ref_jacket",
+    name: "جاكيت خفيف",
+    category: "الرجال",
+    categoryId: "cat_men",
+    price: 3200,
+    priceDisplay: "3.200 د.ج",
+    isNew: false,
+    description: "جاكيت خفيف كلاسيكي بسحاب أنيق وتصميم عصري مريح يناسب الإطلالات اليومية والمناسبات.",
+    images: ["images/prod_jacket.jpg"],
+    colors: [
+      { name: "بيج / جملي", value: "#B8977E" },
+      { name: "أخضر داكن", value: "#1E3328" },
+      { name: "أسود", value: "#1B1B1B" }
+    ],
+    sizes: ["M", "L", "XL", "XXL"],
+    specs: ["خامة مقاومة للرياح وخفيفة الوزن", "سحاب معدني عالي الجودة", "قصة عصرية متناسقة"]
+  },
+  {
+    id: "ref_pants",
+    name: "بنطال واسع",
+    category: "الملابس الكاجوال",
+    categoryId: "cat_casual",
+    price: 2600,
+    priceDisplay: "2.600 د.ج",
+    isNew: false,
+    description: "بنطال واسع بقصة مريحة وأناقة عالية، مصمم بطيات راقية وخامة ناعمة تمنحك حرية الحركة طوال اليوم.",
+    images: ["images/prod_pants.jpg"],
+    colors: [
+      { name: "كريمي / أوف وايت", value: "#E6DED4" },
+      { name: "زيتي داكن", value: "#1F362B" },
+      { name: "كاربون أسود", value: "#1C1C1C" }
+    ],
+    sizes: ["38", "40", "42", "44"],
+    specs: ["قماش كتان وبوليفيسكوز فائق النعومة", "قصة واسعة مريحة (Wide Leg)", "خصر مريح وثابت"]
+  },
+  {
+    id: "ref_hoodie",
+    name: "هودي كلاسيك",
+    category: "الملابس الكاجوال",
+    categoryId: "cat_casual",
+    price: 2400,
+    priceDisplay: "2.400 د.ج",
+    isNew: false,
+    description: "هودي كلاسيكي مصنوع من أجود خامات القطن الدافئ، قصة مثالية وتفاصيل مريحة للاستخدام اليومي.",
+    images: ["images/prod_hoodie.jpg"],
+    colors: [
+      { name: "بيج ناعم", value: "#DFD8CB" },
+      { name: "أخضر زمردي داكن", value: "#1D3326" },
+      { name: "أسود فحمي", value: "#1A1A1A" }
+    ],
+    sizes: ["S", "M", "L", "XL"],
+    specs: ["قطن 100% مبطن بنعومة", "قبعة مريحة برباط تحكم", "جيب كانغارو واسع"]
+  },
+  {
+    id: "ref_sweater",
+    name: "كنزة صوف ناعمة",
+    category: "النساء",
+    categoryId: "cat_women",
+    price: 2800,
+    priceDisplay: "2.800 د.ج",
+    isNew: true,
+    description: "كنزة صوفية ناعمة بقصة فضفاضة مريحة وياقة مستديرة، تمنحك الدفء والأناقة بأسلوب مينيمالي فاخر.",
+    images: ["images/prod_sweater.jpg"],
+    colors: [
+      { name: "جملي دافئ", value: "#B58D70" },
+      { name: "بني شوكولاتة", value: "#6A5142" },
+      { name: "رمادي بيج فاتح", value: "#CEC7BF" }
+    ],
+    sizes: ["Standard", "S/M", "L/XL"],
+    specs: ["صوف فائق النعومة غير مسبب للحكة", "أكتاف منسدلة لإطلالة عصرية", "حياكة مضلعة متينة"]
+  }
+];
+
 // --- Application State ---
 const state = {
-  products: [],
-  categories: [],
+  products: [...REFERENCE_PRODUCTS],
+  categories: [...REFERENCE_CATEGORIES],
   activeFilter: "all",
   cart: loadCartFromStorage(),
   favorites: loadFavoritesFromStorage(),
@@ -38,9 +141,9 @@ const state = {
 
 // Hero Carousel Images
 const HERO_SLIDES = [
+  "images/hero.jpg",
   "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1600&q=85",
-  "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1600&q=85",
-  "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1600&q=85"
+  "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1600&q=85"
 ];
 
 // --- DOM References ---
@@ -412,7 +515,7 @@ async function loadStoreData() {
     if (catSnap) {
       parseCategoriesSnapshot(catSnap);
     }
-    if (prodSnap) {
+    if (prodSnap && !prodSnap.empty) {
       parseProductsSnapshot(prodSnap);
     }
     syncCategoriesFromProducts();
@@ -420,15 +523,15 @@ async function loadStoreData() {
     renderCategoriesUI();
 
     if (state.products.length === 0) {
-      renderEmptyState("لا توجد منتجات حاليًا");
-    } else {
-      renderProducts();
+      state.products = [...REFERENCE_PRODUCTS];
     }
+    renderProducts();
   } catch (serverErr) {
     console.warn("Firestore server fetch failed:", serverErr?.message || serverErr);
-    // If cache already provided products, keep them visible gracefully
     if (state.products.length === 0) {
-      renderErrorState();
+      state.products = [...REFERENCE_PRODUCTS];
+      renderCategoriesUI();
+      renderProducts();
     }
   }
 }
@@ -477,16 +580,19 @@ function renderCategoriesUI() {
           (p.categoryId && p.categoryId === cat.id) || 
           (p.category && (p.category.trim().toLowerCase() === cat.name.trim().toLowerCase() || p.category === cat.slug))
         );
-        const imgUrl = cat.image || (matchingProduct && matchingProduct.images && matchingProduct.images[0]) || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=500&q=80";
+        const imgUrl = cat.image || (matchingProduct && matchingProduct.images && matchingProduct.images[0]) || "images/cat_women.jpg";
         const isActive = state.activeFilter === cat.id || state.activeFilter === cat.name;
 
-        const optimizedCatImg = optimizeImageUrl(imgUrl, 320);
         return `
           <div class="category-card ${isActive ? "active" : ""}" data-category-id="${escapeHtml(cat.id)}" data-category-name="${escapeHtml(cat.name)}" role="button" tabindex="0">
             <div class="category-img-box">
-              <img src="${escapeHtml(optimizedCatImg)}" alt="${escapeHtml(cat.name)}" width="220" height="220" loading="lazy" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=500&q=80';">
+              <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(cat.name)}" loading="lazy">
+              <div class="category-gradient"></div>
             </div>
-            <span class="category-name">${escapeHtml(cat.name)}</span>
+            <div class="category-bottom-bar">
+              <svg class="cat-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              <span class="category-name">${escapeHtml(cat.name)}</span>
+            </div>
           </div>
         `;
       }).join("");
@@ -584,20 +690,13 @@ function renderProducts() {
   });
 
   if (state.products.length === 0) {
-    renderEmptyState("لا توجد منتجات حاليًا");
-    return;
+    state.products = [...REFERENCE_PRODUCTS];
   }
 
   if (filtered.length === 0) {
     DOM.productsGrid.innerHTML = `
       <div class="store-state-box">
-        <div class="store-state-icon store-empty-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="32" height="32">
-            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
-        </div>
         <h3 class="store-state-title">لا توجد منتجات في هذا القسم حالياً</h3>
-        <p class="store-state-desc">اختر قسماً آخر أو تصفح تشكيلة "الكل".</p>
         <button class="btn-state-action" type="button" id="resetCatFilterBtn">
           <span>عرض جميع المنتجات</span>
         </button>
@@ -615,10 +714,24 @@ function renderProducts() {
     const isAboveFold = index < 4;
     const loadingAttr = isAboveFold ? 'loading="eager" fetchpriority="high"' : 'loading="lazy" decoding="async"';
 
+    const swatchesHtml = Array.isArray(p.colors) && p.colors.length > 0
+      ? `<div class="product-swatches-row">
+          ${p.colors.map(col => {
+            const val = typeof col === 'object' ? (col.value || '#111') : (col.startsWith('#') ? col : '#111');
+            const name = typeof col === 'object' ? (col.name || '') : col;
+            return `<span class="swatch-dot" style="background-color: ${escapeHtml(val)};" title="${escapeHtml(name)}"></span>`;
+          }).join("")}
+        </div>`
+      : "";
+
+    const badgeHtml = p.isNew
+      ? `<span class="product-badge-new">جديد</span>`
+      : "";
+
     return `
-      <article class="product-card" data-product-id="${escapeHtml(p.id)}">
+      <article class="product-card" data-product-id="${escapeHtml(p.id)}" data-action="view-details" data-id="${escapeHtml(p.id)}">
         <!-- Thumbnail Wrap -->
-        <div class="product-thumb-wrap" data-action="view-details" data-id="${escapeHtml(p.id)}">
+        <div class="product-thumb-wrap">
           <img 
             class="product-thumb-img" 
             src="${escapeHtml(optimizedThumb)}" 
@@ -626,9 +739,11 @@ function renderProducts() {
             width="400" 
             height="500" 
             ${loadingAttr}
-            onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80';"
+            onerror="this.onerror=null;this.src='images/prod_jacket.jpg';"
           >
           
+          ${badgeHtml}
+
           <!-- Favorite Heart Button -->
           <button class="btn-favorite ${isFav ? "active" : ""}" type="button" data-action="toggle-fav" data-id="${escapeHtml(p.id)}" title="${isFav ? "إزالة من المفضلة" : "إضافة للمفضلة"}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -639,21 +754,13 @@ function renderProducts() {
 
         <!-- Body -->
         <div class="product-info-body">
-          <span class="product-cat-label">${escapeHtml(getCategoryLabel(p.category))}</span>
-          <h3 class="product-name" data-action="view-details" data-id="${escapeHtml(p.id)}">${escapeHtml(p.name)}</h3>
+          <h3 class="product-name">${escapeHtml(p.name)}</h3>
           
           <div class="product-price-row">
             <span class="product-price">${escapeHtml(p.priceDisplay || formatPrice(p.price))}</span>
           </div>
 
-          <button class="btn-add-cart" type="button" data-action="quick-add-cart" data-id="${escapeHtml(p.id)}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-              <line x1="3" y1="6" x2="21" y2="6"/>
-              <path d="M16 10a4 4 0 0 1-8 0"/>
-            </svg>
-            <span>إضافة للسلة</span>
-          </button>
+          ${swatchesHtml}
         </div>
       </article>
     `;
@@ -1088,7 +1195,7 @@ function setupEventListeners() {
   function setHeroSlide(idx) {
     state.heroSlideIndex = (idx + HERO_SLIDES.length) % HERO_SLIDES.length;
     DOM.heroImg.src = HERO_SLIDES[state.heroSlideIndex];
-    document.querySelectorAll(".hero-dot").forEach((dot, i) => {
+    document.querySelectorAll(".hero-bar-item, .hero-dot").forEach((dot, i) => {
       dot.classList.toggle("active", i === state.heroSlideIndex);
     });
   }
@@ -1096,7 +1203,7 @@ function setupEventListeners() {
   DOM.heroPrevBtn?.addEventListener("click", () => setHeroSlide(state.heroSlideIndex - 1));
   DOM.heroNextBtn?.addEventListener("click", () => setHeroSlide(state.heroSlideIndex + 1));
   DOM.heroDots?.addEventListener("click", (e) => {
-    const dot = e.target.closest(".hero-dot");
+    const dot = e.target.closest(".hero-bar-item, .hero-dot");
     if (dot) setHeroSlide(parseInt(dot.dataset.slide, 10));
   });
 
@@ -1461,7 +1568,11 @@ async function initStore() {
   setupEventListeners();
   updateCartUI();
 
-  // Load store data with parallel queries and persistent cache
+  // Instant render of default showcase data matching reference mockup
+  renderCategoriesUI();
+  renderProducts();
+
+  // Load live store data with parallel queries and persistent cache
   await loadStoreData();
 }
 
