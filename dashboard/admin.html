@@ -26,6 +26,10 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2m1 0v14a2 2 0 01-2 2H9a2 2 0 01-2-2V6"/></svg>
         إعادة تعيين
       </button>
+      <button class="btn-ghost" id="logoutBtn" onclick="handleLogout()" title="تسجيل الخروج">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        تسجيل الخروج
+      </button>
     </div>
   </div>
 </header>
@@ -47,6 +51,10 @@
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
       التصنيفات <span class="cnt" id="cntCats">0</span>
     </button>
+    <button class="side-btn" data-view="orders" onclick="switchView('orders',this)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      الطلبات <span class="cnt" id="cntOrders">0</span>
+    </button>
   </aside>
 
   <main>
@@ -57,8 +65,8 @@
       <div class="stats">
         <div class="stat"><div class="ic gold"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/></svg></div><div><div class="v" id="stProducts">0</div><div class="l">منتج في المتجر</div></div></div>
         <div class="stat"><div class="ic blue"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg></div><div><div class="v" id="stCats">0</div><div class="l">تصنيف نشط</div></div></div>
+        <div class="stat"><div class="ic green"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div><div><div class="v" id="stOrders">0</div><div class="l">طلب وارد</div></div></div>
         <div class="stat"><div class="ic red"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 5L5 19M6.5 9a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM17.5 20a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/></svg></div><div><div class="v" id="stSale">0</div><div class="l">منتج عليه خصم</div></div></div>
-        <div class="stat"><div class="ic green"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div><div class="v" id="stStock">0</div><div class="l">قطعة في المخزون</div></div></div>
       </div>
 
       <!-- ========== ADD PRODUCT ========== -->
@@ -313,6 +321,59 @@
         <div class="panel-body">
           <div class="cats-grid" id="catsGrid"></div>
           <div class="empty-state" id="catEmpty" style="display:none">لا توجد تصنيفات بعد — أضف أول تصنيف من قسم الإضافة</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== VIEW: ORDERS ===================== -->
+    <section class="view" id="view-orders">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> إدارة طلبات الزبائن (Cloud Orders)</h2>
+            <p>مزامنة حية ومباشرة من Firestore — تحديث فوري لحالات الطلبات وإدارتها</p>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn-ghost" onclick="refreshOrders()" title="تحديث قائمة الطلبات">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              تحديث
+            </button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="toolbar">
+            <div class="search-box">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              <input type="text" id="orderSearch" placeholder="ابحث باسم الزبون، رقم الهاتف، أو الولاية..." oninput="renderOrdersTable()">
+            </div>
+            <select class="filter-sel" id="orderFilterStatus" onchange="renderOrdersTable()">
+              <option value="">كل الحالات</option>
+              <option value="جديد">جديد</option>
+              <option value="قيد المعالجة">قيد المعالجة</option>
+              <option value="مؤكد">مؤكد</option>
+              <option value="تم التوصيل">تم التوصيل</option>
+              <option value="ملغي">ملغي</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>رقم الطلب</th>
+                  <th>الزبون</th>
+                  <th>الهاتف</th>
+                  <th>الولاية والبلدية</th>
+                  <th>تفاصيل المنتجات</th>
+                  <th>الإجمالي</th>
+                  <th>حالة الطلب</th>
+                  <th>التاريخ</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTbody"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="orderEmpty" style="display:none">لا توجد طلبات مسجلة حتى الآن</div>
         </div>
       </div>
     </section>

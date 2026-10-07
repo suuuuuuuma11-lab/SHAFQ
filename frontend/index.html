@@ -321,17 +321,46 @@
   </div>
 </footer>
 
-<script>
-const products = [
-  {name:"قميص كلاسيك فاخر", price:299, oldPrice:380, img:"img/p1.png", badge:"الأكثر مبيعاً", colors:["#f5f2ea","#dcd5c8","#b99a6b"], colorNames:["أبيض عاجي","بيج فاتح","ذهبي"]},
-  {name:"قميص كلاسيك أسود", price:320, img:"img/p2.png", colors:["#1d1a16","#3a352f","#6b6357"], colorNames:["أسود","رمادي داكن","بني"]},
-  {name:"قميص بأزرار أنيقة", price:320, oldPrice:365, img:"img/p3.png", colors:["#a9c8e8","#7fa8cf","#dce8f5"], colorNames:["أزرق سماوي","أزرق متوسط","أزرق فاتح"]},
-  {name:"قميص كلاسيك بيج", price:340, img:"img/p4.png", colors:["#e8ddcb","#c9b8a0","#8a8277"], colorNames:["بيج","رملي","رمادي"]},
-  {name:"قميص كتان فاخر", price:360, oldPrice:430, img:"img/p5.png", colors:["#5a5b45","#3f4030","#7c7d63"], colorNames:["زيتوني","زيتوني داكن","أخضر فاتح"]},
-  {name:"قميص مخطط أنيق", price:290, oldPrice:350, img:"img/p6.png", colors:["#c5d3ea","#8fa8cc","#ffffff"], colorNames:["أزرق مخطط","أزرق داكن","أبيض مخطط"]},
-  {name:"قميص كحلي فاخر", price:340, img:"img/p7.png", colors:["#1f2a44","#31405f","#6b7a99"], colorNames:["كحلي","كحلي فاتح","رمادي أزرق"]},
-  {name:"قميص قطن فاخر", price:320, img:"img/p8.png", colors:["#f5f2ea","#ffffff","#dcd5c8"], colorNames:["عاجي","أبيض","بيج فاتح"]},
-];
+<!-- Search overlay -->
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-panel">
+    <div class="search-head">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#8a8277" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" id="searchInput" placeholder="ابحث عن قميص...">
+      <button id="searchClose" aria-label="إغلاق"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+  </div>
+</div>
+
+<!-- Cart drawer -->
+<div class="backdrop" id="backdrop"></div>
+<aside class="drawer" id="cartDrawer" aria-label="حقيبة التسوق">
+  <div class="drawer-head">
+    <h3>حقيبة التسوق</h3>
+    <button id="cartClose" aria-label="إغلاق"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="drawer-items" id="cartItems"></div>
+  <div class="drawer-foot" id="cartFoot">
+    <div class="drawer-total"><span>المجموع</span><b id="cartTotal">0 دج</b></div>
+    <button class="btn-order" id="checkoutBtn">إتمام الطلب</button>
+  </div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+
+
+<script type="module">
+import { db } from "./firebase-config.js";
+import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+// Safe HTML escape
+const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+// Products & Categories state (Loaded dynamically from Firestore)
+let products = [];
+let isLoaded = false;
 
 /* ---------- state ---------- */
 let favs = new Set(JSON.parse(localStorage.getItem('alnoor_favs')||'[]'));
@@ -344,7 +373,12 @@ const countEl = document.getElementById('count');
 function saveFavs(){ localStorage.setItem('alnoor_favs', JSON.stringify([...favs])); }
 function saveCart(){ localStorage.setItem('alnoor_cart', JSON.stringify(cart)); updateBadge(); }
 function cartTotalQty(){ return cart.reduce((s,c)=>s+c.qty,0); }
-function cartTotalPrice(){ return cart.reduce((s,c)=>s+c.qty*products[c.id].price,0); }
+function cartTotalPrice(){
+  return cart.reduce((s,c)=> {
+    const prod = products.find(p => String(p.id) === String(c.id));
+    return s + (c.qty * (prod ? prod.price : 0));
+  }, 0);
+}
 
 function toast(msg){
   const t = document.getElementById('toast');
@@ -352,30 +386,36 @@ function toast(msg){
   clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'),2400);
 }
 
-function toggleFav(i, el){
-  if(favs.has(i)){ favs.delete(i); el.classList.remove('liked'); toast('أُزيل من المفضلة'); }
-  else { favs.add(i); el.classList.add('liked'); toast('أُضيف إلى المفضلة ♥'); }
+function toggleFav(id, el){
+  if(favs.has(id)){ favs.delete(id); el.classList.remove('liked'); toast('أُزيل من المفضلة'); }
+  else { favs.add(id); el.classList.add('liked'); toast('أُضيف إلى المفضلة ♥'); }
   saveFavs();
   if(view === 'fav') render();
 }
 
 /* ---------- filter / sort / render ---------- */
 function getList(){
-  let list = products.map((p,i)=>({...p, i}));
-  if(view === 'sale') list = list.filter(p => p.oldPrice);
-  if(view === 'fav') list = list.filter(p => favs.has(p.i));
+  let list = products.slice();
+  if(view === 'sale') list = list.filter(p => p.oldPrice && p.oldPrice > p.price);
+  if(view === 'fav') list = list.filter(p => favs.has(p.id));
   if(priceFilter === 'lt300') list = list.filter(p => p.price < 300);
   else if(priceFilter === 'mid') list = list.filter(p => p.price >= 300 && p.price <= 350);
   else if(priceFilter === 'gt350') list = list.filter(p => p.price > 350);
-  else if(priceFilter === 'sale') list = list.filter(p => p.oldPrice);
+  else if(priceFilter === 'sale') list = list.filter(p => p.oldPrice && p.oldPrice > p.price);
   if(sortMode === 'asc') list.sort((a,b)=>a.price-b.price);
   else if(sortMode === 'desc') list.sort((a,b)=>b.price-a.price);
   else if(sortMode === 'name') list.sort((a,b)=>a.name.localeCompare(b.name,'ar'));
   return list;
 }
-function discount(p){ return p.oldPrice ? Math.round((1 - p.price/p.oldPrice)*100) : 0; }
+function discount(p){ return p.oldPrice && p.oldPrice > p.price ? Math.round((1 - p.price/p.oldPrice)*100) : 0; }
 
 function render(){
+  if (!isLoaded && products.length === 0) {
+    grid.innerHTML = '<div class="empty-state">جاري تحميل المنتجات من السحابة...</div>';
+    countEl.textContent = '...';
+    return;
+  }
+
   const list = getList();
   countEl.textContent = list.length + ' منتج';
   if(!list.length){
@@ -384,23 +424,34 @@ function render(){
       '</small></div>';
     return;
   }
-  grid.innerHTML = list.map(p => `
-  <a class="card" href="product.html?id=${p.i}">
-    <div class="card-img">
-      ${p.oldPrice ? `<span class="badge">خصم ${discount(p)}%</span>` : (p.badge ? `<span class="badge">${p.badge}</span>` : '')}
-      <button class="fav ${favs.has(p.i)?'liked':''}" aria-label="مفضلة" onclick="event.preventDefault();toggleFav(${p.i},this)">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7.5-4.7-9.5-9.2C.9 8.4 3 4.5 6.8 4.5c2 0 3.6 1.1 4.6 2.7h1.2c1-1.6 2.6-2.7 4.6-2.7 3.8 0 5.9 3.9 4.3 7.3C19.5 16.3 12 21 12 21z"/></svg>
-      </button>
-      <img src="${p.img}" alt="${p.name}">
-    </div>
-    <div class="card-info">
-      <h3>${p.name}</h3>
-      <div class="price">${p.price} <span>دج</span>${p.oldPrice?`<span class="price-old">${p.oldPrice} دج</span>`:''}</div>
-      <div class="dots">
-        ${p.colors.map((c,j)=>`<span class="dot ${j===0?'active':''}" style="background:${c}" title="${p.colorNames[j]}" onclick="event.preventDefault();this.parentNode.querySelectorAll('.dot').forEach(d=>d.classList.remove('active'));this.classList.add('active')"></span>`).join('')}
+  grid.innerHTML = list.map(p => {
+    const mainImg = p.img || p.mainImage || 'img/p1.png';
+    const disc = discount(p);
+    const badgeHTML = disc ? `<span class="badge">خصم ${disc}%</span>` : (p.badge ? `<span class="badge">${esc(p.badge)}</span>` : '');
+    const isLiked = favs.has(p.id);
+
+    const colorsHTML = (p.colors || []).map((c, j) => {
+      const hex = typeof c === 'object' ? c.value : c;
+      const nm = typeof c === 'object' ? c.name : (p.colorNames && p.colorNames[j] ? p.colorNames[j] : '');
+      return `<span class="dot ${j===0?'active':''}" style="background:${hex}" title="${esc(nm)}" onclick="event.preventDefault();this.parentNode.querySelectorAll('.dot').forEach(d=>d.classList.remove('active'));this.classList.add('active')"></span>`;
+    }).join('');
+
+    return `
+    <a class="card" href="product.html?id=${encodeURIComponent(p.id)}">
+      <div class="card-img">
+        ${badgeHTML}
+        <button class="fav ${isLiked?'liked':''}" aria-label="مفضلة" onclick="event.preventDefault();toggleFav('${p.id}',this)">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7.5-4.7-9.5-9.2C.9 8.4 3 4.5 6.8 4.5c2 0 3.6 1.1 4.6 2.7h1.2c1-1.6 2.6-2.7 4.6-2.7 3.8 0 5.9 3.9 4.3 7.3C19.5 16.3 12 21 12 21z"/></svg>
+        </button>
+        <img src="${esc(mainImg)}" alt="${esc(p.name)}" loading="lazy" onerror="this.src='img/p1.png'">
       </div>
-    </div>
-  </a>`).join('');
+      <div class="card-info">
+        <h3>${esc(p.name)}</h3>
+        <div class="price">${p.price} <span>دج</span>${p.oldPrice?`<span class="price-old">${p.oldPrice} دج</span>`:''}</div>
+        <div class="dots">${colorsHTML}</div>
+      </div>
+    </a>`;
+  }).join('');
 }
 
 /* ---------- nav views ---------- */
@@ -445,14 +496,14 @@ sOverlay.addEventListener('click', e => { if(e.target === sOverlay) closeSearch(
 document.addEventListener('keydown', e => { if(e.key === 'Escape'){ closeSearch(); closeCart(); } });
 function closeSearch(){ sOverlay.classList.remove('show'); sInput.value = ''; sResults.innerHTML = ''; }
 sInput.addEventListener('input', () => {
-  const q = sInput.value.trim();
+  const q = sInput.value.trim().toLowerCase();
   if(!q){ sResults.innerHTML = ''; return; }
-  const hits = products.map((p,i)=>({...p,i})).filter(p => p.name.includes(q));
+  const hits = products.filter(p => p.name.toLowerCase().includes(q));
   sResults.innerHTML = hits.length ? hits.map(p => `
-    <a class="sr-item" href="product.html?id=${p.i}">
-      <img src="${p.img}" alt="${p.name}">
-      <div><div class="sr-name">${p.name}</div><div class="sr-price">${p.price} دج</div></div>
-    </a>`).join('') : '<div class="search-empty">لا توجد نتائج مطابقة لبحثك</div>';
+    <a class="sr-item" href="product.html?id=${encodeURIComponent(p.id)}">
+      <img src="${esc(p.img || p.mainImage)}" alt="${esc(p.name)}">
+      <div><div class="sr-name">${esc(p.name)}</div><div class="sr-price">${p.price} دج</div></div>
+    </a>`) : '<div class="search-empty">لا توجد نتائج مطابقة لبحثك</div>';
 });
 
 /* ---------- cart ---------- */
@@ -482,12 +533,14 @@ function renderCart(){
   }
   foot.style.display = 'block';
   box.innerHTML = cart.map(c => {
-    const p = products[c.id], k = cartKey(c);
+    const p = products.find(prod => String(prod.id) === String(c.id));
+    if(!p) return '';
+    const k = cartKey(c);
     return `<div class="ci">
-      <img src="${p.img}" alt="${p.name}">
+      <img src="${esc(p.img || p.mainImage)}" alt="${esc(p.name)}">
       <div class="ci-info">
-        <div class="ci-name">${p.name}</div>
-        <div class="ci-meta">المقاس: ${c.size} — اللون: ${c.color}</div>
+        <div class="ci-name">${esc(p.name)}</div>
+        <div class="ci-meta">المقاس: ${esc(c.size)} — اللون: ${esc(c.color)}</div>
         <div class="ci-row">
           <div class="ci-qty"><button onclick="changeCartQty('${k}',1)">+</button><span>${c.qty}</span><button onclick="changeCartQty('${k}',-1)">−</button></div>
           <span class="ci-price">${(p.price*c.qty).toLocaleString('ar-DZ')} دج</span>
@@ -495,44 +548,71 @@ function renderCart(){
         <button class="ci-remove" onclick="removeFromCart('${k}')">إزالة</button>
       </div>
     </div>`;
-  }).join('');
+  }).filter(Boolean).join('');
   document.getElementById('cartTotal').textContent = cartTotalPrice().toLocaleString('ar-DZ') + ' دج';
 }
 document.getElementById('checkoutBtn').addEventListener('click', () => {
   toast('لإتمام طلبك: افتح المنتج واملأ نموذج الدفع عند الاستلام');
 });
 
+// Expose globals for inline attributes
+window.toggleFav = toggleFav;
+window.changeCartQty = changeCartQty;
+window.removeFromCart = removeFromCart;
+
+// --- Real-time Firestore Connection ---
+function initFirestoreSync() {
+  const colRef = collection(db, "products");
+  onSnapshot(colRef, (snapshot) => {
+    const list = [];
+    snapshot.forEach(docSnap => {
+      const d = docSnap.data();
+      if (d.status === 'hidden') return;
+      
+      const mainImg = d.mainImage || d.img || (Array.isArray(d.images) && d.images[0] ? (d.images[0].url || d.images[0]) : '') || 'img/p1.png';
+      
+      let colors = [];
+      if (Array.isArray(d.colors)) {
+        colors = d.colors.map((c, idx) => {
+          if (typeof c === 'object' && c !== null) {
+            return { name: c.name || '', value: c.value || '#111111' };
+          }
+          const nm = (d.colorNames && d.colorNames[idx]) || String(c);
+          return { name: nm, value: String(c) };
+        });
+      }
+
+      list.push({
+        id: docSnap.id,
+        name: d.name || '',
+        price: typeof d.price === 'number' ? d.price : Number(d.price) || 0,
+        oldPrice: d.oldPrice ? Number(d.oldPrice) : null,
+        img: mainImg,
+        mainImage: mainImg,
+        badge: d.badge || '',
+        colors: colors,
+        colorNames: colors.map(c => c.name),
+        sizes: Array.isArray(d.sizes) ? d.sizes : [],
+        status: d.status || 'active',
+        categoryId: d.categoryId || d.category || ''
+      });
+    });
+
+    products = list;
+    isLoaded = true;
+    render();
+    renderCart();
+  }, (err) => {
+    console.error("Firestore onSnapshot error:", err);
+    isLoaded = true;
+    render();
+  });
+}
+
 updateBadge();
 render();
+initFirestoreSync();
 </script>
-
-<!-- Search overlay -->
-<div class="search-overlay" id="searchOverlay">
-  <div class="search-panel">
-    <div class="search-head">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#8a8277" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-      <input type="text" id="searchInput" placeholder="ابحث عن قميص...">
-      <button id="searchClose" aria-label="إغلاق"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-    </div>
-    <div class="search-results" id="searchResults"></div>
-  </div>
-</div>
-
-<!-- Cart drawer -->
-<div class="backdrop" id="backdrop"></div>
-<aside class="drawer" id="cartDrawer" aria-label="حقيبة التسوق">
-  <div class="drawer-head">
-    <h3>حقيبة التسوق</h3>
-    <button id="cartClose" aria-label="إغلاق"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-  </div>
-  <div class="drawer-items" id="cartItems"></div>
-  <div class="drawer-foot" id="cartFoot">
-    <div class="drawer-total"><span>المجموع</span><b id="cartTotal">0 دج</b></div>
-    <button class="btn-order" id="checkoutBtn">إتمام الطلب</button>
-  </div>
-</aside>
-
-<div class="toast" id="toast"></div>
 
 </body>
 </html>

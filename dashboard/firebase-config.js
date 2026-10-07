@@ -3,7 +3,7 @@
    Clean, Modular & Production-Ready Configuration
    ========================================================================== */
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 import { 
   getFirestore, 
@@ -33,7 +33,7 @@ export const CLOUDINARY_CONFIG = {
 };
 
 // --- Initialize Firebase Services with Multi-Tab Browser Persistence ---
-export const app = initializeApp(FIREBASE_CONFIG);
+export const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
 export const auth = getAuth(app);
 
 let dbInstance;

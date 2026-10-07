@@ -1478,3 +1478,64 @@ tbody tr:hover {
   font-size: 0.95rem;
   font-weight: 800;
 }
+
+/* ==========================================================================
+   Orders Management Table Styles
+   ========================================================================== */
+.order-status-select {
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.order-status-select:focus {
+  border-color: var(--gold);
+}
+
+.order-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.order-item-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fbfaf7;
+  border: 1px solid var(--line);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.order-cust-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.order-cust-info .n {
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.order-cust-info .p {
+  font-size: 11px;
+  color: var(--muted);
+  direction: ltr;
+  text-align: right;
+}
+
+.order-date-time {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+

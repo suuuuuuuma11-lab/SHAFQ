@@ -1,18 +1,28 @@
 /* ==========================================================================
-   ALNOOR SHIRTS — Admin Dashboard Logic
-   Pure Vanilla JavaScript with LocalStorage Persistence,
-   Live Previews, Cloudinary Upload Support & Frontend Code Exporter
+   ALNOOR SHIRTS — Admin Dashboard Logic (Cloud Firestore Source of Truth)
+   Firebase Modular SDK v10 (Firestore + Auth + Cloudinary)
+   Real-Time Synchronization with onSnapshot & Automatic Seeding
    ========================================================================== */
 
-import { auth, uploadImageToCloudinary } from "./firebase-config.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+import { auth, db, uploadImageToCloudinary } from "./firebase-config.js";
+import { 
+  onAuthStateChanged, 
+  signOut 
+} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+import { 
+  collection, 
+  doc, 
+  getDocs, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  onSnapshot, 
+  query, 
+  orderBy, 
+  serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
-// --- Storage Keys & Utilities ---
-const LS_P = "alnoor_admin_products";
-const LS_C = "alnoor_admin_cats";
-
-const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-
+// --- Utilities ---
 const esc = (s) =>
   String(s || "")
     .replace(/&/g, "&amp;")
@@ -22,182 +32,201 @@ const esc = (s) =>
 
 const $ = (id) => document.getElementById(id);
 
-// --- Default Demo Data (Matches Storefront 100%) ---
-const DEMO_CATS = [
+// --- Default Seed Data for Migration (If Cloud Firestore is completely empty) ---
+const SEED_CATEGORIES = [
   {
-    id: "c1",
     name: "كلاسيك",
     msg: "الأناقة الخالدة بلمسة عصرية تليق بك في كل مناسبة",
     banner: { type: "color", c1: "#1d1a16", c2: "#b99a6b", img: "" },
-    desc: "",
+    desc: "تشكيلة القمصان الكلاسيكية الفاخرة لرجال الأعمال والمناسبات الرسمية",
     active: true
   },
   {
-    id: "c2",
     name: "كاجوال",
     msg: "راحة يومية بأسلوب شبابي جريء",
     banner: { type: "color", c1: "#31405f", c2: "#1f2a44", img: "" },
-    desc: "",
+    desc: "إطلالات يومية عصرية ومريحة تناسب العمل والنزهات",
     active: true
   },
   {
-    id: "c3",
     name: "فاخر",
     msg: "خامات نادرة وقصّات استثنائية لإطلالة لا تُنسى",
     banner: { type: "color", c1: "#3f4030", c2: "#b99a6b", img: "" },
-    desc: "",
+    desc: "أرقى الأقمشة الإيطالية والمصرية بتفاصيل صدفية حصرية",
     active: true
   }
 ];
 
-const DEMO_PRODUCTS = [
+const SEED_PRODUCTS = [
   {
-    id: "p1",
     name: "قميص كلاسيك فاخر",
     price: 299,
     oldPrice: 380,
     img: "img/p1.png",
+    mainImage: "img/p1.png",
+    images: [{ id: "seed1", url: "img/p1.png", isMain: true }],
     badge: "الأكثر مبيعاً",
-    colors: ["#f5f2ea", "#dcd5c8", "#b99a6b"],
-    colorNames: ["أبيض عاجي", "بيج فاتح", "ذهبي"],
+    category: "كلاسيك",
+    colors: [
+      { name: "أبيض عاجي", value: "#f5f2ea" },
+      { name: "بيج فاتح", value: "#dcd5c8" },
+      { name: "ذهبي", value: "#b99a6b" }
+    ],
     sizes: ["S", "M", "L", "XL"],
     stock: 25,
     status: "active",
-    desc: "قميص قطني 100% بقصّة عصرية وخياطة متقنة.",
-    categoryId: "c1"
+    desc: "قميص قطني 100% بقصّة عصرية وخياطة متقنة بأزرار صدفية."
   },
   {
-    id: "p2",
     name: "قميص كلاسيك أسود",
     price: 320,
     oldPrice: null,
     img: "img/p2.png",
+    mainImage: "img/p2.png",
+    images: [{ id: "seed2", url: "img/p2.png", isMain: true }],
     badge: "",
-    colors: ["#1d1a16", "#3a352f", "#6b6357"],
-    colorNames: ["أسود", "رمادي داكن", "بني"],
+    category: "كلاسيك",
+    colors: [
+      { name: "أسود", value: "#1d1a16" },
+      { name: "رمادي داكن", value: "#3a352f" },
+      { name: "بني", value: "#6b6357" }
+    ],
     sizes: ["S", "M", "L", "XL", "XXL"],
     stock: 18,
     status: "active",
-    desc: "",
-    categoryId: "c1"
+    desc: "قميص أسود راقٍ بخامة فاخرة ومقاومة للتجعد للمناسبات الخاصة."
   },
   {
-    id: "p3",
     name: "قميص بأزرار أنيقة",
     price: 320,
     oldPrice: 365,
     img: "img/p3.png",
+    mainImage: "img/p3.png",
+    images: [{ id: "seed3", url: "img/p3.png", isMain: true }],
     badge: "",
-    colors: ["#a9c8e8", "#7fa8cf", "#dce8f5"],
-    colorNames: ["أزرق سماوي", "أزرق متوسط", "أزرق فاتح"],
+    category: "فاخر",
+    colors: [
+      { name: "أزرق سماوي", value: "#a9c8e8" },
+      { name: "أزرق متوسط", value: "#7fa8cf" },
+      { name: "أزرق فاتح", value: "#dce8f5" }
+    ],
     sizes: ["S", "M", "L", "XL"],
     stock: 30,
     status: "active",
-    desc: "",
-    categoryId: "c3"
+    desc: "قصّة سليم فيت مريحة بأزرار صدف طبيعية وقماش أكسفورد ناعم."
   },
   {
-    id: "p4",
     name: "قميص كلاسيك بيج",
     price: 340,
     oldPrice: null,
     img: "img/p4.png",
+    mainImage: "img/p4.png",
+    images: [{ id: "seed4", url: "img/p4.png", isMain: true }],
     badge: "",
-    colors: ["#e8ddcb", "#c9b8a0", "#8a8277"],
-    colorNames: ["بيج", "رملي", "رمادي"],
+    category: "كلاسيك",
+    colors: [
+      { name: "بيج", value: "#e8ddcb" },
+      { name: "رملي", value: "#c9b8a0" },
+      { name: "رمادي", value: "#8a8277" }
+    ],
     sizes: ["M", "L", "XL"],
     stock: 12,
     status: "active",
-    desc: "",
-    categoryId: "c1"
+    desc: "تصميم كلاسيكي مميز بلون بيج أنيق يناسب البدل والإطلالات الرسمية."
   },
   {
-    id: "p5",
     name: "قميص كتان فاخر",
     price: 360,
     oldPrice: 430,
     img: "img/p5.png",
+    mainImage: "img/p5.png",
+    images: [{ id: "seed5", url: "img/p5.png", isMain: true }],
     badge: "حصري",
-    colors: ["#5a5b45", "#3f4030", "#7c7d63"],
-    colorNames: ["زيتوني", "زيتوني داكن", "أخضر فاتح"],
+    category: "فاخر",
+    colors: [
+      { name: "زيتوني", value: "#5a5b45" },
+      { name: "زيتوني داكن", value: "#3f4030" },
+      { name: "أخضر فاتح", value: "#7c7d63" }
+    ],
     sizes: ["S", "M", "L", "XL"],
     stock: 8,
     status: "active",
-    desc: "",
-    categoryId: "c3"
+    desc: "كتان أوروبي نقي وخفيف الوزن مناسب لجميع فصول السنة."
   },
   {
-    id: "p6",
     name: "قميص مخطط أنيق",
     price: 290,
     oldPrice: 350,
     img: "img/p6.png",
+    mainImage: "img/p6.png",
+    images: [{ id: "seed6", url: "img/p6.png", isMain: true }],
     badge: "",
-    colors: ["#c5d3ea", "#8fa8cc", "#ffffff"],
-    colorNames: ["أزرق مخطط", "أزرق داكن", "أبيض مخطط"],
+    category: "كاجوال",
+    colors: [
+      { name: "أزرق مخطط", value: "#c5d3ea" },
+      { name: "أزرق داكن", value: "#8fa8cc" },
+      { name: "أبيض مخطط", value: "#ffffff" }
+    ],
     sizes: ["S", "M", "L", "XL", "XXL"],
     stock: 22,
     status: "active",
-    desc: "",
-    categoryId: "c2"
+    desc: "خطوط رفيعة بتناغم أنيق تمنح مظهراً عصرياً جذاباً."
   },
   {
-    id: "p7",
     name: "قميص كحلي فاخر",
     price: 340,
     oldPrice: null,
     img: "img/p7.png",
+    mainImage: "img/p7.png",
+    images: [{ id: "seed7", url: "img/p7.png", isMain: true }],
     badge: "",
-    colors: ["#1f2a44", "#31405f", "#6b7a99"],
-    colorNames: ["كحلي", "كحلي فاتح", "رمادي أزرق"],
+    category: "فاخر",
+    colors: [
+      { name: "كحلي", value: "#1f2a44" },
+      { name: "كحلي فاتح", value: "#31405f" },
+      { name: "رمادي أزرق", value: "#6b7a99" }
+    ],
     sizes: ["S", "M", "L", "XL"],
     stock: 15,
     status: "active",
-    desc: "",
-    categoryId: "c3"
+    desc: "لون كحلي ملكي عميق وقماش فاخر عالي الجودة."
   },
   {
-    id: "p8",
     name: "قميص قطن فاخر",
     price: 320,
     oldPrice: null,
     img: "img/p8.png",
+    mainImage: "img/p8.png",
+    images: [{ id: "seed8", url: "img/p8.png", isMain: true }],
     badge: "",
-    colors: ["#f5f2ea", "#ffffff", "#dcd5c8"],
-    colorNames: ["عاجي", "أبيض", "بيج فاتح"],
+    category: "كاجوال",
+    colors: [
+      { name: "عاجي", value: "#f5f2ea" },
+      { name: "أبيض", value: "#ffffff" },
+      { name: "بيج فاتح", value: "#dcd5c8" }
+    ],
     sizes: ["S", "M", "L", "XL"],
     stock: 0,
     status: "active",
-    desc: "",
-    categoryId: "c2"
+    desc: "قطن مصري طويل التيلة فائق النعومة والراحة."
   }
 ];
 
-// --- Application State ---
-function loadStorage(key, fallback) {
-  try {
-    const val = JSON.parse(localStorage.getItem(key));
-    return Array.isArray(val) && val.length ? val : JSON.parse(JSON.stringify(fallback));
-  } catch (e) {
-    return JSON.parse(JSON.stringify(fallback));
-  }
-}
-
-let products = loadStorage(LS_P, DEMO_PRODUCTS);
-let cats = loadStorage(LS_C, DEMO_CATS);
-
-let editingProductId = null;
-let editingCatId = null;
-let productImgData = "";
-let catImgData = "";
-let bannerMode = "color";
-let confirmCb = null;
-
-function saveAll() {
-  localStorage.setItem(LS_P, JSON.stringify(products));
-  localStorage.setItem(LS_C, JSON.stringify(cats));
-  refresh();
-}
+// --- Live Cloud State ---
+const state = {
+  products: [],
+  categories: [],
+  orders: [],
+  isProductsLoaded: false,
+  isCategoriesLoaded: false,
+  isOrdersLoaded: false,
+  editingProductId: null,
+  editingCatId: null,
+  productImgData: "",
+  catImgData: "",
+  bannerMode: "color",
+  confirmCb: null
+};
 
 // --- Toast System ---
 function toast(msg, ok = true) {
@@ -208,7 +237,7 @@ function toast(msg, ok = true) {
   clearTimeout(t._h);
   t._h = setTimeout(() => {
     t.className = "";
-  }, 2600);
+  }, 2800);
 }
 
 // --- View Switching ---
@@ -226,51 +255,240 @@ function switchView(viewName, btn) {
   }
 }
 
-// --- Global Stats & Refresh ---
-function refresh() {
+// --- Stats & Numbers Refresh ---
+function refreshStats() {
   const cntProducts = $("cntProducts");
   const cntCats = $("cntCats");
+  const cntOrders = $("cntOrders");
+
   const stProducts = $("stProducts");
   const stCats = $("stCats");
+  const stOrders = $("stOrders");
   const stSale = $("stSale");
-  const stStock = $("stStock");
 
-  if (cntProducts) cntProducts.textContent = products.length;
-  if (cntCats) cntCats.textContent = cats.length;
-  if (stProducts) stProducts.textContent = products.length;
-  if (stCats) stCats.textContent = cats.length;
+  if (cntProducts) cntProducts.textContent = state.products.length;
+  if (cntCats) cntCats.textContent = state.categories.length;
+  if (cntOrders) cntOrders.textContent = state.orders.length;
+
+  if (stProducts) stProducts.textContent = state.products.length;
+  if (stCats) stCats.textContent = state.categories.length;
+  if (stOrders) stOrders.textContent = state.orders.length;
 
   if (stSale) {
-    stSale.textContent = products.filter((p) => p.oldPrice && p.oldPrice > p.price).length;
+    stSale.textContent = state.products.filter(
+      (p) => p.oldPrice && Number(p.oldPrice) > Number(p.price)
+    ).length;
   }
-  if (stStock) {
-    stStock.textContent = products.reduce((sum, p) => sum + (+p.stock || 0), 0);
-  }
-
-  fillCatSelects();
-  renderProductsTable();
-  renderCatsGrid();
 }
 
-// --- Category Select Dropdowns ---
+// --- Category Selects ---
 function fillCatSelects() {
   const pCat = $("pCategory");
   const fCat = $("prodFilterCat");
 
   const opts =
     '<option value="">— اختر التصنيف —</option>' +
-    cats.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+    state.categories
+      .map((c) => `<option value="${esc(c.id)}">${esc(c.name)}</option>`)
+      .join("");
 
   if (pCat) pCat.innerHTML = opts;
 
   if (fCat) {
     fCat.innerHTML =
       '<option value="">كل التصنيفات</option>' +
-      cats.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+      state.categories
+        .map((c) => `<option value="${esc(c.id)}">${esc(c.name)}</option>`)
+        .join("");
   }
 }
 
-// --- Product Form Handlers & Live Previews ---
+// --- Cloud Firestore Real-Time Listeners ---
+function initRealtimeFirestore() {
+  // 1. Categories Real-Time Listener
+  const catsCol = collection(db, "categories");
+  onSnapshot(
+    catsCol,
+    async (snapshot) => {
+      const list = [];
+      snapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          name: d.name || "",
+          msg: d.msg || "",
+          banner: d.banner || { type: "color", c1: "#1d1a16", c2: "#b99a6b", img: "" },
+          desc: d.desc || "",
+          active: d.active !== false,
+          createdAt: d.createdAt || "",
+          updatedAt: d.updatedAt || ""
+        });
+      });
+
+      // Migration: If completely empty in Firestore, seed automatically
+      if (list.length === 0 && !state.isCategoriesLoaded) {
+        state.isCategoriesLoaded = true;
+        await seedCategoriesIfEmpty();
+        return;
+      }
+
+      state.categories = list;
+      state.isCategoriesLoaded = true;
+      fillCatSelects();
+      renderCatsGrid();
+      refreshStats();
+    },
+    (err) => {
+      console.error("Categories Firestore onSnapshot error:", err);
+      toast("تعذر مزامنة التصنيفات من السحابة", false);
+    }
+  );
+
+  // 2. Products Real-Time Listener
+  const prodsCol = collection(db, "products");
+  onSnapshot(
+    prodsCol,
+    async (snapshot) => {
+      const list = [];
+      snapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        
+        // Normalize colors to array of { name, value }
+        let colors = [];
+        if (Array.isArray(d.colors)) {
+          colors = d.colors.map((c, idx) => {
+            if (typeof c === "object" && c !== null) {
+              return { name: c.name || "لون", value: c.value || "#111111" };
+            }
+            const name = (d.colorNames && d.colorNames[idx]) || String(c);
+            return { name, value: String(c) };
+          });
+        }
+
+        const mainImg =
+          d.mainImage ||
+          d.img ||
+          (Array.isArray(d.images) && d.images[0] ? (d.images[0].url || d.images[0]) : "") ||
+          "";
+
+        list.push({
+          id: docSnap.id,
+          name: d.name || "",
+          title: d.title || "",
+          categoryId: d.categoryId || "",
+          category: d.category || "",
+          price: typeof d.price === "number" ? d.price : Number(d.price) || 0,
+          oldPrice: d.oldPrice ? Number(d.oldPrice) : null,
+          img: mainImg,
+          mainImage: mainImg,
+          images: Array.isArray(d.images) ? d.images : (mainImg ? [{ id: "m1", url: mainImg, isMain: true }] : []),
+          badge: d.badge || "",
+          sizes: Array.isArray(d.sizes) ? d.sizes : [],
+          colors: colors,
+          colorNames: colors.map((c) => c.name),
+          stock: typeof d.stock === "number" ? d.stock : (d.stock !== undefined ? Number(d.stock) : 20),
+          status: d.status || "active",
+          desc: d.description || d.desc || "",
+          createdAt: d.createdAt || "",
+          updatedAt: d.updatedAt || ""
+        });
+      });
+
+      // Migration: If completely empty in Firestore, seed automatically
+      if (list.length === 0 && !state.isProductsLoaded) {
+        state.isProductsLoaded = true;
+        await seedProductsIfEmpty();
+        return;
+      }
+
+      state.products = list;
+      state.isProductsLoaded = true;
+      renderProductsTable();
+      refreshStats();
+    },
+    (err) => {
+      console.error("Products Firestore onSnapshot error:", err);
+      toast("تعذر مزامنة المنتجات من السحابة", false);
+    }
+  );
+
+  // 3. Orders Real-Time Listener
+  const ordersCol = collection(db, "orders");
+  onSnapshot(
+    ordersCol,
+    (snapshot) => {
+      const list = [];
+      snapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          customer: d.customer || d.name || "عميل",
+          phone: d.phone || "",
+          wilaya: d.wilaya || "",
+          commune: d.commune || "",
+          address: d.address || "",
+          items: Array.isArray(d.items) ? d.items : [],
+          total: d.total || 0,
+          paymentMethod: d.paymentMethod || "الدفع عند الاستلام",
+          status: d.status || "جديد",
+          createdAt: d.createdAt || new Date().toISOString()
+        });
+      });
+
+      // Sort newest first
+      list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      state.orders = list;
+      state.isOrdersLoaded = true;
+      renderOrdersTable();
+      refreshStats();
+    },
+    (err) => {
+      console.error("Orders Firestore onSnapshot error:", err);
+    }
+  );
+}
+
+// --- Automatic Safe Migration / Seeding Helpers ---
+async function seedCategoriesIfEmpty() {
+  try {
+    const catsCol = collection(db, "categories");
+    const checkSnap = await getDocs(catsCol);
+    if (!checkSnap.empty) return;
+
+    for (const cat of SEED_CATEGORIES) {
+      await addDoc(catsCol, {
+        ...cat,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+    }
+    console.info("Seeded default categories to Firestore successfully.");
+  } catch (err) {
+    console.warn("Could not seed categories:", err);
+  }
+}
+
+async function seedProductsIfEmpty() {
+  try {
+    const prodsCol = collection(db, "products");
+    const checkSnap = await getDocs(prodsCol);
+    if (!checkSnap.empty) return;
+
+    for (const p of SEED_PRODUCTS) {
+      await addDoc(prodsCol, {
+        ...p,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+    }
+    console.info("Seeded default products to Firestore successfully.");
+  } catch (err) {
+    console.warn("Could not seed products:", err);
+  }
+}
+
+// --- Product Form Handlers & Previews ---
 function updateDiscPreview() {
   const pr = +$("pPrice").value;
   const old = +$("pOldPrice").value;
@@ -291,11 +509,11 @@ function showProductImg() {
   const uploader = $("pUploader");
   if (!uploader) return;
   uploader.classList.add("has-img");
-  uploader.innerHTML = `<img src="${productImgData}" alt="صورة المنتج">`;
+  uploader.innerHTML = `<img src="${state.productImgData}" alt="صورة المنتج">`;
 }
 
 function clearProductImage() {
-  productImgData = "";
+  state.productImgData = "";
   const fileInput = $("pImgFile");
   if (fileInput) fileInput.value = "";
   const uploader = $("pUploader");
@@ -313,38 +531,37 @@ function toggleImgUrl() {
   if (u.style.display === "block") u.focus();
 }
 
-// Image File Upload with Cloudinary Support
 async function handleProductImageFile(file) {
   if (!file) return;
   if (!file.type.startsWith("image/")) {
-    toast("الملف المختار ليس صورة صالحة", false);
+    toast("الملف ليس صورة", false);
     return;
   }
-  if (file.size > 4 * 1024 * 1024) {
-    toast("حجم الصورة كبير (الحد الأقصى 4MB)", false);
+  if (file.size > 5 * 1024 * 1024) {
+    toast("حجم الصورة كبير (الحد الأقصى 5MB)", false);
     return;
   }
 
   // Instant local preview
   const reader = new FileReader();
   reader.onload = (ev) => {
-    productImgData = ev.target.result;
+    state.productImgData = ev.target.result;
     showProductImg();
     clearErr("pImg");
   };
   reader.readAsDataURL(file);
 
-  // Background upload to Cloudinary for permanent CDN link
+  // Background Cloudinary Upload
   try {
     toast("جاري رفع الصورة إلى السحابة...", true);
     const secureUrl = await uploadImageToCloudinary(file);
     if (secureUrl) {
-      productImgData = secureUrl;
+      state.productImgData = secureUrl;
       showProductImg();
       toast("تم حفظ الصورة على السحابة بنجاح ✓", true);
     }
   } catch (err) {
-    console.info("Cloudinary upload fallback to local data URL:", err.message);
+    console.info("Cloudinary upload fallback to data URL:", err.message);
   }
 }
 
@@ -371,7 +588,7 @@ function addColorLine(hex = "#b99a6b", name = "") {
 
   row.querySelector(".color-del").addEventListener("click", () => {
     if (document.querySelectorAll("#colorsList .color-item").length <= 1) {
-      toast("يجب أن يبقى لون واحد على الأقل للمنتج", false);
+      toast("يجب أن يبقى لون واحد على الأقل", false);
       return;
     }
     row.remove();
@@ -383,14 +600,14 @@ function addColorLine(hex = "#b99a6b", name = "") {
 function getColors() {
   const out = [];
   document.querySelectorAll("#colorsList .color-item").forEach((r) => {
-    const hex = r.querySelector("input[type=color]").value;
+    const value = r.querySelector("input[type=color]").value;
     const name = r.querySelector("input[type=text]").value.trim();
-    out.push({ hex, name });
+    out.push({ name, value });
   });
   return out;
 }
 
-// Error Helpers
+// Form Errors Helpers
 function setErr(id) {
   const targetId = id === "pImg" ? "e-pImg" : id === "colors" ? "e-colors" : "e-" + id;
   const el = $(targetId);
@@ -445,7 +662,7 @@ function resetProductForm() {
   const disc = $("discPreview");
   if (disc) disc.classList.remove("show");
 
-  editingProductId = null;
+  state.editingProductId = null;
   const modeTag = $("prodFormMode");
   if (modeTag) modeTag.textContent = "نموذج إضافة";
 
@@ -457,28 +674,29 @@ function resetProductForm() {
       </svg>
       إضافة المنتج للمتجر
     `;
+    submitBtn.disabled = false;
   }
 
   const cancelBtn = $("pCancelEdit");
   if (cancelBtn) cancelBtn.style.display = "none";
 }
 
-// Edit Product
+// Edit Product Mode
 function editProduct(id) {
-  const p = products.find((x) => x.id === id);
+  const p = state.products.find((x) => x.id === id);
   if (!p) return;
 
-  editingProductId = id;
+  state.editingProductId = id;
   $("pName").value = p.name;
   $("pCategory").value = p.categoryId;
   $("pPrice").value = p.price;
   $("pOldPrice").value = p.oldPrice || "";
   updateDiscPreview();
 
-  productImgData = p.img;
+  state.productImgData = p.img || p.mainImage || "";
   showProductImg();
 
-  // Badges
+  // Badge
   const isCustom = p.badge && !["الأكثر مبيعاً", "جديد", "حصري"].includes(p.badge);
   const badgeSeg = $("badgeSeg");
   if (badgeSeg) {
@@ -498,7 +716,7 @@ function editProduct(id) {
   });
 
   $("pStock").value = p.stock !== undefined ? p.stock : 20;
-  $("pDesc").value = p.desc || "";
+  $("pDesc").value = p.desc || p.description || "";
 
   const statusRadio = document.querySelector(`input[name="pStatus"][value="${p.status || "active"}"]`);
   if (statusRadio) statusRadio.checked = true;
@@ -507,7 +725,11 @@ function editProduct(id) {
   const colorsList = $("colorsList");
   if (colorsList) colorsList.innerHTML = "";
   if (Array.isArray(p.colors) && p.colors.length) {
-    p.colors.forEach((c, i) => addColorLine(c, p.colorNames ? p.colorNames[i] || "" : ""));
+    p.colors.forEach((c) => {
+      const val = typeof c === "object" ? c.value : c;
+      const nm = typeof c === "object" ? c.name : "";
+      addColorLine(val, nm);
+    });
   } else {
     addColorLine("#1d1a16", "أسود");
   }
@@ -521,7 +743,7 @@ function editProduct(id) {
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
         <path d="M20 6L9 17l-5-5"/>
       </svg>
-      حفظ التعديلات
+      حفظ التعديلات في السحابة
     `;
   }
 
@@ -530,7 +752,7 @@ function editProduct(id) {
 
   switchView("dash", document.querySelector('[data-view="dash"]'));
   window.scrollTo({ top: 0, behavior: "smooth" });
-  toast('تعديل "' + p.name + '" — قم بتعديل البيانات واضغط حفظ');
+  toast('تعديل "' + p.name + '" — عدّل البيانات ثم اضغط حفظ');
 }
 
 function cancelProductEdit() {
@@ -538,18 +760,22 @@ function cancelProductEdit() {
   toast("تم إلغاء التعديل");
 }
 
-// Delete Product Flow
+// Delete Product via Firestore
 function askDeleteProduct(id) {
-  const p = products.find((x) => x.id === id);
+  const p = state.products.find((x) => x.id === id);
   if (!p) return;
 
   confirmBox(
-    "حذف المنتج",
-    `سيتم حذف "${esc(p.name)}" نهائياً من المتجر. لا يمكن التراجع عن هذا الإجراء.`,
-    () => {
-      products = products.filter((x) => x.id !== id);
-      saveAll();
-      toast("تم حذف المنتج بنجاح ✓");
+    "حذف المنتج من السحابة",
+    `سيتم حذف "${esc(p.name)}" نهائياً من قاعدة بيانات Firestore والمتجر. هل تود المتابعة؟`,
+    async () => {
+      try {
+        await deleteDoc(doc(db, "products", id));
+        toast("تم حذف المنتج من السحابة بنجاح ✓");
+      } catch (err) {
+        console.error("Firestore deleteDoc error:", err);
+        toast("فشل حذف المنتج من قاعدة البيانات", false);
+      }
     }
   );
 }
@@ -568,10 +794,10 @@ function renderProductsTable() {
   const fc = filterCat ? filterCat.value : "";
   const fs = filterStatus ? filterStatus.value : "";
 
-  let list = products.slice();
+  let list = state.products.slice();
 
   if (q) list = list.filter((p) => p.name.toLowerCase().includes(q));
-  if (fc) list = list.filter((p) => p.categoryId === fc);
+  if (fc) list = list.filter((p) => p.categoryId === fc || p.category === fc);
   if (fs === "active") list = list.filter((p) => p.status === "active" && +p.stock > 0);
   if (fs === "hidden") list = list.filter((p) => p.status === "hidden");
   if (fs === "sale") list = list.filter((p) => p.oldPrice && p.oldPrice > p.price);
@@ -581,7 +807,7 @@ function renderProductsTable() {
 
   tbody.innerHTML = list
     .map((p) => {
-      const cat = cats.find((c) => c.id === p.categoryId);
+      const cat = state.categories.find((c) => c.id === p.categoryId || c.name === p.category);
       const disc =
         p.oldPrice && p.oldPrice > p.price ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
 
@@ -595,16 +821,20 @@ function renderProductsTable() {
       const statusTag = p.status === "hidden" ? '<span class="tag gray">مخفي</span>' : "";
 
       const colorsDots = (p.colors || [])
-        .map((c) => `<span class="c-dot" style="background:${c}"></span>`)
+        .map((c) => {
+          const val = typeof c === "object" ? c.value : c;
+          const nm = typeof c === "object" ? c.name : "";
+          return `<span class="c-dot" style="background:${val}" title="${esc(nm)}"></span>`;
+        })
         .join("");
 
       return `<tr>
         <td>
           <div class="t-prod">
-            <img src="${esc(p.img)}" alt="${esc(p.name)}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'46\\' height=\\'52\\' viewBox=\\'0 0 24 24\\'><rect width=\\'24\\' height=\\'24\\' fill=\\'%23e7e1d7\\'/></svg>'">
+            <img src="${esc(p.img || p.mainImage)}" alt="${esc(p.name)}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'46\\' height=\\'52\\' viewBox=\\'0 0 24 24\\'><rect width=\\'24\\' height=\\'24\\' fill=\\'%23e7e1d7\\'/></svg>'">
             <div>
               <div class="n">${esc(p.name)}</div>
-              <div class="c">${cat ? esc(cat.name) : "بدون تصنيف"}</div>
+              <div class="c">${cat ? esc(cat.name) : esc(p.category || "بدون تصنيف")}</div>
             </div>
           </div>
         </td>
@@ -664,11 +894,11 @@ function updateBannerPreview() {
   const c1 = $("cColor1") ? $("cColor1").value : "#1d1a16";
   const c2 = $("cColor2") ? $("cColor2").value : "#b99a6b";
 
-  if (bannerMode === "image" && catImgData) {
+  if (state.bannerMode === "image" && state.catImgData) {
     pv.style.background = "#1d1a16";
     pv.querySelector("img")?.remove();
     const im = document.createElement("img");
-    im.src = catImgData;
+    im.src = state.catImgData;
     pv.insertBefore(im, pv.firstChild);
   } else {
     pv.querySelector("img")?.remove();
@@ -683,7 +913,7 @@ function resetCatForm() {
   if ($("cColor1")) $("cColor1").value = "#1d1a16";
   if ($("cColor2")) $("cColor2").value = "#b99a6b";
 
-  bannerMode = "color";
+  state.bannerMode = "color";
   const bannerSeg = $("bannerSeg");
   if (bannerSeg) {
     bannerSeg.querySelectorAll("button").forEach((btn, i) => btn.classList.toggle("on", i === 0));
@@ -692,7 +922,7 @@ function resetCatForm() {
   if ($("bannerColorBox")) $("bannerColorBox").style.display = "block";
   if ($("bannerImgBox")) $("bannerImgBox").style.display = "none";
 
-  catImgData = "";
+  state.catImgData = "";
   if ($("cImgFile")) $("cImgFile").value = "";
 
   const uploader = $("cUploader");
@@ -702,7 +932,7 @@ function resetCatForm() {
       '<div class="up-txt" id="cUpTxt"><b>اضغط لرفع صورة البنر</b>عرض 1600×500 بكسل يُفضل</div>';
   }
 
-  editingCatId = null;
+  state.editingCatId = null;
   const modeTag = $("catFormMode");
   if (modeTag) modeTag.textContent = "نموذج إضافة";
 
@@ -713,35 +943,35 @@ function resetCatForm() {
 }
 
 function editCat(id) {
-  const c = cats.find((x) => x.id === id);
+  const c = state.categories.find((x) => x.id === id);
   if (!c) return;
 
-  editingCatId = id;
+  state.editingCatId = id;
   $("cName").value = c.name;
   $("cMsg").value = c.msg;
   $("cDesc").value = c.desc || "";
 
-  bannerMode = (c.banner && c.banner.type) || "color";
+  state.bannerMode = (c.banner && c.banner.type) || "color";
   const bannerSeg = $("bannerSeg");
   if (bannerSeg) {
     bannerSeg.querySelectorAll("button").forEach((b) => {
-      b.classList.toggle("on", b.dataset.v === bannerMode);
+      b.classList.toggle("on", b.dataset.v === state.bannerMode);
     });
   }
 
-  if ($("bannerColorBox")) $("bannerColorBox").style.display = bannerMode === "color" ? "block" : "none";
-  if ($("bannerImgBox")) $("bannerImgBox").style.display = bannerMode === "image" ? "block" : "none";
+  if ($("bannerColorBox")) $("bannerColorBox").style.display = state.bannerMode === "color" ? "block" : "none";
+  if ($("bannerImgBox")) $("bannerImgBox").style.display = state.bannerMode === "image" ? "block" : "none";
 
-  if (bannerMode === "color") {
+  if (state.bannerMode === "color") {
     if ($("cColor1")) $("cColor1").value = c.banner.c1 || "#1d1a16";
     if ($("cColor2")) $("cColor2").value = c.banner.c2 || "#b99a6b";
-    catImgData = "";
+    state.catImgData = "";
   } else {
-    catImgData = c.banner.img || "";
+    state.catImgData = c.banner.img || "";
     const uploader = $("cUploader");
     if (uploader) {
       uploader.classList.add("has-img");
-      uploader.innerHTML = `<img src="${catImgData}" alt="" style="height:150px">`;
+      uploader.innerHTML = `<img src="${state.catImgData}" alt="" style="height:150px">`;
     }
   }
 
@@ -759,7 +989,7 @@ function editCat(id) {
     window.scrollTo({ top: catForm.offsetTop - 100, behavior: "smooth" });
   }
 
-  toast('تعديل تصنيف "' + c.name + '" — عدّل البيانات ثم اضغط حفظ');
+  toast('تعديل تصنيف "' + c.name + '" — عدّل البيانات واضغط حفظ');
 }
 
 function cancelCatEdit() {
@@ -768,19 +998,27 @@ function cancelCatEdit() {
 }
 
 function askDeleteCat(id) {
-  const c = cats.find((x) => x.id === id);
+  const c = state.categories.find((x) => x.id === id);
   if (!c) return;
 
-  const count = products.filter((p) => p.categoryId === id).length;
+  const count = state.products.filter((p) => p.categoryId === id || p.category === c.name).length;
   const extra = count
-    ? `<br><b style="color:var(--red)">تحذير: يوجد ${count} منتج مرتبط بهذا التصنيف — سيبقى بدون تصنيف.</b>`
+    ? `<br><b style="color:var(--red)">تحذير: يوجد ${count} منتج مرتبط بهذا التصنيف في المتجر.</b>`
     : "";
 
-  confirmBox("حذف التصنيف", `سيتم حذف تصنيف "${esc(c.name)}" نهائياً.${extra}`, () => {
-    cats = cats.filter((x) => x.id !== id);
-    saveAll();
-    toast("تم حذف التصنيف بنجاح ✓");
-  });
+  confirmBox(
+    "حذف التصنيف من السحابة",
+    `سيتم حذف تصنيف "${esc(c.name)}" نهائياً من قاعدة بيانات Firestore.${extra}`,
+    async () => {
+      try {
+        await deleteDoc(doc(db, "categories", id));
+        toast("تم حذف التصنيف بنجاح ✓");
+      } catch (err) {
+        console.error("Firestore deleteDoc category error:", err);
+        toast("فشل حذف التصنيف من السحابة", false);
+      }
+    }
+  );
 }
 
 function renderCatsGrid() {
@@ -788,11 +1026,11 @@ function renderCatsGrid() {
   const empty = $("catEmpty");
   if (!grid) return;
 
-  if (empty) empty.style.display = cats.length ? "none" : "block";
+  if (empty) empty.style.display = state.categories.length ? "none" : "block";
 
-  grid.innerHTML = cats
+  grid.innerHTML = state.categories
     .map((c) => {
-      const n = products.filter((p) => p.categoryId === c.id).length;
+      const n = state.products.filter((p) => p.categoryId === c.id || p.category === c.name).length;
       const isImg = c.banner && c.banner.type === "image" && c.banner.img;
       const bg = isImg ? `<img src="${esc(c.banner.img)}" alt="">` : "";
       const style = isImg
@@ -830,6 +1068,114 @@ function renderCatsGrid() {
     .join("");
 }
 
+// --- Orders Management (Cloud Firestore) ---
+function renderOrdersTable() {
+  const tbody = $("ordersTbody");
+  const empty = $("orderEmpty");
+  const searchInput = $("orderSearch");
+  const filterStatus = $("orderFilterStatus");
+
+  if (!tbody) return;
+
+  const q = searchInput ? searchInput.value.trim().toLowerCase() : "";
+  const fs = filterStatus ? filterStatus.value : "";
+
+  let list = state.orders.slice();
+  if (q) {
+    list = list.filter(
+      (o) =>
+        (o.customer || "").toLowerCase().includes(q) ||
+        (o.phone || "").includes(q) ||
+        (o.wilaya || "").toLowerCase().includes(q)
+    );
+  }
+  if (fs) {
+    list = list.filter((o) => o.status === fs);
+  }
+
+  if (empty) empty.style.display = list.length ? "none" : "block";
+
+  tbody.innerHTML = list
+    .map((o) => {
+      const itemsHTML = (o.items || [])
+        .map(
+          (item) => `
+        <div class="order-item-chip">
+          <b>${esc(item.name || "منتج")}</b>
+          ${item.size ? `<span>[مقاس: ${esc(item.size)}]</span>` : ""}
+          ${item.color ? `<span>[لون: ${esc(item.color)}]</span>` : ""}
+          <span>× ${item.quantity || 1}</span>
+          <span>(${item.price || 0} دج)</span>
+        </div>
+      `
+        )
+        .join("");
+
+      const dateStr = o.createdAt ? new Date(o.createdAt).toLocaleString("ar-DZ") : "—";
+
+      return `<tr>
+        <td><b>#${esc(o.id.slice(-6).toUpperCase())}</b></td>
+        <td>
+          <div class="order-cust-info">
+            <span class="n">${esc(o.customer)}</span>
+          </div>
+        </td>
+        <td><span style="direction:ltr;display:inline-block">${esc(o.phone)}</span></td>
+        <td>${esc(o.wilaya)} — ${esc(o.commune || "")}<br><small style="color:var(--muted)">${esc(o.address || "")}</small></td>
+        <td><div class="order-items-list">${itemsHTML || "—"}</div></td>
+        <td><b style="color:var(--gold-dark)">${o.total} دج</b></td>
+        <td>
+          <select class="order-status-select" onchange="changeOrderStatus('${o.id}', this.value)">
+            <option value="جديد" ${o.status === "جديد" ? "selected" : ""}>جديد</option>
+            <option value="قيد المعالجة" ${o.status === "قيد المعالجة" ? "selected" : ""}>قيد المعالجة</option>
+            <option value="مؤكد" ${o.status === "مؤكد" ? "selected" : ""}>مؤكد</option>
+            <option value="تم التوصيل" ${o.status === "تم التوصيل" ? "selected" : ""}>تم التوصيل</option>
+            <option value="ملغي" ${o.status === "ملغي" ? "selected" : ""}>ملغي</option>
+          </select>
+        </td>
+        <td><span class="order-date-time">${dateStr}</span></td>
+        <td>
+          <button class="icon-btn del" title="حذف الطلب" onclick="askDeleteOrder('${o.id}')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M8 6V4h8v2m1 0v14a2 2 0 01-2 2H9a2 2 0 01-2-2V6"/>
+            </svg>
+          </button>
+        </td>
+      </tr>`;
+    })
+    .join("");
+}
+
+async function changeOrderStatus(orderId, newStatus) {
+  try {
+    await updateDoc(doc(db, "orders", orderId), {
+      status: newStatus,
+      updatedAt: new Date().toISOString()
+    });
+    toast(`تم تحديث حالة الطلب إلى "${newStatus}" ✓`);
+  } catch (err) {
+    console.error("Update order status error:", err);
+    toast("تعذر تحديث حالة الطلب في السحابة", false);
+  }
+}
+
+function askDeleteOrder(orderId) {
+  confirmBox("حذف الطلب", "هل أنت متأكد من حذف هذا الطلب نهائياً من قاعدة البيانات؟", async () => {
+    try {
+      await deleteDoc(doc(db, "orders", orderId));
+      toast("تم حذف الطلب بنجاح ✓");
+    } catch (err) {
+      console.error("Delete order error:", err);
+      toast("تعذر حذف الطلب", false);
+    }
+  });
+}
+
+function refreshOrders() {
+  toast("جاري تحديث الطلبات من السحابة...");
+  renderOrdersTable();
+}
+
 // --- Generic Confirmation Modal ---
 function confirmBox(title, text, cb) {
   const cfTitle = $("cfTitle");
@@ -838,26 +1184,28 @@ function confirmBox(title, text, cb) {
 
   if (cfTitle) cfTitle.textContent = title;
   if (cfText) cfText.innerHTML = text;
-  confirmCb = cb;
+  state.confirmCb = cb;
   if (modal) modal.classList.add("open");
 }
 
 // --- Exporter for Storefront Code ---
 function buildExport() {
-  const pl = products.map((p) => {
+  const pl = state.products.map((p) => {
     const o = {
+      id: p.id,
       name: p.name,
       price: p.price,
-      img: p.img,
-      colors: p.colors || [],
-      colorNames: p.colorNames || []
+      img: p.img || p.mainImage,
+      colors: (p.colors || []).map((c) => (typeof c === "object" ? c.value : c)),
+      colorNames: (p.colors || []).map((c) => (typeof c === "object" ? c.name : c))
     };
     if (p.oldPrice && p.oldPrice > p.price) o.oldPrice = p.oldPrice;
     if (p.badge) o.badge = p.badge;
     return o;
   });
 
-  const cl = cats.map((c) => ({
+  const cl = state.categories.map((c) => ({
+    id: c.id,
     name: c.name,
     msg: c.msg,
     banner: c.banner,
@@ -865,7 +1213,7 @@ function buildExport() {
   }));
 
   return (
-    "/* ===== الصق هذا الكود في index.html / product.html ===== */\n" +
+    "/* ===== مصفوفة البيانات الحية من Firebase Firestore ===== */\n" +
     "const categories = " +
     JSON.stringify(cl, null, 2) +
     ";\n\n" +
@@ -897,29 +1245,31 @@ function downloadExport() {
   const b = new Blob([codeBox.textContent], { type: "text/javascript" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(b);
-  a.download = "alnoor-data.js";
+  a.download = "alnoor-cloud-data.js";
   a.click();
   toast("تم تنزيل الملف ✓");
 }
 
 function askReset() {
   confirmBox(
-    "إعادة تعيين كل البيانات",
-    "سيتم حذف كل المنتجات والتصنيفات المضافة واستعادة البيانات التجريبية الأصلية.",
-    () => {
-      localStorage.removeItem(LS_P);
-      localStorage.removeItem(LS_C);
-      products = JSON.parse(JSON.stringify(DEMO_PRODUCTS));
-      cats = JSON.parse(JSON.stringify(DEMO_CATS));
-      saveAll();
-      resetProductForm();
-      resetCatForm();
-      toast("تمت إعادة تعيين البيانات بنجاح");
+    "إعادة تعيين البيانات",
+    "سيتم استعادة البيانات الافتراضية في Firestore وإعادة ضبط القوائم.",
+    async () => {
+      try {
+        toast("جاري إعادة التعيين في Firestore...");
+        await seedCategoriesIfEmpty();
+        await seedProductsIfEmpty();
+        resetProductForm();
+        resetCatForm();
+        toast("تمت استعادة البيانات الافتراضية بنجاح ✓");
+      } catch (err) {
+        toast("حدث خطأ أثناء إعادة التعيين", false);
+      }
     }
   );
 }
 
-// --- Event Listeners Setup ---
+// --- Event Listeners Initialization ---
 function initEvents() {
   // Product Badge Segmented Control
   const badgeSeg = $("badgeSeg");
@@ -936,11 +1286,11 @@ function initEvents() {
     });
   }
 
-  // Price & Old Price live listeners
+  // Price & Old Price
   $("pPrice")?.addEventListener("input", updateDiscPreview);
   $("pOldPrice")?.addEventListener("input", updateDiscPreview);
 
-  // Product Image File Input
+  // Product Image File
   $("pImgFile")?.addEventListener("change", (e) => {
     if (e.target.files && e.target.files[0]) {
       handleProductImageFile(e.target.files[0]);
@@ -951,7 +1301,7 @@ function initEvents() {
   $("pImgUrl")?.addEventListener("input", () => {
     const v = $("pImgUrl").value.trim();
     if (/^https?:\/\/.+\.(png|jpe?g|webp|gif|svg)(\?.*)?$/i.test(v)) {
-      productImgData = v;
+      state.productImgData = v;
       showProductImg();
       clearErr("pImg");
     }
@@ -966,8 +1316,8 @@ function initEvents() {
     }
   });
 
-  // Product Form Submit
-  $("productForm")?.addEventListener("submit", (e) => {
+  // Product Form Submit -> Firestore (addDoc or updateDoc)
+  $("productForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const name = $("pName").value.trim();
@@ -993,16 +1343,11 @@ function initEvents() {
       markErr("pName");
       ok = false;
     }
-    if (products.some((p) => p.name.toLowerCase() === name.toLowerCase() && p.id !== editingProductId)) {
-      markErr("pName");
-      toast("يوجد منتج بنفس الاسم مسبقاً", false);
-      ok = false;
-    }
     if (!catId) {
       markErr("pCategory");
       ok = false;
     }
-    if (!productImgData) {
+    if (!state.productImgData) {
       setErr("pImg");
       ok = false;
     }
@@ -1034,34 +1379,64 @@ function initEvents() {
       return;
     }
 
-    const data = {
+    const matchedCat = state.categories.find((c) => c.id === catId);
+    const catName = matchedCat ? matchedCat.name : "";
+
+    const submitBtn = $("pSubmitBtn");
+    const origBtnHTML = submitBtn ? submitBtn.innerHTML : "";
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "جاري الحفظ في السحابة...";
+    }
+
+    const productPayload = {
       name,
+      title: name,
       categoryId: catId,
-      price,
-      oldPrice,
-      img: productImgData,
+      category: catName,
+      price: Number(price),
+      oldPrice: oldPrice ? Number(oldPrice) : null,
+      img: state.productImgData,
+      mainImage: state.productImgData,
+      images: [
+        {
+          id: "img_" + Date.now().toString(36),
+          url: state.productImgData,
+          isMain: true
+        }
+      ],
       badge,
-      colors: colors.map((c) => c.hex),
+      colors,
       colorNames: colors.map((c) => c.name),
       sizes,
       stock: +stock,
       status,
-      desc
+      description: desc,
+      desc: desc,
+      updatedAt: new Date().toISOString()
     };
 
-    if (editingProductId) {
-      const idx = products.findIndex((p) => p.id === editingProductId);
-      if (idx !== -1) {
-        products[idx] = { ...products[idx], ...data };
-        toast("تم تحديث المنتج بنجاح ✓");
+    try {
+      if (state.editingProductId) {
+        // Update existing document in Firestore
+        await updateDoc(doc(db, "products", state.editingProductId), productPayload);
+        toast("تم تحديث المنتج في السحابة بنجاح ✓");
+      } else {
+        // Add new document in Firestore
+        productPayload.createdAt = new Date().toISOString();
+        await addDoc(collection(db, "products"), productPayload);
+        toast('تمت إضافة "' + name + '" إلى Firestore والمتجر بنجاح ✓');
       }
-    } else {
-      products.unshift({ id: uid(), ...data });
-      toast('تمت إضافة "' + name + '" للمتجر بنجاح ✓');
+      resetProductForm();
+    } catch (err) {
+      console.error("Save product to Firestore error:", err);
+      toast("حدث خطأ أثناء حفظ المنتج في السحابة: " + err.message, false);
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = origBtnHTML;
+      }
     }
-
-    saveAll();
-    resetProductForm();
   });
 
   // Banner Segmented Control
@@ -1072,9 +1447,9 @@ function initEvents() {
       if (!b) return;
       bannerSeg.querySelectorAll("button").forEach((x) => x.classList.remove("on"));
       b.classList.add("on");
-      bannerMode = b.dataset.v;
-      if ($("bannerColorBox")) $("bannerColorBox").style.display = bannerMode === "color" ? "block" : "none";
-      if ($("bannerImgBox")) $("bannerImgBox").style.display = bannerMode === "image" ? "block" : "none";
+      state.bannerMode = b.dataset.v;
+      if ($("bannerColorBox")) $("bannerColorBox").style.display = state.bannerMode === "color" ? "block" : "none";
+      if ($("bannerImgBox")) $("bannerImgBox").style.display = state.bannerMode === "image" ? "block" : "none";
       updateBannerPreview();
     });
   }
@@ -1091,18 +1466,18 @@ function initEvents() {
       toast("الملف المختار ليس صورة صالحة", false);
       return;
     }
-    if (f.size > 4 * 1024 * 1024) {
-      toast("حجم البنر كبير (الحد الأقصى 4MB)", false);
+    if (f.size > 5 * 1024 * 1024) {
+      toast("حجم البنر كبير (الحد الأقصى 5MB)", false);
       return;
     }
 
     const r = new FileReader();
     r.onload = (ev) => {
-      catImgData = ev.target.result;
+      state.catImgData = ev.target.result;
       const uploader = $("cUploader");
       if (uploader) {
         uploader.classList.add("has-img");
-        uploader.innerHTML = `<img src="${catImgData}" alt="" style="height:150px">`;
+        uploader.innerHTML = `<img src="${state.catImgData}" alt="" style="height:150px">`;
       }
       updateBannerPreview();
       clearErr("cBanner");
@@ -1112,14 +1487,14 @@ function initEvents() {
     try {
       const secureUrl = await uploadImageToCloudinary(f);
       if (secureUrl) {
-        catImgData = secureUrl;
+        state.catImgData = secureUrl;
         updateBannerPreview();
       }
     } catch (_) {}
   });
 
-  // Category Form Submit
-  $("categoryForm")?.addEventListener("submit", (e) => {
+  // Category Form Submit -> Firestore (addDoc or updateDoc)
+  $("categoryForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = $("cName") ? $("cName").value.trim() : "";
     const msg = $("cMsg") ? $("cMsg").value.trim() : "";
@@ -1130,7 +1505,11 @@ function initEvents() {
       markErr("cName");
       ok = false;
     }
-    if (cats.some((c) => c.name.toLowerCase() === name.toLowerCase() && c.id !== editingCatId)) {
+    if (
+      state.categories.some(
+        (c) => c.name.toLowerCase() === name.toLowerCase() && c.id !== state.editingCatId
+      )
+    ) {
       markErr("cName");
       toast("يوجد تصنيف بنفس الاسم مسبقاً", false);
       ok = false;
@@ -1139,7 +1518,7 @@ function initEvents() {
       markErr("cMsg");
       ok = false;
     }
-    if (bannerMode === "image" && !catImgData) {
+    if (state.bannerMode === "image" && !state.catImgData) {
       setErr("cBanner");
       ok = false;
     }
@@ -1150,7 +1529,7 @@ function initEvents() {
     }
 
     const banner =
-      bannerMode === "color"
+      state.bannerMode === "color"
         ? {
             type: "color",
             c1: $("cColor1") ? $("cColor1").value : "#1d1a16",
@@ -1161,28 +1540,38 @@ function initEvents() {
             type: "image",
             c1: "#1d1a16",
             c2: "#1d1a16",
-            img: catImgData
+            img: state.catImgData
           };
 
-    if (editingCatId) {
-      const idx = cats.findIndex((c) => c.id === editingCatId);
-      if (idx !== -1) {
-        cats[idx] = { ...cats[idx], name, msg, banner, desc };
-        toast("تم تحديث التصنيف بنجاح ✓");
-      }
-    } else {
-      cats.push({ id: uid(), name, msg, banner, desc, active: true });
-      toast('تمت إضافة تصنيف "' + name + '" بنجاح ✓');
-    }
+    const categoryPayload = {
+      name,
+      msg,
+      banner,
+      desc,
+      active: true,
+      updatedAt: new Date().toISOString()
+    };
 
-    saveAll();
-    resetCatForm();
+    try {
+      if (state.editingCatId) {
+        await updateDoc(doc(db, "categories", state.editingCatId), categoryPayload);
+        toast("تم تحديث التصنيف في السحابة بنجاح ✓");
+      } else {
+        categoryPayload.createdAt = new Date().toISOString();
+        await addDoc(collection(db, "categories"), categoryPayload);
+        toast('تمت إضافة تصنيف "' + name + '" إلى Firestore بنجاح ✓');
+      }
+      resetCatForm();
+    } catch (err) {
+      console.error("Save category error:", err);
+      toast("حدث خطأ أثناء حفظ التصنيف في السحابة: " + err.message, false);
+    }
   });
 
   // Confirmation Modal Listeners
   $("cfYes")?.addEventListener("click", () => {
     $("confirmModal")?.classList.remove("open");
-    if (confirmCb) confirmCb();
+    if (state.confirmCb) state.confirmCb();
   });
 
   $("confirmModal")?.addEventListener("click", (e) => {
@@ -1192,6 +1581,17 @@ function initEvents() {
   $("exportModal")?.addEventListener("click", (e) => {
     if (e.target.id === "exportModal") e.target.classList.remove("open");
   });
+}
+
+// --- Logout Handler ---
+async function handleLogout() {
+  try {
+    await signOut(auth);
+    window.location.replace("login.html");
+  } catch (err) {
+    console.error("Logout error:", err);
+    toast("تعذر تسجيل الخروج", false);
+  }
 }
 
 // --- Expose Global Functions for Inline HTML Attributes ---
@@ -1210,29 +1610,40 @@ window.editCat = editCat;
 window.askDeleteCat = askDeleteCat;
 window.cancelCatEdit = cancelCatEdit;
 window.renderProductsTable = renderProductsTable;
+window.renderOrdersTable = renderOrdersTable;
+window.changeOrderStatus = changeOrderStatus;
+window.askDeleteOrder = askDeleteOrder;
+window.refreshOrders = refreshOrders;
+window.handleLogout = handleLogout;
 
-// --- Firebase Authentication Guard (Optional / Non-blocking) ---
+// --- Firebase Auth Observer ---
 onAuthStateChanged(auth, (user) => {
+  const adminPill = document.querySelector(".admin-pill");
   if (user) {
-    const adminPill = document.querySelector(".admin-pill");
     if (adminPill) {
+      adminPill.innerHTML = `<span class="dot-live"></span> ${user.email ? user.email.split("@")[0] : "المدير"}`;
       adminPill.title = user.email || "مدير النظام";
+    }
+  } else {
+    // If not authenticated, still keep pill showing status without blocking
+    if (adminPill) {
+      adminPill.innerHTML = `<span class="dot-live"></span> وضع المدير`;
     }
   }
 });
 
-// --- Initialize Everything on DOM Ready ---
+// --- Initialize Everything ---
 document.addEventListener("DOMContentLoaded", () => {
   initEvents();
   addColorLine("#f5f2ea", "أبيض عاجي");
   addColorLine("#1d1a16", "أسود");
   updateBannerPreview();
-  refresh();
+  initRealtimeFirestore();
 });
 
-// Immediate execution fallback if already parsed
+// Fallback immediate initialization if DOMContentLoaded already fired
 initEvents();
 addColorLine("#f5f2ea", "أبيض عاجي");
 addColorLine("#1d1a16", "أسود");
 updateBannerPreview();
-refresh();
+initRealtimeFirestore();
