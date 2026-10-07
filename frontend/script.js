@@ -1121,18 +1121,7 @@ function setupEventListeners() {
     }, { passive: true });
   }
 
-  // Footer Links
-  $("footerOrderLink")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    openCheckoutModal();
-  });
 
-  // Newsletter Form
-  $("newsletterForm")?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    showToast("شكراً لاشتراكك في نشرة ClothStore البريدية!");
-    e.target.reset();
-  });
 
   // Global Escape Key Handler
   document.addEventListener("keydown", (e) => {
