@@ -751,7 +751,11 @@ async function handleCreateCategory(e) {
     showToast(`تم إنشاء التصنيف "${newCat.name}" بنجاح!`, "success");
   } catch (err) {
     console.error("Create category error:", err);
-    showToast("حدث خطأ أثناء حفظ التصنيف، يرجى المحاولة مجدداً.", "error");
+    if (err.code === "permission-denied" || (err.message && err.message.includes("insufficient permissions"))) {
+      showToast("صلاحيات Firebase: يرجى إضافة قاعدة categories في Firebase Console", "error");
+    } else {
+      showToast("حدث خطأ أثناء حفظ التصنيف، يرجى المحاولة مجدداً.", "error");
+    }
   } finally {
     DOM.saveCategoryBtn.disabled = false;
     DOM.saveCategoryBtnText.hidden = false;
