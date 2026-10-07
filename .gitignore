@@ -4,3 +4,26 @@ Thumbs.db
 
 # Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Secrets & Environment Variables (NEVER COMMIT)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Firebase & Cloud Credentials
+*serviceAccount*.json
+*service-account*.json
+firebase-adminsdk*.json
+*-adminsdk-*.json
+
+# Dependencies & Build artifacts
+node_modules/
+.vercel
+dist/
+build/

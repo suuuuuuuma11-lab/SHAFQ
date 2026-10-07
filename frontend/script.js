@@ -18,9 +18,7 @@ import {
   orderBy
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
-// --- Telegram Configuration ---
-const TELEGRAM_BOT_TOKEN = "8916406368:AAFIJTPkAykiL54hn_mmbv6AqGax6lvq08U";
-const TELEGRAM_CHAT_ID = "6609345622";
+// Telegram credentials removed from frontend — routed securely via /api/telegram
 
 // --- Application State ---
 const state = {
@@ -1177,27 +1175,29 @@ async function sendOrderToTelegram(formData) {
     : (state.cart.length > 0 ? state.cart : (state.currentDetailProduct ? [state.currentDetailProduct] : []));
   const total = items.reduce((sum, i) => sum + (i.price * (i.quantity || 1)), 0);
 
-  const endpoint = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  const text = formatTelegramOrderMessage(formValues, items, total);
-
-  const response = await fetch(endpoint, {
+  const res = await fetch("/api/telegram", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      chat_id: TELEGRAM_CHAT_ID,
-      text: text
+      orderId: "LEGACY-" + Date.now().toString().slice(-6),
+      orderData: {
+        productName: items.map(i => i.name).join(", "),
+        color: items.map(i => i.color || "افتراضي").join(", "),
+        size: items.map(i => i.size || "M").join(", "),
+        qty: items.reduce((s, i) => s + (i.quantity || 1), 0),
+        price: items[0]?.price || 0,
+        total: total.toLocaleString('ar-DZ'),
+        name: formValues.customerName || formValues.fullName || "",
+        phone: formValues.customerPhone || formValues.phone || "",
+        wilaya: formValues.wilaya || "",
+        commune: formValues.commune || "",
+        address: formValues.address || ""
+      }
     })
   });
 
-  if (!response.ok) {
-    let errorMsg = "";
-    try {
-      const errJson = await response.json();
-      errorMsg = errJson.description;
-    } catch (_) { }
-    throw new Error(errorMsg || "تعذر إرسال الطلب حالياً.");
+  if (!res.ok) {
+    throw new Error("تعذر إرسال الطلب حالياً.");
   }
 }
 
@@ -1229,7 +1229,8 @@ function renderSearchResults(queryText) {
   );
 
   if (results.length === 0) {
-    DOM.searchResultsList.innerHTML = `<p style="text-align: center; color: var(--color-text-sub); padding: 20px;">لم يتم العثور على أي نتائج مطابقة لـ "${q}".</p>`;
+    const safeQ = String(q || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    DOM.searchResultsList.innerHTML = `<p style="text-align: center; color: var(--color-text-sub); padding: 20px;">لم يتم العثور على أي نتائج مطابقة لـ "${safeQ}".</p>`;
     return;
   }
 

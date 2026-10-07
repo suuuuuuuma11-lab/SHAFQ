@@ -1,13 +1,18 @@
 /* ==========================================================================
-   ClothStore — Admin Authentication Logic
-   Firebase Email/Password Authentication & Redirection
+   ClothStore — Admin Authentication Logic (Hardened)
+   Firebase Email/Password Authentication & Admin Role Verification
    ========================================================================== */
 
-import { auth } from "./firebase-config.js";
+import { auth, db } from "./firebase-config.js";
 import { 
   signInWithEmailAndPassword, 
+  signOut,
   onAuthStateChanged 
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+import { 
+  doc, 
+  getDoc 
+} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
 // --- DOM References ---
 const $ = (id) => document.getElementById(id);
@@ -27,11 +32,42 @@ const DOM = {
   btnLoader: $("loginBtnLoader")
 };
 
+// Check URL query parameters for unauthorized warnings
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get("error") === "unauthorized") {
+  showErrorAlert("تم رفض الوصول: هذا الحساب مسجل ولكنه لا يملك صلاحيات المشرف (Admin).");
+}
+
+// --- Admin Authorization Check ---
+async function verifyIsAdmin(user) {
+  if (!user) return false;
+  try {
+    const tokenResult = await user.getIdTokenResult();
+    if (tokenResult.claims.admin === true || tokenResult.claims.role === "admin") {
+      return true;
+    }
+  } catch (_) {}
+
+  try {
+    const adminSnap = await getDoc(doc(db, "admins", user.uid));
+    if (adminSnap.exists()) {
+      return true;
+    }
+  } catch (_) {}
+
+  return false;
+}
+
 // --- Check If Already Authenticated ---
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   if (user) {
-    // Already logged in, redirect straight to admin dashboard
-    window.location.replace("admin.html");
+    const isAdmin = await verifyIsAdmin(user);
+    if (isAdmin) {
+      window.location.replace("admin.html");
+    } else {
+      await signOut(auth);
+      showErrorAlert("تم تسجيل الخروج: الحساب الحالي لا يملك صلاحيات المشرف.");
+    }
   }
 });
 
@@ -112,8 +148,14 @@ DOM.form.addEventListener("submit", async (e) => {
   setLoading(true);
 
   try {
-    await signInWithEmailAndPassword(auth, email, password);
-    // onAuthStateChanged will handle redirection or redirect immediately:
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    const isAdmin = await verifyIsAdmin(cred.user);
+    if (!isAdmin) {
+      await signOut(auth);
+      setLoading(false);
+      showErrorAlert("عذراً، هذا الحساب ليس لديه صلاحيات المشرف (Admin). تم حظر الوصول.");
+      return;
+    }
     window.location.replace("admin.html");
   } catch (error) {
     console.error("Login failed:", error);

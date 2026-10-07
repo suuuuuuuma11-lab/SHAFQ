@@ -12,6 +12,7 @@ import {
 import { 
   collection, 
   doc, 
+  getDoc,
   getDocs, 
   addDoc, 
   updateDoc, 
@@ -25,10 +26,7 @@ import {
 // --- Utilities ---
 const esc = (s) =>
   String(s || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
 
 const $ = (id) => document.getElementById(id);
 
@@ -1616,34 +1614,59 @@ window.askDeleteOrder = askDeleteOrder;
 window.refreshOrders = refreshOrders;
 window.handleLogout = handleLogout;
 
-// --- Firebase Auth Observer ---
-onAuthStateChanged(auth, (user) => {
+// --- Admin Authorization Guard ---
+async function verifyIsAdmin(user) {
+  if (!user) return false;
+  try {
+    const tokenResult = await user.getIdTokenResult();
+    if (tokenResult.claims.admin === true || tokenResult.claims.role === "admin") {
+      return true;
+    }
+  } catch (_) {}
+
+  try {
+    const adminSnap = await getDoc(doc(db, "admins", user.uid));
+    if (adminSnap.exists()) {
+      return true;
+    }
+  } catch (_) {}
+
+  return false;
+}
+
+// --- Firebase Auth Observer with Role Verification ---
+let isDashboardInitialized = false;
+
+onAuthStateChanged(auth, async (user) => {
   const adminPill = document.querySelector(".admin-pill");
-  if (user) {
-    if (adminPill) {
-      adminPill.innerHTML = `<span class="dot-live"></span> ${user.email ? user.email.split("@")[0] : "المدير"}`;
-      adminPill.title = user.email || "مدير النظام";
-    }
-  } else {
-    // If not authenticated, still keep pill showing status without blocking
-    if (adminPill) {
-      adminPill.innerHTML = `<span class="dot-live"></span> وضع المدير`;
-    }
+
+  if (!user) {
+    // Unauthenticated user -> kick out to login page
+    window.location.replace("login.html");
+    return;
+  }
+
+  // User is logged in -> verify admin role
+  const isAdmin = await verifyIsAdmin(user);
+  if (!isAdmin) {
+    console.warn("Unauthorized user blocked from dashboard:", user.uid);
+    await signOut(auth);
+    window.location.replace("login.html?error=unauthorized");
+    return;
+  }
+
+  // Admin access granted:
+  if (adminPill) {
+    adminPill.innerHTML = `<span class="dot-live"></span> ${esc(user.email ? user.email.split("@")[0] : "المدير")}`;
+    adminPill.title = esc(user.email || "مدير النظام");
+  }
+
+  if (!isDashboardInitialized) {
+    isDashboardInitialized = true;
+    initEvents();
+    addColorLine("#f5f2ea", "أبيض عاجي");
+    addColorLine("#1d1a16", "أسود");
+    updateBannerPreview();
+    initRealtimeFirestore();
   }
 });
-
-// --- Initialize Everything ---
-document.addEventListener("DOMContentLoaded", () => {
-  initEvents();
-  addColorLine("#f5f2ea", "أبيض عاجي");
-  addColorLine("#1d1a16", "أسود");
-  updateBannerPreview();
-  initRealtimeFirestore();
-});
-
-// Fallback immediate initialization if DOMContentLoaded already fired
-initEvents();
-addColorLine("#f5f2ea", "أبيض عاجي");
-addColorLine("#1d1a16", "أسود");
-updateBannerPreview();
-initRealtimeFirestore();

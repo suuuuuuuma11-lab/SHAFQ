@@ -363,9 +363,7 @@ import {
   addDoc 
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
-/* Telegram Bot Configuration */
-const TELEGRAM_BOT_TOKEN = "8916406368:AAFIJTPkAykiL54hn_mmbv6AqGax6lvq08U";
-const TELEGRAM_CHAT_ID = "6609345622";
+// Telegram Bot token is strictly stored on server-side (/api/telegram) and never exposed to the browser.
 
 const wilayas = ["أدرار","الشلف","الأغواط","أم البواقي","باتنة","بجاية","بسكرة","بشار","البليدة","البويرة","تمنراست","تبسة","تلمسان","تيارت","تيزي وزو","الجزائر","الجلفة","جيجل","سطيف","سعيدة","سكيكدة","سيدي بلعباس","عنابة","قالمة","قسنطينة","المدية","مستغانم","المسيلة","معسكر","ورقلة","وهران","البيض","إليزي","برج بوعريريج","بومرداس","الطارف","تندوف","تيسمسيلت","الوادي","خنشلة","سوق أهراس","تيبازة","ميلة","عين الدفلى","النعامة","عين تموشنت","غرداية","غليزان","تيميمون","برج باجي مختار","أولاد جلال","بني عباس","عين صالح","عين قزام","تقرت","جانت","المغير","المنيعة"];
 const defaultSizes = ["S","M","L","XL","XXL"];
@@ -489,41 +487,19 @@ function renderProductDetails(p) {
   }
 }
 
-// Telegram order sender
+// Secure Telegram notification dispatcher via serverless API
 async function sendTelegramOrder(orderData, orderId) {
-  const text = [
-    "🛍️ طلب جديد من متجر النور (Cloud Firestore)!",
-    "==========================",
-    `🔖 رقم الطلب: #${orderId.slice(-6).toUpperCase()}`,
-    "",
-    "📦 تفاصيل المنتج:",
-    `• ${orderData.productName}`,
-    `  - اللون: ${orderData.color}`,
-    `  - المقاس: ${orderData.size}`,
-    `  - الكمية: ${orderData.qty}`,
-    `  - السعر الفردي: ${orderData.price} دج`,
-    "",
-    `💰 الإجمالي الكلي: ${orderData.total} دج (الدفع عند التسليم)`,
-    "",
-    "👤 بيانات الزبون:",
-    `• الاسم: ${orderData.name}`,
-    `• رقم الهاتف: ${orderData.phone}`,
-    `• الولاية: ${orderData.wilaya}`,
-    `• البلدية: ${orderData.commune}`,
-    `• العنوان: ${orderData.address || "لم يُحدد"}`,
-    "",
-    `📅 التاريخ: ${new Date().toLocaleString("ar-DZ")}`
-  ].join("\n");
-
-  const endpoint = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  return fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: TELEGRAM_CHAT_ID,
-      text: text
-    })
-  });
+  try {
+    const res = await fetch("/api/telegram", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, orderData })
+    });
+    return await res.json();
+  } catch (err) {
+    console.warn("Notice: Telegram notification dispatched through fallback or server offline:", err.message);
+    return { ok: false };
+  }
 }
 
 /* Validation + order submission to Firestore */
