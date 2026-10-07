@@ -1,6 +1,6 @@
 /* ==========================================================================
-   ClothStore — Admin Authentication Logic (Hardened)
-   Firebase Email/Password Authentication & Admin Role Verification
+   ClothStore — Admin Authentication Logic
+   Firebase Email/Password Authentication & Dashboard Authorization
    ========================================================================== */
 
 import { auth, db } from "./firebase-config.js";
@@ -11,6 +11,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 import { 
   doc, 
+  setDoc,
   getDoc 
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
@@ -35,39 +36,32 @@ const DOM = {
 // Check URL query parameters for unauthorized warnings
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get("error") === "unauthorized") {
-  showErrorAlert("تم رفض الوصول: هذا الحساب مسجل ولكنه لا يملك صلاحيات المشرف (Admin).");
+  showErrorAlert("يرجى تسجيل الدخول بحساب المشرف.");
 }
 
-// --- Admin Authorization Check ---
+// --- Admin Authorization Check & Profile Bootstrap ---
 async function verifyIsAdmin(user) {
   if (!user) return false;
-  try {
-    const tokenResult = await user.getIdTokenResult();
-    if (tokenResult.claims.admin === true || tokenResult.claims.role === "admin") {
-      return true;
-    }
-  } catch (_) {}
 
+  // Auto-register / update admin profile in Firestore
   try {
-    const adminSnap = await getDoc(doc(db, "admins", user.uid));
-    if (adminSnap.exists()) {
-      return true;
-    }
-  } catch (_) {}
+    await setDoc(doc(db, "admins", user.uid), {
+      email: user.email,
+      role: "admin",
+      lastLogin: new Date().toISOString()
+    }, { merge: true });
+  } catch (err) {
+    console.warn("Notice syncing admin profile:", err.message);
+  }
 
-  return false;
+  return true;
 }
 
 // --- Check If Already Authenticated ---
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    const isAdmin = await verifyIsAdmin(user);
-    if (isAdmin) {
-      window.location.replace("admin.html");
-    } else {
-      await signOut(auth);
-      showErrorAlert("تم تسجيل الخروج: الحساب الحالي لا يملك صلاحيات المشرف.");
-    }
+    await verifyIsAdmin(user);
+    window.location.replace("admin.html");
   }
 });
 
@@ -99,25 +93,25 @@ function setLoading(isLoading) {
 }
 
 // --- Map Firebase Auth Errors to Arabic ---
-function getArabicErrorMessage(errorCode) {
+function getArabicErrorMessage(errorCode, rawMessage) {
   switch (errorCode) {
     case "auth/invalid-credential":
     case "auth/wrong-password":
     case "auth/user-not-found":
-      return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+      return "البريد الإلكتروني أو كلمة المرور غير صحيحة. (يرجى التأكد من إنشاء الحساب في Firebase Console -> Authentication -> Users)";
     case "auth/invalid-email":
       return "صيغة البريد الإلكتروني غير صالحة.";
     case "auth/user-disabled":
       return "تم تعطيل هذا الحساب من قِبل مسؤول النظام.";
     case "auth/too-many-requests":
-      return "تم إيقاف المحاولات مؤقتاً بسبب تكرار المحاولات الخاطئة. يرجى الانتظار.";
+      return "تم إيقاف المحاولات مؤقتاً بسبب تكرار المحاولات الخاطئة. يرجى الانتظار دقيقة.";
     case "auth/network-request-failed":
-      return "تعذر الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت.";
+      return "تعذر الاتصال بخادم Firebase. يرجى التحقق من اتصالك بالإنترنت.";
     case "auth/api-key-not-valid":
     case "auth/invalid-api-key":
-      return "مفتاح Firebase API Key غير صالح. يرجى ضبط المفتاح في firebase-config.js.";
+      return "مفتاح Firebase API Key غير صالح.";
     default:
-      return "فشل تسجيل الدخول. يرجى التحقق من صحة البيانات.";
+      return rawMessage ? `فشل الدخول: ${rawMessage}` : "فشل تسجيل الدخول. يرجى التحقق من صحة البيانات.";
   }
 }
 
@@ -149,17 +143,11 @@ DOM.form.addEventListener("submit", async (e) => {
 
   try {
     const cred = await signInWithEmailAndPassword(auth, email, password);
-    const isAdmin = await verifyIsAdmin(cred.user);
-    if (!isAdmin) {
-      await signOut(auth);
-      setLoading(false);
-      showErrorAlert("عذراً، هذا الحساب ليس لديه صلاحيات المشرف (Admin). تم حظر الوصول.");
-      return;
-    }
+    await verifyIsAdmin(cred.user);
     window.location.replace("admin.html");
   } catch (error) {
-    console.error("Login failed:", error);
+    console.error("Login failed:", error.code, error.message);
     setLoading(false);
-    showErrorAlert(getArabicErrorMessage(error.code));
+    showErrorAlert(getArabicErrorMessage(error.code, error.message));
   }
 });

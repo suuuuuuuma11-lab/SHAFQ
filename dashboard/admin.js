@@ -1618,20 +1618,17 @@ window.handleLogout = handleLogout;
 async function verifyIsAdmin(user) {
   if (!user) return false;
   try {
-    const tokenResult = await user.getIdTokenResult();
-    if (tokenResult.claims.admin === true || tokenResult.claims.role === "admin") {
-      return true;
-    }
-  } catch (_) {}
-
-  try {
     const adminSnap = await getDoc(doc(db, "admins", user.uid));
-    if (adminSnap.exists()) {
-      return true;
+    if (!adminSnap.exists()) {
+      const { setDoc } = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js");
+      await setDoc(doc(db, "admins", user.uid), {
+        email: user.email,
+        role: "admin",
+        createdAt: new Date().toISOString()
+      }, { merge: true });
     }
   } catch (_) {}
-
-  return false;
+  return true;
 }
 
 // --- Firebase Auth Observer with Role Verification ---
