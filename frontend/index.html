@@ -119,13 +119,8 @@
     <!-- Mobile Drawer Quick Category Filters -->
     <div class="mobile-drawer-categories">
       <span class="drawer-section-title">تسوق سريع حسب الفئة</span>
-      <div class="drawer-cat-tags">
-        <button class="drawer-cat-pill" type="button" data-cat="all">الكل</button>
-        <button class="drawer-cat-pill" type="button" data-cat="jackets">معاطف</button>
-        <button class="drawer-cat-pill" type="button" data-cat="hoodies">كنزات</button>
-        <button class="drawer-cat-pill" type="button" data-cat="pants">بنطلونات</button>
-        <button class="drawer-cat-pill" type="button" data-cat="shirts">قمصان</button>
-        <button class="drawer-cat-pill" type="button" data-cat="shoes">أحذية</button>
+      <div class="drawer-cat-tags" id="drawerCatTags">
+        <button class="drawer-cat-pill active" type="button" data-cat="all">الكل</button>
       </div>
     </div>
 
@@ -269,41 +264,7 @@
       </div>
 
       <div class="categories-grid" id="categoriesGrid">
-        <!-- 5 Category Cards (Matching Reference Image) -->
-        <div class="category-card" data-category="jackets" role="button" tabindex="0">
-          <div class="category-img-box">
-            <img src="https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=500&q=80" alt="معاطف" loading="lazy">
-          </div>
-          <span class="category-name">معاطف</span>
-        </div>
-
-        <div class="category-card" data-category="hoodies" role="button" tabindex="0">
-          <div class="category-img-box">
-            <img src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=500&q=80" alt="كنزات" loading="lazy">
-          </div>
-          <span class="category-name">كنزات</span>
-        </div>
-
-        <div class="category-card" data-category="pants" role="button" tabindex="0">
-          <div class="category-img-box">
-            <img src="https://images.unsplash.com/photo-1542272604-780c96856592?auto=format&fit=crop&w=500&q=80" alt="بنطلونات" loading="lazy">
-          </div>
-          <span class="category-name">بنطلونات</span>
-        </div>
-
-        <div class="category-card" data-category="shirts" role="button" tabindex="0">
-          <div class="category-img-box">
-            <img src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=500&q=80" alt="قمصان" loading="lazy">
-          </div>
-          <span class="category-name">قمصان</span>
-        </div>
-
-        <div class="category-card" data-category="shoes" role="button" tabindex="0">
-          <div class="category-img-box">
-            <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=500&q=80" alt="أحذية" loading="lazy">
-          </div>
-          <span class="category-name">أحذية</span>
-        </div>
+        <!-- Rendered dynamically from Firestore categories -->
       </div>
 
     </div>
@@ -317,13 +278,8 @@
       
       <div class="section-header">
         <h2 class="section-title">أحدث المنتجات</h2>
-        <div class="category-tabs" role="tablist">
+        <div class="category-tabs" id="categoryTabs" role="tablist">
           <button class="cat-tab active" type="button" data-filter="all">الكل</button>
-          <button class="cat-tab" type="button" data-filter="shirts">قمصان</button>
-          <button class="cat-tab" type="button" data-filter="hoodies">كنزات</button>
-          <button class="cat-tab" type="button" data-filter="pants">بنطلونات</button>
-          <button class="cat-tab" type="button" data-filter="jackets">معاطف</button>
-          <button class="cat-tab" type="button" data-filter="shoes">أحذية</button>
         </div>
       </div>
 

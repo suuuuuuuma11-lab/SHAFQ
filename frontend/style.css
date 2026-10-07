@@ -383,7 +383,8 @@ img {
 }
 
 .drawer-cat-pill:hover,
-.drawer-cat-pill:active {
+.drawer-cat-pill:active,
+.drawer-cat-pill.active {
   background: var(--color-secondary);
   color: #FFFFFF;
   border-color: var(--color-secondary);
@@ -668,7 +669,7 @@ img {
 
 .categories-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: var(--sp-5);
 }
 
@@ -688,6 +689,12 @@ img {
   border-color: #d1cdc4;
   box-shadow: var(--shadow-md);
   transform: translateY(-3px);
+}
+
+.category-card.active {
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 2px var(--color-secondary);
+  background: #fbfaf7;
 }
 
 .category-img-box {

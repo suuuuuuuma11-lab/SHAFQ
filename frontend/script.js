@@ -20,149 +20,10 @@ import {
 const TELEGRAM_BOT_TOKEN = "8916406368:AAFIJTPkAykiL54hn_mmbv6AqGax6lvq08U";
 const TELEGRAM_CHAT_ID = "6609345622";
 
-// --- Curated Showcase Catalog (Matching Reference Design Exactly) ---
-const SHOWCASE_PRODUCTS = [
-  {
-    id: "showcase-1",
-    name: "قميص رسمي",
-    category: "shirts",
-    price: 3500,
-    priceDisplay: "3,500 د.ج",
-    rating: 4.8,
-    reviewsCount: 10,
-    description: "قميص أنيق ومريح من القطن عالي الجودة. مناسب لجميع المناسبات سواء للعمل أو الخروج اليومي.",
-    images: [
-      "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=900&q=80",
-      "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=900&q=80",
-      "https://images.unsplash.com/photo-1620012253295-c15c429f6356?auto=format&fit=crop&w=900&q=80"
-    ],
-    colors: ["#60a5fa", "#ffffff", "#1e293b", "#0f172a"],
-    sizes: ["S", "M", "L", "XL"],
-    specs: [
-      "الخامة: قطن 100% ممتاز",
-      "المقاس: متوفر من S إلى XL",
-      "اللون: أزرق فاتح مخطط",
-      "مناسب لجميع المواسم"
-    ]
-  },
-  {
-    id: "showcase-2",
-    name: "تيشيرت كلاسيك",
-    category: "shirts",
-    price: 2800,
-    priceDisplay: "2,800 د.ج",
-    rating: 4.9,
-    reviewsCount: 18,
-    description: "تيشيرت قطني كلاسيكي ناعم الملمس، بقصة مريحة وأكمام قصيرة تلائم الإطلالات العصرية.",
-    images: [
-      "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80",
-      "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=900&q=80"
-    ],
-    colors: ["#111615", "#ffffff", "#6b7280"],
-    sizes: ["S", "M", "L", "XL"],
-    specs: [
-      "الخامة: قطن بيور 100%",
-      "القصة: ريغولار فيت",
-      "مقاوم للانكماش والبهتان"
-    ]
-  },
-  {
-    id: "showcase-3",
-    name: "هودي كاجوال",
-    category: "hoodies",
-    price: 4500,
-    priceDisplay: "4,500 د.ج",
-    rating: 4.7,
-    reviewsCount: 14,
-    description: "هودي أوفر سايز بقماش ميلتون دافئ وفاخر مع جيب كنغر وغطاء رأس مبطن.",
-    images: [
-      "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=900&q=80",
-      "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=900&q=80"
-    ],
-    colors: ["#d6d3d1", "#1e293b", "#78716c"],
-    sizes: ["M", "L", "XL"],
-    specs: [
-      "الخامة: ميلتون قطن مدعم",
-      "الستايل: كاجوال أوفر سايز",
-      "بطانة ناعمة توفر الدفء"
-    ]
-  },
-  {
-    id: "showcase-4",
-    name: "حذاء رياضي",
-    category: "shoes",
-    price: 6900,
-    priceDisplay: "6,900 د.ج",
-    rating: 5.0,
-    reviewsCount: 22,
-    description: "حذاء سنيكرز كلاسيكي بتصميم أبيض أنيق مع نعل داخلي مبطن لراحة فائقة طوال اليوم.",
-    images: [
-      "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=900&q=80",
-      "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=900&q=80"
-    ],
-    colors: ["#f8fafc", "#e2e8f0"],
-    sizes: ["40", "41", "42", "43", "44"],
-    specs: [
-      "الخامة: جلد صناعي ممتاز",
-      "النعل: مطاطي مقاوم للانزلاق",
-      "الوزن: خفيف ومريح للمشي"
-    ]
-  },
-  {
-    id: "showcase-5",
-    name: "بنطلون جينز كلاسيك",
-    category: "pants",
-    price: 3800,
-    priceDisplay: "3,800 د.ج",
-    rating: 4.8,
-    reviewsCount: 16,
-    description: "جينز أزرق داكن بقصة مستقيمة مريحة مصنوع من قماش الدنيم المعالج عالي التحمل.",
-    images: [
-      "https://images.unsplash.com/photo-1542272604-780c96856592?auto=format&fit=crop&w=900&q=80"
-    ],
-    colors: ["#1e3a8a", "#1e293b"],
-    sizes: ["30", "32", "34", "36"],
-    specs: [
-      "الخامة: دنيم قطني 98% مع إيلاستين",
-      "القصة: مستقيمة كلاسيكية",
-      "جيوب متينة وخياطة مزدوجة"
-    ]
-  },
-  {
-    id: "showcase-6",
-    name: "معطف شتوي فاخر",
-    category: "jackets",
-    price: 8500,
-    priceDisplay: "8,500 د.ج",
-    rating: 4.9,
-    reviewsCount: 9,
-    description: "معطف شتوي طويل أنيق يمنحك مظهراً راقياً ودفئاً مثالياً في الأيام الباردة.",
-    images: [
-      "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=900&q=80"
-    ],
-    colors: ["#111615", "#78716c"],
-    sizes: ["M", "L", "XL"],
-    specs: [
-      "الخامة: صوف معالج مع بطانة ساتان",
-      "ياقة كلاسيكية عريضة",
-      "أزرار أنيقة وقفل محكم"
-    ]
-  }
-];
-
-// --- Category Labels Dictionary ---
-const CATEGORY_NAMES = {
-  all: "الكل",
-  shirts: "قمصان",
-  hoodies: "كنزات",
-  pants: "بنطلونات",
-  jackets: "معاطف",
-  shoes: "أحذية"
-};
-
 // --- Application State ---
 const state = {
-  products: [...SHOWCASE_PRODUCTS],
+  products: [],
+  categories: [],
   activeFilter: "all",
   cart: loadCartFromStorage(),
   favorites: loadFavoritesFromStorage(),
@@ -189,11 +50,13 @@ const DOM = {
   heroNextBtn: $("heroNextBtn"),
   heroDots: $("heroDots"),
 
-  // Products & Tabs
+  // Products & Categories
   productsGrid: $("productsGrid"),
-  catTabs: document.querySelectorAll(".cat-tab"),
+  categoryTabs: $("categoryTabs"),
+  categoriesSection: $("categoriesSection"),
   categoriesGrid: $("categoriesGrid"),
   viewAllCategoriesBtn: $("viewAllCategoriesBtn"),
+  drawerCatTags: $("drawerCatTags"),
 
   // Cart Drawer
   cartBtn: $("cartBtn"),
@@ -275,7 +138,19 @@ function formatPrice(num) {
 }
 
 function getCategoryLabel(key) {
-  return CATEGORY_NAMES[key] || key || "عام";
+  if (!key || key === "all") return "الكل";
+  const found = state.categories.find(c => c.id === key || c.name === key || c.slug === key);
+  return found ? found.name : key;
+}
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 // --- Toast System ---
@@ -291,49 +166,217 @@ function showToast(message) {
 }
 
 // --- Live Firestore Sync ---
+async function fetchStoreCategories() {
+  try {
+    const colRef = collection(db, "categories");
+    let snapshot;
+    try {
+      const q = query(colRef, orderBy("createdAt", "desc"));
+      snapshot = await getDocs(q);
+    } catch (_) {
+      snapshot = await getDocs(colRef);
+    }
+
+    const list = [];
+    if (snapshot && !snapshot.empty) {
+      snapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        if (d && d.name && d.name.trim()) {
+          list.push({
+            id: docSnap.id,
+            name: d.name.trim(),
+            slug: d.slug || d.name.trim(),
+            image: d.image || ""
+          });
+        }
+      });
+    }
+
+    state.categories = list;
+  } catch (err) {
+    console.warn("Firestore categories fetch:", err.message);
+    state.categories = [];
+  }
+}
+
 async function fetchStoreProducts() {
   try {
     const colRef = collection(db, "products");
-    const q = query(colRef, orderBy("createdAt", "desc"));
-    const snapshot = await getDocs(q);
+    let snapshot;
+    try {
+      const q = query(colRef, orderBy("createdAt", "desc"));
+      snapshot = await getDocs(q);
+    } catch (_) {
+      snapshot = await getDocs(colRef);
+    }
 
     if (!snapshot.empty) {
       const liveList = [];
       snapshot.forEach((docSnap) => {
         const p = docSnap.data();
         const rawImages = Array.isArray(p.images) ? p.images : [];
-        const imageUrls = rawImages.map(i => typeof i === "string" ? i : i.url).filter(Boolean);
+        const imageUrls = rawImages.map(i => typeof i === "string" ? i : (i && i.url)).filter(Boolean);
         if (imageUrls.length === 0 && p.mainImage) {
           imageUrls.push(p.mainImage);
         }
 
         const priceNum = typeof p.price === "number" ? p.price : (parseInt(p.price, 10) || 0);
 
+        let catName = (p.category || "").trim();
+        const catId = (p.categoryId || "").trim();
+        if (!catName && catId) {
+          const matchCat = state.categories.find(c => c.id === catId);
+          if (matchCat) catName = matchCat.name;
+        }
+        if (!catName) catName = "عام";
+
         liveList.push({
           id: docSnap.id,
-          name: p.name || "منتج فاخر",
-          category: p.category || "shirts",
+          name: p.name || "منتج",
+          categoryId: catId,
+          category: catName,
           price: priceNum,
           priceDisplay: formatPrice(priceNum),
-          rating: 4.8,
-          reviewsCount: 12,
-          description: p.description || p.title || "منتج عالي الجودة من تشكيلة ClothStore الفاخرة.",
-          images: imageUrls.length > 0 ? imageUrls : ["https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=900&q=80"],
-          colors: ["#111615", "#ffffff", "#60a5fa"],
-          sizes: ["S", "M", "L", "XL"],
-          specs: [
-            "الخامة: قطن أصلي عالي الجودة",
+          rating: typeof p.rating === "number" ? p.rating : 4.8,
+          reviewsCount: typeof p.reviewsCount === "number" ? p.reviewsCount : 12,
+          description: p.description || p.title || "منتج عالي الجودة متوفر للطلب مع خدمة التوصيل والدفع عند الاستلام.",
+          images: imageUrls.length > 0 ? imageUrls : ["https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80"],
+          colors: Array.isArray(p.colors) && p.colors.length > 0 ? p.colors : ["#111615", "#ffffff"],
+          sizes: Array.isArray(p.sizes) && p.sizes.length > 0 ? p.sizes : ["S", "M", "L", "XL"],
+          specs: Array.isArray(p.specs) && p.specs.length > 0 ? p.specs : [
+            "الخامة: جودة ممتازة مضمونة",
             "المقاس: متوفر بمقاسات متعددة",
-            "ضمان الجودة والأصالة"
+            "الدفع عند الاستلام بعد المعاينة"
           ]
         });
       });
 
       state.products = liveList;
+    } else {
+      state.products = [];
     }
   } catch (err) {
-    console.info("Using showcase fashion collection:", err.message);
+    console.warn("Firestore products fetch:", err.message);
+    state.products = [];
   }
+}
+
+function syncCategoriesFromProducts() {
+  const existingNames = new Set(state.categories.map(c => c.name.trim().toLowerCase()));
+  const existingIds = new Set(state.categories.map(c => c.id));
+
+  state.products.forEach(p => {
+    const catName = (p.category || "").trim();
+    const catId = (p.categoryId || "").trim();
+
+    if (catId && !existingIds.has(catId) && catName && !existingNames.has(catName.toLowerCase())) {
+      state.categories.push({
+        id: catId,
+        name: catName,
+        slug: catName,
+        image: (p.images && p.images[0]) || ""
+      });
+      existingNames.add(catName.toLowerCase());
+      existingIds.add(catId);
+    } else if (catName && catName !== "عام" && !existingNames.has(catName.toLowerCase())) {
+      state.categories.push({
+        id: catId || catName,
+        name: catName,
+        slug: catName,
+        image: (p.images && p.images[0]) || ""
+      });
+      existingNames.add(catName.toLowerCase());
+    }
+  });
+}
+
+function renderCategoriesUI() {
+  if (DOM.categoriesSection) {
+    DOM.categoriesSection.style.display = state.categories.length > 0 ? "" : "none";
+  }
+
+  // 1. Categories Grid Cards ("تسوق حسب الفئة")
+  if (DOM.categoriesGrid) {
+    if (state.categories.length === 0) {
+      DOM.categoriesGrid.innerHTML = "";
+    } else {
+      DOM.categoriesGrid.innerHTML = state.categories.map(cat => {
+        const matchingProduct = state.products.find(p => 
+          (p.categoryId && p.categoryId === cat.id) || 
+          (p.category && (p.category.trim().toLowerCase() === cat.name.trim().toLowerCase() || p.category === cat.slug))
+        );
+        const imgUrl = cat.image || (matchingProduct && matchingProduct.images && matchingProduct.images[0]) || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=500&q=80";
+        const isActive = state.activeFilter === cat.id || state.activeFilter === cat.name;
+
+        return `
+          <div class="category-card ${isActive ? "active" : ""}" data-category-id="${escapeHtml(cat.id)}" data-category-name="${escapeHtml(cat.name)}" role="button" tabindex="0">
+            <div class="category-img-box">
+              <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(cat.name)}" loading="lazy">
+            </div>
+            <span class="category-name">${escapeHtml(cat.name)}</span>
+          </div>
+        `;
+      }).join("");
+    }
+  }
+
+  // 2. Category Filter Tabs ("أحدث المنتجات")
+  const catTabsContainer = DOM.categoryTabs || $("categoryTabs");
+  if (catTabsContainer) {
+    const allIsActive = state.activeFilter === "all";
+    const tabsHtml = [
+      `<button class="cat-tab ${allIsActive ? "active" : ""}" type="button" data-filter="all">الكل</button>`
+    ];
+
+    state.categories.forEach(cat => {
+      const isActive = state.activeFilter === cat.id || state.activeFilter === cat.name;
+      tabsHtml.push(
+        `<button class="cat-tab ${isActive ? "active" : ""}" type="button" data-filter="${escapeHtml(cat.id)}" data-filter-name="${escapeHtml(cat.name)}">${escapeHtml(cat.name)}</button>`
+      );
+    });
+
+    catTabsContainer.innerHTML = tabsHtml.join("");
+  }
+
+  // 3. Mobile Drawer Quick Category Filters
+  const drawerCatContainer = DOM.drawerCatTags || $("drawerCatTags");
+  if (drawerCatContainer) {
+    const allIsActive = state.activeFilter === "all";
+    const pillsHtml = [
+      `<button class="drawer-cat-pill ${allIsActive ? "active" : ""}" type="button" data-cat="all">الكل</button>`
+    ];
+
+    state.categories.forEach(cat => {
+      const isActive = state.activeFilter === cat.id || state.activeFilter === cat.name;
+      pillsHtml.push(
+        `<button class="drawer-cat-pill ${isActive ? "active" : ""}" type="button" data-cat="${escapeHtml(cat.id)}" data-cat-name="${escapeHtml(cat.name)}">${escapeHtml(cat.name)}</button>`
+      );
+    });
+
+    drawerCatContainer.innerHTML = pillsHtml.join("");
+  }
+}
+
+function setActiveCategory(filter) {
+  state.activeFilter = filter || "all";
+
+  // Synchronize Tab Buttons
+  document.querySelectorAll(".cat-tab").forEach(tab => {
+    const isMatch = tab.dataset.filter === state.activeFilter || tab.dataset.filterName === state.activeFilter;
+    tab.classList.toggle("active", isMatch);
+  });
+
+  // Synchronize Drawer Pills
+  document.querySelectorAll(".drawer-cat-pill").forEach(pill => {
+    const isMatch = pill.dataset.cat === state.activeFilter || pill.dataset.catName === state.activeFilter;
+    pill.classList.toggle("active", isMatch);
+  });
+
+  // Synchronize Category Cards
+  document.querySelectorAll(".category-card").forEach(card => {
+    const isMatch = card.dataset.categoryId === state.activeFilter || card.dataset.categoryName === state.activeFilter;
+    card.classList.toggle("active", isMatch);
+  });
 
   renderProducts();
 }
@@ -341,7 +384,30 @@ async function fetchStoreProducts() {
 // --- Render Products Grid ---
 function renderProducts() {
   const filtered = state.products.filter(p => {
-    return state.activeFilter === "all" || p.category === state.activeFilter;
+    if (!state.activeFilter || state.activeFilter === "all") return true;
+
+    // Check by categoryId
+    if (p.categoryId && p.categoryId === state.activeFilter) return true;
+
+    // Check by category name
+    if (p.category && p.category.trim().toLowerCase() === state.activeFilter.trim().toLowerCase()) return true;
+
+    // Check matching category object from state.categories
+    const targetCat = state.categories.find(c => 
+      c.id === state.activeFilter || 
+      c.name.trim().toLowerCase() === state.activeFilter.trim().toLowerCase() ||
+      c.slug === state.activeFilter
+    );
+
+    if (targetCat) {
+      if (p.categoryId && p.categoryId === targetCat.id) return true;
+      if (p.category && (
+        p.category.trim().toLowerCase() === targetCat.name.trim().toLowerCase() ||
+        p.category === targetCat.slug
+      )) return true;
+    }
+
+    return false;
   });
 
   if (filtered.length === 0) {
@@ -751,38 +817,25 @@ function setupEventListeners() {
     if (dot) setHeroSlide(parseInt(dot.dataset.slide, 10));
   });
 
-  // Category Filter Tabs
-  DOM.catTabs.forEach(tab => {
-    tab.addEventListener("click", () => {
-      DOM.catTabs.forEach(t => t.classList.remove("active"));
-      tab.classList.add("active");
-      state.activeFilter = tab.dataset.filter;
-      renderProducts();
-    });
+  // Category Filter Tabs Delegation
+  $("categoryTabs")?.addEventListener("click", (e) => {
+    const tab = e.target.closest(".cat-tab");
+    if (!tab) return;
+    setActiveCategory(tab.dataset.filter);
   });
 
   // Category Cards in Category Section
   DOM.categoriesGrid?.addEventListener("click", (e) => {
     const card = e.target.closest(".category-card");
     if (!card) return;
-    const cat = card.dataset.category;
-    state.activeFilter = cat;
-
-    // Highlight matching tab
-    DOM.catTabs.forEach(t => {
-      t.classList.toggle("active", t.dataset.filter === cat);
-    });
-
-    renderProducts();
-    const target = $("productsSection");
-    if (target) target.scrollIntoView({ behavior: "smooth" });
+    const cat = card.dataset.categoryId || card.dataset.categoryName;
+    setActiveCategory(cat);
+    $("productsSection")?.scrollIntoView({ behavior: "smooth" });
   });
 
   DOM.viewAllCategoriesBtn?.addEventListener("click", (e) => {
     e.preventDefault();
-    state.activeFilter = "all";
-    DOM.catTabs.forEach(t => t.classList.toggle("active", t.dataset.filter === "all"));
-    renderProducts();
+    setActiveCategory("all");
     $("productsSection")?.scrollIntoView({ behavior: "smooth" });
   });
 
@@ -1035,16 +1088,13 @@ function setupEventListeners() {
     link.addEventListener("click", closeMobileDrawer);
   });
 
-  // Category Pills inside Mobile Drawer
-  document.querySelectorAll(".drawer-cat-pill").forEach(pill => {
-    pill.addEventListener("click", () => {
-      const cat = pill.dataset.cat;
-      state.activeFilter = cat;
-      DOM.catTabs.forEach(t => t.classList.toggle("active", t.dataset.filter === cat));
-      renderProducts();
-      closeMobileDrawer();
-      $("productsSection")?.scrollIntoView({ behavior: "smooth" });
-    });
+  // Category Pills inside Mobile Drawer Delegation
+  $("drawerCatTags")?.addEventListener("click", (e) => {
+    const pill = e.target.closest(".drawer-cat-pill");
+    if (!pill) return;
+    setActiveCategory(pill.dataset.cat);
+    closeMobileDrawer();
+    $("productsSection")?.scrollIntoView({ behavior: "smooth" });
   });
 
   // Touch Swipe for Hero Banner on Mobile
@@ -1097,6 +1147,29 @@ function setupEventListeners() {
 }
 
 // --- Initialization ---
-setupEventListeners();
-updateCartUI();
-fetchStoreProducts();
+async function initStore() {
+  setupEventListeners();
+  updateCartUI();
+
+  // Show clean spinner during initial fetch
+  if (DOM.productsGrid) {
+    DOM.productsGrid.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; color: var(--color-text-sub);">
+        <p style="font-size: 1rem; font-weight: 600;">جاري تحميل أحدث المنتجات والتصنيفات...</p>
+      </div>
+    `;
+  }
+
+  // Fetch from Firestore
+  await fetchStoreCategories();
+  await fetchStoreProducts();
+
+  // Discover any category present on products
+  syncCategoriesFromProducts();
+
+  // Render dynamic UI
+  renderCategoriesUI();
+  renderProducts();
+}
+
+initStore();
