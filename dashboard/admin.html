@@ -137,21 +137,22 @@
 
               <div class="form-field-group" id="fieldCategoryGroup">
                 <label for="productCategory">التصنيف</label>
-                <div class="select-wrapper">
-                  <select id="productCategory" name="category">
-                    <option value="">اختر التصنيف</option>
-                    <option value="shirts">تيشيرتات</option>
-                    <option value="jackets">جاكيتات</option>
-                    <option value="hoodies">هوديات</option>
-                    <option value="pants">بناطيل</option>
-                    <option value="shoes">أحذية</option>
-                    <option value="jellabas">جلابيب</option>
-                    <option value="underwear">ملابس داخلية</option>
-                    <option value="accessories">إكسسوارات</option>
-                  </select>
-                  <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <path d="M6 9l6 6 6-6"/>
-                  </svg>
+                <div class="category-select-control-row">
+                  <div class="select-wrapper category-select-wrap">
+                    <select id="productCategory" name="categoryId">
+                      <option value="">اختر التصنيف</option>
+                    </select>
+                    <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                      <path d="M6 9l6 6 6-6"/>
+                    </svg>
+                  </div>
+                  <button type="button" class="btn-create-category" id="openAddCategoryModalBtn" title="إضافة تصنيف جديد">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                      <line x1="12" y1="5" x2="12" y2="19"/>
+                      <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    <span>إضافة تصنيف</span>
+                  </button>
                 </div>
                 <span class="field-error-msg" id="categoryError"></span>
               </div>
@@ -236,6 +237,51 @@
             </div>
           </div>
 
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ====== Add Category Modal (Inside Product Form Workflow) ====== -->
+  <div class="modal-overlay nested-modal-overlay" id="addCategoryModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="addCategoryModalTitle">
+    <div class="category-modal-panel">
+      <!-- Modal Header -->
+      <div class="category-modal-header">
+        <div class="category-modal-header-text">
+          <h3 class="category-modal-title" id="addCategoryModalTitle">إضافة تصنيف جديد</h3>
+          <p class="category-modal-subtitle">أدخل اسم التصنيف لحفظه وتحديده في نموذج المنتج فوراً.</p>
+        </div>
+        <button class="modal-close-icon-btn" type="button" id="closeCategoryModalBtn" aria-label="إغلاق">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Category Form -->
+      <form class="category-form" id="categoryForm" novalidate>
+        <div class="form-field-group" id="categoryNameFieldGroup">
+          <label for="newCategoryName">اسم التصنيف <span class="required-star">*</span></label>
+          <input 
+            type="text" 
+            id="newCategoryName" 
+            name="name" 
+            placeholder="مثال: فساتين، معاطف، أحذية..." 
+            autocomplete="off"
+            required
+          >
+          <span class="field-error-msg" id="newCategoryNameError"></span>
+        </div>
+
+        <div class="category-modal-actions">
+          <button class="btn btn-secondary" type="button" id="cancelCategoryModalBtn">
+            إلغاء
+          </button>
+          <button class="btn btn-primary" type="submit" id="saveCategoryBtn">
+            <span class="btn-text" id="saveCategoryBtnText">إنشاء التصنيف</span>
+            <span class="btn-loader" id="saveCategoryBtnLoader" hidden>جاري الإنشاء...</span>
+          </button>
         </div>
       </form>
     </div>

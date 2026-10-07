@@ -25,22 +25,13 @@ const CONFIG = {
   ITEMS_PER_PAGE: 5,
   MAX_IMAGE_SIZE: 5 * 1024 * 1024,
   ACCEPTED_TYPES: ["image/jpeg", "image/jpg", "image/png", "image/webp"],
-  TOAST_DURATION: 3000,
-  CATEGORIES: {
-    shirts: "تيشيرتات",
-    jackets: "جاكيتات",
-    hoodies: "هوديات",
-    pants: "بناطيل",
-    shoes: "أحذية",
-    jellabas: "جلابيب",
-    underwear: "ملابس داخلية",
-    accessories: "إكسسوارات"
-  }
+  TOAST_DURATION: 3000
 };
 
 // --- Application State ---
 const state = {
   products: [],
+  categories: [],
   currentPage: 1,
   searchQuery: "",
   editingProductId: null,
@@ -74,9 +65,21 @@ const DOM = {
   // Form Fields
   productName: $("productName"),
   productCategory: $("productCategory"),
+  openAddCategoryModalBtn: $("openAddCategoryModalBtn"),
   productPrice: $("productPrice"),
   productTitle: $("productTitle"),
   productDescription: $("productDescription"),
+
+  // Add Category Modal (Nested within Product Form workflow)
+  addCategoryModal: $("addCategoryModal"),
+  closeCategoryModalBtn: $("closeCategoryModalBtn"),
+  cancelCategoryModalBtn: $("cancelCategoryModalBtn"),
+  categoryForm: $("categoryForm"),
+  newCategoryName: $("newCategoryName"),
+  newCategoryNameError: $("newCategoryNameError"),
+  saveCategoryBtn: $("saveCategoryBtn"),
+  saveCategoryBtnText: $("saveCategoryBtnText"),
+  saveCategoryBtnLoader: $("saveCategoryBtnLoader"),
 
   // Dropzone & Thumbnails
   dropzone: $("dropzone"),
@@ -104,7 +107,77 @@ const DOM = {
   logoutBtn: $("logoutBtn")
 };
 
-// --- Product API Layer (Firestore) ---
+// --- Helpers ---
+function generateSlug(text) {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/[\s\-_]+/g, "-")
+    .replace(/[^\p{L}\p{N}\-]+/gu, "")
+    .replace(/^-+|-+$/g, "") || ("cat-" + Date.now().toString(36));
+}
+
+// --- Category API Layer (Firestore /categories) ---
+const CategoryAPI = {
+  async getAll() {
+    try {
+      const colRef = collection(db, "categories");
+      const q = query(colRef, orderBy("createdAt", "desc"));
+      const snapshot = await getDocs(q);
+      const list = [];
+      snapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        list.push({
+          id: docSnap.id,
+          name: d.name || "",
+          slug: d.slug || "",
+          image: d.image || "",
+          createdAt: d.createdAt || "",
+          updatedAt: d.updatedAt || ""
+        });
+      });
+      return list;
+    } catch (e) {
+      console.warn("Falling back to unordered categories query:", e);
+      try {
+        const colRef = collection(db, "categories");
+        const snapshot = await getDocs(colRef);
+        const list = [];
+        snapshot.forEach((docSnap) => {
+          const d = docSnap.data();
+          list.push({
+            id: docSnap.id,
+            name: d.name || "",
+            slug: d.slug || "",
+            image: d.image || "",
+            createdAt: d.createdAt || "",
+            updatedAt: d.updatedAt || ""
+          });
+        });
+        return list;
+      } catch (err) {
+        console.error("Firestore categories getAll error:", err);
+        return [];
+      }
+    }
+  },
+
+  async create(name) {
+    const colRef = collection(db, "categories");
+    const now = new Date().toISOString();
+    const slug = generateSlug(name);
+    const catData = {
+      name: name.trim(),
+      slug: slug,
+      createdAt: now,
+      updatedAt: now
+    };
+    const docRef = await addDoc(colRef, catData);
+    return { id: docRef.id, ...catData };
+  }
+};
+
+// --- Product API Layer (Firestore /products) ---
 const ProductAPI = {
   async getAll() {
     try {
@@ -117,6 +190,7 @@ const ProductAPI = {
         list.push({
           id: docSnap.id,
           name: d.name || "",
+          categoryId: d.categoryId || d.category || "",
           category: d.category || "",
           title: d.title || "",
           price: typeof d.price === "number" ? d.price : Number(d.price) || 0,
@@ -143,7 +217,8 @@ const ProductAPI = {
     const now = new Date().toISOString();
     const docData = {
       name: data.name,
-      category: data.category,
+      categoryId: data.categoryId, // SOURCE OF TRUTH
+      category: data.categoryName || data.category || "",
       title: data.title,
       price: data.price,
       description: data.description || "",
@@ -161,7 +236,8 @@ const ProductAPI = {
     const now = new Date().toISOString();
     const updateData = {
       name: data.name,
-      category: data.category,
+      categoryId: data.categoryId, // SOURCE OF TRUTH
+      category: data.categoryName || data.category || "",
       title: data.title,
       price: data.price,
       description: data.description || "",
@@ -188,8 +264,49 @@ function escapeHTML(str) {
   return d.innerHTML;
 }
 
-function getCategoryLabel(categoryKey) {
-  return CONFIG.CATEGORIES[categoryKey] || categoryKey || "عام";
+function getCategoryLabel(productOrCatId) {
+  if (!productOrCatId) return "—";
+  let catId = "";
+  let catNameFallback = "";
+  if (typeof productOrCatId === "object") {
+    catId = productOrCatId.categoryId || productOrCatId.category || "";
+    catNameFallback = productOrCatId.category || "";
+  } else {
+    catId = String(productOrCatId);
+  }
+
+  const match = state.categories.find(c => c.id === catId || c.slug === catId || c.name === catId);
+  if (match) return match.name;
+  if (catNameFallback) return catNameFallback;
+  return catId || "—";
+}
+
+function renderCategoryDropdown(selectedCategoryId = "") {
+  if (!DOM.productCategory) return;
+
+  const currentVal = selectedCategoryId !== undefined && selectedCategoryId !== "" ? selectedCategoryId : DOM.productCategory.value;
+
+  if (!state.categories || state.categories.length === 0) {
+    DOM.productCategory.innerHTML = `
+      <option value="">لا توجد تصنيفات — أضف تصنيفًا جديدًا</option>
+    `;
+    return;
+  }
+
+  const optionsHTML = state.categories.map(c => `
+    <option value="${escapeHTML(c.id)}" ${c.id === currentVal ? "selected" : ""}>
+      ${escapeHTML(c.name)}
+    </option>
+  `).join("");
+
+  DOM.productCategory.innerHTML = `
+    <option value="">اختر التصنيف</option>
+    ${optionsHTML}
+  `;
+
+  if (currentVal) {
+    DOM.productCategory.value = currentVal;
+  }
 }
 
 function getMainImage(product) {
@@ -252,7 +369,7 @@ function getFilteredProducts() {
   return state.products.filter(p =>
     p.name.toLowerCase().includes(q) ||
     (p.title || "").toLowerCase().includes(q) ||
-    getCategoryLabel(p.category).toLowerCase().includes(q)
+    getCategoryLabel(p).toLowerCase().includes(q)
   );
 }
 
@@ -283,7 +400,7 @@ function renderTableRowHTML(p) {
         </div>
       </td>
       <td class="td-name">${escapeHTML(p.name)}</td>
-      <td class="td-category">${escapeHTML(getCategoryLabel(p.category))}</td>
+      <td class="td-category">${escapeHTML(getCategoryLabel(p))}</td>
       <td class="td-title">${escapeHTML(p.title || "—")}</td>
       <td class="td-price">${p.price} دج</td>
       <td class="td-actions">
@@ -315,7 +432,7 @@ function renderMobileCardHTML(p) {
         <div class="mobile-card-row-top">
           <span class="mobile-card-name">${escapeHTML(p.name)}</span>
         </div>
-        <div class="mobile-card-meta">${escapeHTML(getCategoryLabel(p.category))} • ${escapeHTML(p.title || "")}</div>
+        <div class="mobile-card-meta">${escapeHTML(getCategoryLabel(p))} • ${escapeHTML(p.title || "")}</div>
         <div class="mobile-card-row-bottom">
           <span class="mobile-card-price">${p.price} دج</span>
           <div class="table-actions-cell">
@@ -427,13 +544,16 @@ function openProductForm(product = null) {
   clearValidationErrors();
   DOM.productForm.reset();
 
+  const selectedCatId = product ? (product.categoryId || product.category || "") : "";
+  renderCategoryDropdown(selectedCatId);
+
   if (product) {
     state.editingProductId = product.id;
     DOM.formModalTitle.textContent = "تعديل المنتج";
     DOM.saveBtnText.textContent = "حفظ التعديلات";
 
     DOM.productName.value = product.name || "";
-    DOM.productCategory.value = product.category || "";
+    DOM.productCategory.value = selectedCatId;
     DOM.productPrice.value = product.price !== undefined ? product.price : "";
     DOM.productTitle.value = product.title || "";
     DOM.productDescription.value = product.description || "";
@@ -448,6 +568,7 @@ function openProductForm(product = null) {
     state.editingProductId = null;
     DOM.formModalTitle.textContent = "إضافة منتج";
     DOM.saveBtnText.textContent = "حفظ المنتج";
+    DOM.productCategory.value = "";
     state.formImages = [];
   }
 
@@ -509,9 +630,15 @@ function collectProductFormData() {
   ensureMainImage(cleanImages);
   const mainImage = cleanImages.find(img => img.isMain)?.url || (cleanImages[0]?.url || "");
 
+  const selectedCatId = DOM.productCategory.value;
+  const selectedCat = state.categories.find(c => c.id === selectedCatId);
+  const selectedCatName = selectedCat ? selectedCat.name : "";
+
   return {
     name: DOM.productName.value.trim(),
-    category: DOM.productCategory.value,
+    categoryId: selectedCatId, // SOURCE OF TRUTH
+    categoryName: selectedCatName,
+    category: selectedCatName || selectedCatId, // backwards compatibility
     title: DOM.productTitle.value.trim(),
     price: parseInt(DOM.productPrice.value.trim(), 10),
     description: DOM.productDescription.value.trim(),
@@ -559,6 +686,87 @@ async function saveProduct(e) {
     DOM.saveProductBtn.disabled = false;
     DOM.saveBtnText.hidden = false;
     DOM.saveBtnLoader.hidden = true;
+  }
+}
+
+// --- Category Management (Inside Product Form Workflow) ---
+function openCategoryModal() {
+  if (DOM.newCategoryName) {
+    DOM.newCategoryName.value = "";
+    DOM.newCategoryName.closest(".form-field-group")?.classList.remove("has-error");
+    if (DOM.newCategoryNameError) DOM.newCategoryNameError.textContent = "";
+  }
+  openModal(DOM.addCategoryModal);
+  setTimeout(() => DOM.newCategoryName?.focus(), 120);
+}
+
+function closeCategoryModal() {
+  closeModal(DOM.addCategoryModal);
+}
+
+async function handleCreateCategory(e) {
+  e.preventDefault();
+  const name = DOM.newCategoryName ? DOM.newCategoryName.value.trim() : "";
+
+  if (!name) {
+    DOM.newCategoryName?.closest(".form-field-group")?.classList.add("has-error");
+    if (DOM.newCategoryNameError) DOM.newCategoryNameError.textContent = "يرجى إدخال اسم التصنيف";
+    DOM.newCategoryName?.focus();
+    return;
+  }
+
+  // Check if a category with this name already exists in state.categories
+  const existing = state.categories.find(c => c.name.toLowerCase() === name.toLowerCase());
+  if (existing) {
+    renderCategoryDropdown(existing.id);
+    DOM.productCategory.value = existing.id;
+    DOM.productCategory.closest(".form-field-group")?.classList.remove("has-error");
+    const catErr = $("categoryError");
+    if (catErr) catErr.textContent = "";
+
+    closeCategoryModal();
+    showToast(`التصنيف "${existing.name}" موجود بالفعل وتم تحديده.`, "info");
+    return;
+  }
+
+  DOM.saveCategoryBtn.disabled = true;
+  DOM.saveCategoryBtnText.hidden = true;
+  DOM.saveCategoryBtnLoader.hidden = false;
+
+  try {
+    const newCat = await CategoryAPI.create(name);
+    state.categories.unshift(newCat);
+
+    // Refresh category dropdown automatically and select newly created category
+    renderCategoryDropdown(newCat.id);
+    DOM.productCategory.value = newCat.id;
+
+    // Clear any validation error on the product form's category field
+    DOM.productCategory.closest(".form-field-group")?.classList.remove("has-error");
+    const catErr = $("categoryError");
+    if (catErr) catErr.textContent = "";
+
+    // Close category modal smoothly while keeping product form completely intact
+    closeCategoryModal();
+    showToast(`تم إنشاء التصنيف "${newCat.name}" بنجاح!`, "success");
+  } catch (err) {
+    console.error("Create category error:", err);
+    showToast("حدث خطأ أثناء حفظ التصنيف، يرجى المحاولة مجدداً.", "error");
+  } finally {
+    DOM.saveCategoryBtn.disabled = false;
+    DOM.saveCategoryBtnText.hidden = false;
+    DOM.saveCategoryBtnLoader.hidden = true;
+  }
+}
+
+async function loadCategories() {
+  try {
+    state.categories = await CategoryAPI.getAll();
+    renderCategoryDropdown();
+  } catch (err) {
+    console.error("Load categories error:", err);
+    state.categories = [];
+    renderCategoryDropdown();
   }
 }
 
@@ -805,16 +1013,31 @@ function initEventListeners() {
     });
   }
 
-  // Global Escape key handler
+  // Category Modal actions
+  DOM.openAddCategoryModalBtn?.addEventListener("click", openCategoryModal);
+  DOM.closeCategoryModalBtn?.addEventListener("click", closeCategoryModal);
+  DOM.cancelCategoryModalBtn?.addEventListener("click", closeCategoryModal);
+  DOM.categoryForm?.addEventListener("submit", handleCreateCategory);
+  DOM.addCategoryModal?.addEventListener("click", (e) => {
+    if (e.target === DOM.addCategoryModal) closeCategoryModal();
+  });
+
+  // Global Escape key handler (handles nested modal cleanly)
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeAllModals();
+    if (e.key === "Escape") {
+      if (DOM.addCategoryModal?.classList.contains("show")) {
+        closeCategoryModal();
+        return;
+      }
+      closeAllModals();
+    }
   });
 }
 
 // --- Initialization & Auth Guard ---
 initEventListeners();
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   if (!user) {
     // Unauthenticated user -> redirect to login.html
     window.location.replace("login.html");
@@ -826,5 +1049,6 @@ onAuthStateChanged(auth, (user) => {
     DOM.adminUserEmail.textContent = user.email || "Admin";
   }
   document.body.classList.remove("auth-loading");
-  loadProducts();
+  await loadCategories();
+  await loadProducts();
 });
