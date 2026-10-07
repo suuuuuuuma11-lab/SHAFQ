@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>النور | تفاصيل المنتج</title>
+<title>حجاج | تفاصيل المنتج</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -193,8 +193,8 @@
       <a href="index.html" class="active">القمصان</a>
     </nav>
     <a href="index.html" class="logo">
-      <div class="mark">N AL NOOR</div>
-      <div class="sub">DRESS SHIRTS</div>
+      <div class="mark">HADJAJ</div>
+      <div class="sub">حجاج • SHIRTS</div>
     </a>
   </div>
 </header>
@@ -418,7 +418,7 @@ window.changeQty = changeQty;
 
 function renderProductDetails(p) {
   currentProduct = p;
-  document.title = "النور | " + p.name;
+  document.title = "حجاج | " + p.name;
   
   const crumbEl = document.getElementById("crumb");
   const nameEl = document.getElementById("pName");
@@ -516,7 +516,7 @@ async function sendTelegramOrder(orderData, orderId) {
   const CHAT_ID = "6609345622";
 
   const messageText = [
-    "🛍️ طلب جديد من متجر النور!",
+    "🛍️ طلب جديد من متجر حجاج (HADJAJ)!",
     "==========================",
     `🔖 رقم الطلب: #${orderId.slice(-6).toUpperCase()}`,
     "",

@@ -1148,7 +1148,7 @@ function formatTelegramOrderMessage(formValues, items, total) {
   }).join("\n");
 
   return [
-    "🛍️ طلب جديد من متجر ClothStore!",
+    "🛍️ طلب جديد من متجر حجاج (HADJAJ)!",
     "==========================",
     "",
     "📦 تفاصيل الطلب:",

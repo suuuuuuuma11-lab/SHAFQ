@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ALNOOR SHIRTS — Admin Dashboard Logic (Cloud Firestore Source of Truth)
+   HADJAJ SHIRTS — Admin Dashboard Logic (Cloud Firestore Source of Truth)
    Firebase Modular SDK v10 (Firestore + Auth + Cloudinary)
    Real-Time Synchronization with onSnapshot & Automatic Seeding
    ========================================================================== */
@@ -1030,7 +1030,7 @@ function renderCatsGrid() {
         <div class="cat-banner" ${style}>
           ${bg}
           <div class="cb-txt">
-            <div class="cb-k">ALNOOR COLLECTION</div>
+            <div class="cb-k">HADJAJ COLLECTION</div>
             <div class="cb-n">${esc(c.name)}</div>
           </div>
         </div>
@@ -1234,7 +1234,7 @@ function downloadExport() {
   const b = new Blob([codeBox.textContent], { type: "text/javascript" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(b);
-  a.download = "alnoor-cloud-data.js";
+  a.download = "hadjaj-cloud-data.js";
   a.click();
   toast("تم تنزيل الملف ✓");
 }
