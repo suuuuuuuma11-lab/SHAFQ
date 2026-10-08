@@ -85,7 +85,7 @@ import { db } from "./firebase-config.js";
         return;
       }
       grid.innerHTML = list.map(p => {
-        const mainImg = p.img || p.mainImage || 'img/p1.png';
+        const mainImg = p.img || p.mainImage || '';
         const disc = discount(p);
         const badgeHTML = disc ? `<span class="badge">خصم ${disc}%</span>` : (p.badge ? `<span class="badge">${esc(p.badge)}</span>` : '');
         const isLiked = favs.has(p.id);
@@ -106,7 +106,7 @@ import { db } from "./firebase-config.js";
           <button type="button" class="fav ${isLiked ? 'liked' : ''}" aria-label="مفضلة" onclick="event.preventDefault();event.stopPropagation();toggleFav('${p.id}',this)">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7.5-4.7-9.5-9.2C.9 8.4 3 4.5 6.8 4.5c2 0 3.6 1.1 4.6 2.7h1.2c1-1.6 2.6-2.7 4.6-2.7 3.8 0 5.9 3.9 4.3 7.3C19.5 16.3 12 21 12 21z"/></svg>
           </button>
-          <img src="${esc(mainImg)}" alt="${esc(p.name)}" loading="lazy" onerror="this.src='img/p1.png'">
+          <img src="${esc(mainImg)}" alt="${esc(p.name)}" loading="lazy" onerror="this.src=''">
         </div>
         <div class="card-info-top">
           <h3>${esc(p.name)}</h3>
@@ -617,7 +617,7 @@ import { db } from "./firebase-config.js";
       if (sizeErr) sizeErr.style.display = 'none';
       if (colorErr) colorErr.style.display = 'none';
 
-      if (imgEl) imgEl.src = p.img || p.mainImage || 'img/p1.png';
+      if (imgEl) imgEl.src = p.img || p.mainImage || '';
       if (titleEl) titleEl.textContent = p.name;
       if (priceEl) priceEl.textContent = p.price.toLocaleString('ar-DZ');
       if (qtyVal) qtyVal.textContent = 1;
@@ -750,7 +750,7 @@ import { db } from "./firebase-config.js";
         productId: currentQoProduct.id,
         name: currentQoProduct.name,
         price: currentQoProduct.price,
-        image: currentQoProduct.img || currentQoProduct.mainImage || 'img/p1.png',
+        image: currentQoProduct.img || currentQoProduct.mainImage || '',
         quantity: qoQty,
         size: qoSelectedSize || 'افتراضي',
         color: qoSelectedColor || 'افتراضي',
@@ -796,7 +796,7 @@ import { db } from "./firebase-config.js";
           productId: p.id,
           name: p.name,
           price: p.price,
-          image: p.img || p.mainImage || 'img/p1.png',
+          image: p.img || p.mainImage || '',
           quantity: 1,
           size: 'افتراضي',
           color: 'افتراضي',
@@ -824,7 +824,7 @@ import { db } from "./firebase-config.js";
           const d = docSnap.data();
           if (d.status === 'hidden') return;
 
-          const mainImg = d.mainImage || d.img || (Array.isArray(d.images) && d.images[0] ? (d.images[0].url || d.images[0]) : '') || 'img/p1.png';
+          const mainImg = d.mainImage || d.img || (Array.isArray(d.images) && d.images[0] ? (d.images[0].url || d.images[0]) : '') || '';
 
           let colors = [];
           if (Array.isArray(d.colors)) {

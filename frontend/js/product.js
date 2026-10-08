@@ -154,7 +154,7 @@ function renderProductDetails(p) {
   if (nameEl) nameEl.textContent = p.name;
   if (priceEl) priceEl.textContent = p.price;
   
-  const mainImg = p.img || p.mainImage || 'img/p1.png';
+  const mainImg = p.img || p.mainImage || '';
   const imgSkel = document.getElementById("pImgSkeleton");
 
   if (imgEl) {
@@ -175,7 +175,7 @@ function renderProductDetails(p) {
     const preloader = new Image();
     preloader.onload = onImageLoaded;
     preloader.onerror = () => {
-      imgEl.src = 'img/p1.png';
+      imgEl.src = '';
       imgEl.style.opacity = "1";
       if (imgSkel) {
         imgSkel.style.opacity = "0";
@@ -327,7 +327,7 @@ if (addCartBtn) {
       productId: currentProduct.id,
       name: currentProduct.name,
       price: currentProduct.price,
-      image: currentProduct.img || currentProduct.mainImage || 'img/p1.png',
+      image: currentProduct.img || currentProduct.mainImage || '',
       quantity: qty,
       size: selectedSize,
       color: colorName,
@@ -498,7 +498,7 @@ async function loadProductFromFirestore() {
     const list = [];
     snap.forEach(docSnap => {
       const d = docSnap.data();
-      const mainImg = d.mainImage || d.img || (Array.isArray(d.images) && d.images[0] ? (d.images[0].url || d.images[0]) : '') || 'img/p1.png';
+      const mainImg = d.mainImage || d.img || (Array.isArray(d.images) && d.images[0] ? (d.images[0].url || d.images[0]) : '') || '';
       
       let colors = [];
       if (Array.isArray(d.colors)) {

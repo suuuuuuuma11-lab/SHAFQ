@@ -70,7 +70,7 @@ function loadCartFromStorage() {
       const size = String(item.size || "M");
       const color = String(item.color || "افتراضي");
       const colorHex = String(item.colorHex || "#1d1a16");
-      const image = item.image || item.img || "img/p1.png";
+      const image = item.image || item.img || '';
       const availableSizes = Array.isArray(item.availableSizes) && item.availableSizes.length ? item.availableSizes : DEFAULT_SIZES;
       const availableColors = Array.isArray(item.availableColors) && item.availableColors.length ? item.availableColors : [{ name: color, value: colorHex }];
 
@@ -174,7 +174,7 @@ export function addToCart({
       id: pid,
       name: name || "قميص فاخر",
       price: cleanPrice,
-      image: image || "img/p1.png",
+      image: image || '',
       quantity: cleanQty,
       size: cleanSize,
       color: cleanColor,
@@ -370,7 +370,7 @@ export function renderCartDrawer() {
 
     return `
       <div class="ci" data-key="${esc(k)}">
-        <img src="${esc(item.image)}" alt="${esc(item.name)}" onerror="this.src='img/p1.png'">
+        <img src="${esc(item.image)}" alt="${esc(item.name)}" onerror="this.style.opacity='0'">
         <div class="ci-info">
           <div class="ci-name">${esc(item.name)}</div>
           
@@ -465,7 +465,7 @@ function renderCheckoutModalReview() {
   if (listEl) {
     listEl.innerHTML = cart.map(item => `
       <div class="cm-review-item">
-        <img src="${esc(item.image)}" alt="${esc(item.name)}" onerror="this.src='img/p1.png'">
+        <img src="${esc(item.image)}" alt="${esc(item.name)}" onerror="this.style.opacity='0'">
         <div class="cm-review-info">
           <div class="cm-review-name">${esc(item.name)}</div>
           <div class="cm-review-meta">المقاس: <b>${esc(item.size)}</b> — اللون: <b>${esc(item.color)}</b></div>
@@ -692,7 +692,7 @@ export async function handleCheckoutSubmit(e) {
     size: i.size,
     color: i.color,
     colorHex: i.colorHex || "#1d1a16",
-    image: i.image || "img/p1.png"
+    image: i.image || ''
   }));
 
   let createdOrderId = null;

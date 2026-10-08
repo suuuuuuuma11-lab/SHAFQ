@@ -195,7 +195,7 @@ export default async function handler(req, res) {
         size: sanitizeText(it.size || "M"),
         color: sanitizeText(it.color || "افتراضي"),
         colorHex: sanitizeText(it.colorHex || "#1d1a16"),
-        image: sanitizeText(it.image || "img/p1.png")
+        image: sanitizeText(it.image || '')
       };
     });
 
