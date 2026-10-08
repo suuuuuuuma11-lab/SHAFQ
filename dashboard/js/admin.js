@@ -1944,29 +1944,13 @@ function initShippingSettings() {
   updateShippingCounts();
   const shippingDocRef = doc(db, "shippingSettings", "current");
 
-  // 1. Try local cache first for instant UI response
-  try {
-    const cached = localStorage.getItem("hadjaj_shipping_settings");
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      if (parsed && parsed.rates) {
-        state.shippingSettings.rates = syncShippingRatesWithLocations(parsed.rates);
-        state.shippingSettings.isLoaded = true;
-        renderShippingTable();
-        updateShippingCounts();
-      }
-    }
-  } catch (_) {}
+  // 1. Initial manual baseline rates
+  state.shippingSettings.rates = syncShippingRatesWithLocations({});
+  state.shippingSettings.isLoaded = true;
+  renderShippingTable();
+  updateShippingCounts();
 
-  // 2. Default manual rates if not loaded yet
-  if (!state.shippingSettings.isLoaded) {
-    state.shippingSettings.rates = syncShippingRatesWithLocations({});
-    state.shippingSettings.isLoaded = true;
-    renderShippingTable();
-    updateShippingCounts();
-  }
-
-  // 3. Real-Time Cloud Firestore Sync
+  // 2. Real-Time Cloud Firestore Sync (Direct Cloud Source of Truth)
   onSnapshot(
     shippingDocRef,
     (snap) => {
@@ -1976,17 +1960,11 @@ function initShippingSettings() {
           state.shippingSettings.rates = syncShippingRatesWithLocations(d.rates);
           renderShippingTable();
           updateShippingCounts();
-          try {
-            localStorage.setItem("hadjaj_shipping_settings", JSON.stringify({
-              rates: state.shippingSettings.rates,
-              updatedAt: d.updatedAt || new Date().toISOString()
-            }));
-          } catch (_) {}
         }
       }
     },
     (err) => {
-      console.warn("Firestore shippingSettings onSnapshot error (using cached rates):", err.message);
+      console.warn("Firestore shippingSettings onSnapshot error:", err.message);
     }
   );
 }
@@ -2106,17 +2084,13 @@ async function saveShippingSettings() {
   };
 
   try {
-    try {
-      localStorage.setItem("hadjaj_shipping_settings", JSON.stringify(payload));
-    } catch (_) {}
-
     const shippingDocRef = doc(db, "shippingSettings", "current");
     await setDoc(shippingDocRef, payload, { merge: true });
 
-    toast("تم حفظ أسعار التوصيل لجميع الولايات الـ 69 بنجاح ✓");
+    toast("تم حفظ أسعار التوصيل في السحابة بنجاح ✓");
   } catch (err) {
     console.error("Save shipping settings error:", err);
-    toast("تم الحفظ محلياً — تعذر الحفظ في السحابة: " + (err.message || ""), false);
+    toast("تعذر حفظ الأسعار في السحابة: " + (err.message || ""), false);
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;

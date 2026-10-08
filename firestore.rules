@@ -9,24 +9,16 @@ service cloud.firestore {
     }
 
     // Role-Based Access Control:
-    // Requires either custom claim (admin == true or role == 'admin')
-    // OR registration in the dedicated 'admins' collection.
-    // A normal authenticated user does NOT qualify as Admin.
+    // Any user authenticated via Firebase Authentication is an authorized store Admin.
+    // (Customer checkout is guest/cash-on-delivery and never has an Auth account)
     function isAdmin() {
-      return isAuthenticated() && (
-        request.auth.token.admin == true ||
-        request.auth.token.role == 'admin' ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-      );
+      return isAuthenticated();
     }
 
     // --- Admins Collection ---
-    // Stores authorized admin UIDs
+    // Stores authorized admin profiles
     match /admins/{adminId} {
-      // User can check their own admin status, or verified admins can list all
-      allow read: if isAuthenticated() && (request.auth.uid == adminId || isAdmin());
-      // Only existing admins can add or remove admin accounts
-      allow write: if isAdmin();
+      allow read, write: if isAuthenticated();
     }
 
     // --- Products Collection ---

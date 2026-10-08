@@ -13,7 +13,6 @@ import { DEFAULT_SHIPPING_RATES } from "../data/default-shipping-rates.js";
 import { db } from "./firebase-config.js";
 import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
-export const LOCAL_STORAGE_SHIPPING_KEY = "hadjaj_shipping_settings";
 
 /**
  * Normalizes a Wilaya code to a two-digit string ("01" - "69")
@@ -41,16 +40,9 @@ export function findWilaya(identifier) {
 }
 
 /**
- * Returns immediate synchronous fallback rates from localStorage or default baseline.
+ * Returns immediate synchronous fallback rates from baseline.
  */
 export function getInitialShippingSettings() {
-  try {
-    const cached = localStorage.getItem(LOCAL_STORAGE_SHIPPING_KEY);
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      if (parsed && parsed.rates) return parsed;
-    }
-  } catch (_) {}
   return {
     rates: DEFAULT_SHIPPING_RATES,
     updatedAt: new Date().toISOString()
@@ -58,10 +50,9 @@ export function getInitialShippingSettings() {
 }
 
 /**
- * Loads active manual shipping rates from Firestore with localStorage fallback.
+ * Loads active manual shipping rates directly from Cloud Firestore.
  */
 export async function loadActiveShippingSettings() {
-  // 1. Try reading from Cloud Firestore
   try {
     const docRef = doc(db, "shippingSettings", "current");
     const snap = await getDoc(docRef);
@@ -75,32 +66,16 @@ export async function loadActiveShippingSettings() {
             ...data.rates[code]
           };
         });
-        const resolved = {
+        return {
           rates: mergedRates,
           updatedAt: data.updatedAt || new Date().toISOString()
         };
-        try {
-          localStorage.setItem(LOCAL_STORAGE_SHIPPING_KEY, JSON.stringify(resolved));
-        } catch (_) {}
-        return resolved;
       }
     }
   } catch (err) {
-    console.warn("Could not read shipping settings from Firestore (using cached/fallback):", err.message);
+    console.warn("Could not read shipping settings from Firestore (using baseline fallback):", err.message);
   }
 
-  // 2. Fallback to localStorage
-  try {
-    const cached = localStorage.getItem(LOCAL_STORAGE_SHIPPING_KEY);
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      if (parsed && parsed.rates) {
-        return parsed;
-      }
-    }
-  } catch (_) {}
-
-  // 3. Ultimate baseline fallback
   return {
     rates: DEFAULT_SHIPPING_RATES,
     updatedAt: new Date().toISOString()
@@ -108,17 +83,13 @@ export async function loadActiveShippingSettings() {
 }
 
 /**
- * Saves active shipping settings to Firestore and localStorage.
+ * Saves active shipping settings directly to Cloud Firestore.
  */
 export async function saveActiveShippingSettings(settings) {
   const payload = {
     rates: settings.rates || DEFAULT_SHIPPING_RATES,
     updatedAt: new Date().toISOString()
   };
-
-  try {
-    localStorage.setItem(LOCAL_STORAGE_SHIPPING_KEY, JSON.stringify(payload));
-  } catch (_) {}
 
   try {
     const docRef = doc(db, "shippingSettings", "current");
