@@ -1113,6 +1113,13 @@
       border-color: var(--gold)
     }
 
+    .field select:disabled {
+      background: #f4f2ee;
+      color: #8a8275;
+      cursor: not-allowed;
+      opacity: 0.8;
+    }
+
     .field .err {
       color: #c0392b;
       font-size: 12px;

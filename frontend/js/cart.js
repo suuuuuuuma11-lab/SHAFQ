@@ -20,16 +20,10 @@ import {
 const PRIMARY_CART_KEY = "hadjaj_cart";
 const LEGACY_CART_KEY = "alnoor_cart";
 
+import { setupWilayaCommuneCascade, ALGERIA_LOCATIONS } from "./locations.js";
+
 // Algeria 69 Wilayas (التقسيم الإداري الرسمي 69 ولاية)
-export const ALGERIA_WILAYAS = [
-  "أدرار", "الشلف", "الأغواط", "أم البواقي", "باتنة", "بجاية", "بسكرة", "بشار", "البليدة", "البويرة",
-  "تمنراست", "تبسة", "تلمسان", "تيارت", "تيزي وزو", "الجزائر", "الجلفة", "جيجل", "سطيف", "سعيدة",
-  "سكيكدة", "سيدي بلعباس", "عنابة", "قالمة", "قسنطينة", "المدية", "مستغانم", "المسيلة", "معسكر", "ورقلة",
-  "وهران", "البيض", "إليزي", "برج بوعريريج", "بومرداس", "الطارف", "تندوف", "تيسمسيلت", "الوادي", "خنشلة",
-  "سوق أهراس", "تيبازة", "ميلة", "عين الدفلى", "النعامة", "عين تموشنت", "غرداية", "غليزان",
-  "تيميمون", "برج باجي مختار", "أولاد جلال", "بني عباس", "عين صالح", "عين قزام", "تقرت", "جانت", "المغير", "المنيعة",
-  "آفلو", "بريكة", "القنطرة", "بئر العاتر", "العريشة", "قصر الشلالة", "عين وسارة", "مسعد", "قصر البخاري", "بوسعادة", "الأبيض سيدي الشيخ"
-];
+export const ALGERIA_WILAYAS = ALGERIA_LOCATIONS.map(w => w.name);
 
 export const DEFAULT_SIZES = ["S", "M", "L", "XL", "XXL"];
 
@@ -486,12 +480,16 @@ function renderCheckoutModalReview() {
   }
 }
 
+let cmCascadeInitialized = false;
 function populateWilayasDropdown() {
-  const wilayaSelect = document.getElementById("cmWilaya");
-  if (wilayaSelect && wilayaSelect.options.length <= 1) {
-    wilayaSelect.innerHTML =
-      '<option value="">— اختر الولاية —</option>' +
-      ALGERIA_WILAYAS.map((w, i) => `<option value="${w}">${String(i + 1).padStart(2, "0")} — ${w}</option>`).join("");
+  if (!cmCascadeInitialized) {
+    setupWilayaCommuneCascade({
+      wilayaSelectId: "cmWilaya",
+      communeSelectId: "cmCommune",
+      wilayaFieldId: "cmFWilaya",
+      communeFieldId: "cmFCommune"
+    });
+    cmCascadeInitialized = true;
   }
 }
 
@@ -588,7 +586,7 @@ export async function handleCheckoutSubmit(e) {
   valid = setInvalid("cmFName", name.length < 3) && valid;
   valid = setInvalid("cmFPhone", !/^0[5-7][0-9]{8}$/.test(phone)) && valid;
   valid = setInvalid("cmFWilaya", !wilaya) && valid;
-  valid = setInvalid("cmFCommune", commune.length < 2) && valid;
+  valid = setInvalid("cmFCommune", !commune) && valid;
 
   if (!valid) return;
 
@@ -705,6 +703,7 @@ export function closeOrderSuccessReceipt() {
 export function initCartUI() {
   updateBadge();
   renderCartDrawer();
+  populateWilayasDropdown();
 
   // Drawer event bindings
   document.getElementById("cartBtn")?.addEventListener("click", openCartDrawer);

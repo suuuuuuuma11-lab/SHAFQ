@@ -8,19 +8,10 @@ import {
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 import { initCartUI, addToCart, toast as cartToast, sendTelegramOrderNotification } from "./cart.js";
+import { setupWilayaCommuneCascade, ALGERIA_LOCATIONS } from "./locations.js";
 
 // Telegram Bot token is strictly stored on server-side (/api/telegram) and never exposed to the browser.
 
-// 69 wilayas of Algeria (التقسيم الإداري الرسمي 69 ولاية)
-const wilayas = [
-  "أدرار", "الشلف", "الأغواط", "أم البواقي", "باتنة", "بجاية", "بسكرة", "بشار", "البليدة", "البويرة",
-  "تمنراست", "تبسة", "تلمسان", "تيارت", "تيزي وزو", "الجزائر", "الجلفة", "جيجل", "سطيف", "سعيدة",
-  "سكيكدة", "سيدي بلعباس", "عنابة", "قالمة", "قسنطينة", "المدية", "مستغانم", "المسيلة", "معسكر", "ورقلة",
-  "وهران", "البيض", "إليزي", "برج بوعريريج", "بومرداس", "الطارف", "تندوف", "تيسمسيلت", "الوادي", "خنشلة",
-  "سوق أهراس", "تيبازة", "ميلة", "عين الدفلى", "النعامة", "عين تموشنت", "غرداية", "غليزان",
-  "تيميمون", "برج باجي مختار", "أولاد جلال", "بني عباس", "عين صالح", "عين قزام", "تقرت", "جانت", "المغير", "المنيعة",
-  "آفلو", "بريكة", "القنطرة", "بئر العاتر", "العريشة", "قصر الشلالة", "عين وسارة", "مسعد", "قصر البخاري", "بوسعادة", "الأبيض سيدي الشيخ"
-];
 const defaultSizes = ["S","M","L","XL","XXL"];
 
 // Safe HTML Escape
@@ -37,13 +28,13 @@ let favsP = new Set(JSON.parse(localStorage.getItem('alnoor_favs') || '[]'));
 const params = new URLSearchParams(location.search);
 const idParam = params.get("id");
 
-/* Wilayas dropdown */
-const wilayaEl = document.getElementById("wilaya");
-if (wilayaEl) {
-  wilayaEl.innerHTML =
-    '<option value="">— اختر الولاية —</option>' +
-    wilayas.map((w,i)=> `<option value="${w}">${String(i+1).padStart(2,'0')} — ${w}</option>`).join("");
-}
+/* Wilayas & Communes dropdown setup (Official 69 Wilayas & 1541 Communes) */
+setupWilayaCommuneCascade({
+  wilayaSelectId: "wilaya",
+  communeSelectId: "commune",
+  wilayaFieldId: "fWilaya",
+  communeFieldId: "fCommune"
+});
 
 function toast(msg){
   const t = document.getElementById('toast');
@@ -272,7 +263,7 @@ if (orderForm) {
     ok = setInvalid("fName", name.length < 3) && ok;
     ok = setInvalid("fPhone", !/^0[5-7][0-9]{8}$/.test(phone)) && ok;
     ok = setInvalid("fWilaya", !wilaya) && ok;
-    ok = setInvalid("fCommune", commune.length < 2) && ok;
+    ok = setInvalid("fCommune", !commune) && ok;
     if (!ok) return;
 
     const submitBtn = document.querySelector("#orderForm button[type=submit]");

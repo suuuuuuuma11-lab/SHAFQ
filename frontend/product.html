@@ -147,8 +147,10 @@
             </div>
             <div class="field" id="fCommune">
               <label>البلدية <em>*</em></label>
-              <input type="text" id="commune" placeholder="مثال: باب الزوار">
-              <div class="err">يرجى إدخال البلدية</div>
+              <select id="commune" disabled>
+                <option value="">— اختر الولاية أولاً —</option>
+              </select>
+              <div class="err">يرجى اختيار البلدية</div>
             </div>
           </div>
 
@@ -263,8 +265,10 @@
         </div>
         <div class="field" id="cmFCommune">
           <label>البلدية <em>*</em></label>
-          <input type="text" id="cmCommune" placeholder="مثال: باب الزوار" required>
-          <div class="err">يرجى إدخال اسم البلدية</div>
+          <select id="cmCommune" disabled required>
+            <option value="">— اختر الولاية أولاً —</option>
+          </select>
+          <div class="err">يرجى اختيار البلدية</div>
         </div>
       </div>
 

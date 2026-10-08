@@ -1,0 +1,9737 @@
+/**
+ * Algeria 69 Wilayas & 1541 Communes dataset
+ * Canonical authority: Law No. 26-06 (4 April 2026, Journal Officiel No. 25)
+ * Decree No. 26-206 (25 May 2026, Journal Officiel No. 40)
+ */
+export const ALGERIA_LOCATIONS = [
+  {
+    "code": "01",
+    "name": "أدرار",
+    "name_latin": "Adrar",
+    "communes": [
+      {
+        "name": "أدرار",
+        "name_latin": "Adrar",
+        "code_postal": "01000",
+        "id": "0101"
+      },
+      {
+        "name": "اقبلي",
+        "name_latin": "Akabli",
+        "code_postal": "01044",
+        "id": "0102"
+      },
+      {
+        "name": "السبع",
+        "name_latin": "Sebaa",
+        "code_postal": "01022",
+        "id": "0103"
+      },
+      {
+        "name": "إن زغمير",
+        "name_latin": "In Zghmir",
+        "code_postal": "01047",
+        "id": "0104"
+      },
+      {
+        "name": "أولاد أحمد تيمي",
+        "name_latin": "Ouled Ahmed Timmi",
+        "code_postal": "01025",
+        "id": "0105"
+      },
+      {
+        "name": "أولف",
+        "name_latin": "Aoulef",
+        "code_postal": "01003",
+        "id": "0106"
+      },
+      {
+        "name": "بودة",
+        "name_latin": "Bouda",
+        "code_postal": "01023",
+        "id": "0107"
+      },
+      {
+        "name": "تامست",
+        "name_latin": "Tamest",
+        "code_postal": "01020",
+        "id": "0108"
+      },
+      {
+        "name": "تامنطيط",
+        "name_latin": "Tamantit",
+        "code_postal": "01021",
+        "id": "0109"
+      },
+      {
+        "name": "تسابيت",
+        "name_latin": "Tsabit",
+        "code_postal": "01011",
+        "id": "0110"
+      },
+      {
+        "name": "تيت",
+        "name_latin": "Tit",
+        "code_postal": "01031",
+        "id": "0111"
+      },
+      {
+        "name": "تيمقتن",
+        "name_latin": "Timekten",
+        "code_postal": "01041",
+        "id": "0112"
+      },
+      {
+        "name": "رقان",
+        "name_latin": "Reggane",
+        "code_postal": "01004",
+        "id": "0113"
+      },
+      {
+        "name": "زاوية كنتة",
+        "name_latin": "Zaouiet Kounta",
+        "code_postal": "01007",
+        "id": "0114"
+      },
+      {
+        "name": "سالي",
+        "name_latin": "Sali",
+        "code_postal": "01009",
+        "id": "0115"
+      },
+      {
+        "name": "فنوغيل",
+        "name_latin": "Fenoughil",
+        "code_postal": "01008",
+        "id": "0116"
+      }
+    ]
+  },
+  {
+    "code": "02",
+    "name": "الشلف",
+    "name_latin": "Chlef",
+    "communes": [
+      {
+        "name": "أبو الحسن",
+        "name_latin": "Abou El Hassane",
+        "code_postal": "02018",
+        "id": "0201"
+      },
+      {
+        "name": "الأبيض مجاجة",
+        "name_latin": "Labiod Medjadja",
+        "code_postal": "02073",
+        "id": "0202"
+      },
+      {
+        "name": "الحجاج",
+        "name_latin": "El Hadjadj",
+        "code_postal": "02050",
+        "id": "0203"
+      },
+      {
+        "name": "الزبوجة",
+        "name_latin": "Zeboudja",
+        "code_postal": "02014",
+        "id": "0204"
+      },
+      {
+        "name": "الشطية",
+        "name_latin": "Chettia",
+        "code_postal": "02007",
+        "id": "0205"
+      },
+      {
+        "name": "الشلف",
+        "name_latin": "Chlef",
+        "code_postal": "02000",
+        "id": "0206"
+      },
+      {
+        "name": "الصبحة",
+        "name_latin": "Sobha",
+        "code_postal": "02030",
+        "id": "0207"
+      },
+      {
+        "name": "الظهرة",
+        "name_latin": "Dahra",
+        "code_postal": "02032",
+        "id": "0208"
+      },
+      {
+        "name": "الكريمية",
+        "name_latin": "El Karimia",
+        "code_postal": "02008",
+        "id": "0209"
+      },
+      {
+        "name": "المرسى",
+        "name_latin": "El Marsa",
+        "code_postal": "02015",
+        "id": "0210"
+      },
+      {
+        "name": "الهرانفة",
+        "name_latin": "Herenfa",
+        "code_postal": "02038",
+        "id": "0211"
+      },
+      {
+        "name": "أم الدروع",
+        "name_latin": "Oum Drou",
+        "code_postal": "02024",
+        "id": "0212"
+      },
+      {
+        "name": "أولاد بن عبد القادر",
+        "name_latin": "Ouled Ben Abdelkader",
+        "code_postal": "02037",
+        "id": "0213"
+      },
+      {
+        "name": "أولاد عباس",
+        "name_latin": "Ouled Abbes",
+        "code_postal": "02029",
+        "id": "0214"
+      },
+      {
+        "name": "أولاد فارس",
+        "name_latin": "Ouled Fares",
+        "code_postal": "02010",
+        "id": "0215"
+      },
+      {
+        "name": "بريرة",
+        "name_latin": "Breira",
+        "code_postal": "02070",
+        "id": "0216"
+      },
+      {
+        "name": "بنايرية",
+        "name_latin": "Benairia",
+        "code_postal": "02039",
+        "id": "0217"
+      },
+      {
+        "name": "بني بوعتاب",
+        "name_latin": "Beni Bouattab",
+        "code_postal": "02071",
+        "id": "0218"
+      },
+      {
+        "name": "بني حواء",
+        "name_latin": "Beni Haoua",
+        "code_postal": "02017",
+        "id": "0219"
+      },
+      {
+        "name": "بني راشد",
+        "name_latin": "Beni Rached",
+        "code_postal": "02035",
+        "id": "0220"
+      },
+      {
+        "name": "بوزغاية",
+        "name_latin": "Bouzeghaia",
+        "code_postal": "02019",
+        "id": "0221"
+      },
+      {
+        "name": "بوقادير",
+        "name_latin": "Boukadir",
+        "code_postal": "02002",
+        "id": "0222"
+      },
+      {
+        "name": "تاجنة",
+        "name_latin": "Tadjena",
+        "code_postal": "02043",
+        "id": "0223"
+      },
+      {
+        "name": "تاوقريت",
+        "name_latin": "Taougrit",
+        "code_postal": "02012",
+        "id": "0224"
+      },
+      {
+        "name": "تلعصة",
+        "name_latin": "Talassa",
+        "code_postal": "02065",
+        "id": "0225"
+      },
+      {
+        "name": "تنس",
+        "name_latin": "Tenes",
+        "code_postal": "02006",
+        "id": "0226"
+      },
+      {
+        "name": "حرشون",
+        "name_latin": "Harchoun",
+        "code_postal": "02031",
+        "id": "0227"
+      },
+      {
+        "name": "سنجاس",
+        "name_latin": "Sendjas",
+        "code_postal": "02025",
+        "id": "0228"
+      },
+      {
+        "name": "سيدي عبد الرحمن",
+        "name_latin": "Sidi Abderrahmane",
+        "code_postal": "02066",
+        "id": "0229"
+      },
+      {
+        "name": "سيدي عكاشة",
+        "name_latin": "Sidi Akkacha",
+        "code_postal": "02009",
+        "id": "0230"
+      },
+      {
+        "name": "عين مران",
+        "name_latin": "Ain Merane",
+        "code_postal": "02004",
+        "id": "0231"
+      },
+      {
+        "name": "مصدق",
+        "name_latin": "Moussadek",
+        "code_postal": "02060",
+        "id": "0232"
+      },
+      {
+        "name": "وادي الفضة",
+        "name_latin": "Oued Fodda",
+        "code_postal": "02001",
+        "id": "0233"
+      },
+      {
+        "name": "وادي سلي",
+        "name_latin": "Oued Sly",
+        "code_postal": "02011",
+        "id": "0234"
+      },
+      {
+        "name": "وادي قوسين",
+        "name_latin": "Oued Goussine",
+        "code_postal": "02061",
+        "id": "0235"
+      }
+    ]
+  },
+  {
+    "code": "03",
+    "name": "الأغواط",
+    "name_latin": "Laghouat",
+    "communes": [
+      {
+        "name": "الأغواط",
+        "name_latin": "Laghouat",
+        "code_postal": "03000",
+        "id": "0301"
+      },
+      {
+        "name": "الحويطة",
+        "name_latin": "El Haouaita",
+        "code_postal": "03040",
+        "id": "0302"
+      },
+      {
+        "name": "الخنق",
+        "name_latin": "Kheneg",
+        "code_postal": "03010",
+        "id": "0303"
+      },
+      {
+        "name": "العسافية",
+        "name_latin": "El Assafia",
+        "code_postal": "03014",
+        "id": "0304"
+      },
+      {
+        "name": "بن ناصر بن شهرة",
+        "name_latin": "Benacer Benchohra",
+        "code_postal": "03033",
+        "id": "0305"
+      },
+      {
+        "name": "تاجرونة",
+        "name_latin": "Tadjrouna",
+        "code_postal": "03011",
+        "id": "0306"
+      },
+      {
+        "name": "تاجموت",
+        "name_latin": "Tadjemout",
+        "code_postal": "03007",
+        "id": "0307"
+      },
+      {
+        "name": "حاسي الدلاعة",
+        "name_latin": "Hassi Delaa",
+        "code_postal": "03022",
+        "id": "0308"
+      },
+      {
+        "name": "حاسي الرمل",
+        "name_latin": "Hassi R'mel",
+        "code_postal": "03004",
+        "id": "0309"
+      },
+      {
+        "name": "سيدي مخلوف",
+        "name_latin": "Sidi Makhlouf",
+        "code_postal": "03019",
+        "id": "0310"
+      },
+      {
+        "name": "عين ماضي",
+        "name_latin": "Ain Madhi",
+        "code_postal": "03012",
+        "id": "0311"
+      },
+      {
+        "name": "قصر الحيران",
+        "name_latin": "Ksar El Hirane",
+        "code_postal": "03003",
+        "id": "0312"
+      }
+    ]
+  },
+  {
+    "code": "04",
+    "name": "أم البواقي",
+    "name_latin": "Oum El Bouaghi",
+    "communes": [
+      {
+        "name": "البلالة",
+        "name_latin": "El Belala",
+        "code_postal": "04044",
+        "id": "0401"
+      },
+      {
+        "name": "الجازية",
+        "name_latin": "El Djazia",
+        "code_postal": "04040",
+        "id": "0402"
+      },
+      {
+        "name": "الحرملية",
+        "name_latin": "El Harmilia",
+        "code_postal": "04032",
+        "id": "0403"
+      },
+      {
+        "name": "الرحية",
+        "name_latin": "Rahia",
+        "code_postal": "04045",
+        "id": "0404"
+      },
+      {
+        "name": "الزرق",
+        "name_latin": "Zorg",
+        "code_postal": "04024",
+        "id": "0405"
+      },
+      {
+        "name": "الضلعة",
+        "name_latin": "Dhalaa",
+        "code_postal": "04008",
+        "id": "0406"
+      },
+      {
+        "name": "العامرية",
+        "name_latin": "El Amiria",
+        "code_postal": "04038",
+        "id": "0407"
+      },
+      {
+        "name": "الفجوج بوغرارة سعودي",
+        "name_latin": "El Fedjoudj Boughrara Sa",
+        "code_postal": "04042",
+        "id": "0408"
+      },
+      {
+        "name": "أم البواقي",
+        "name_latin": "Oum El Bouaghi",
+        "code_postal": "04000",
+        "id": "0409"
+      },
+      {
+        "name": "أولاد حملة",
+        "name_latin": "Ouled Hamla",
+        "code_postal": "04019",
+        "id": "0410"
+      },
+      {
+        "name": "أولاد زواي",
+        "name_latin": "Ouled Zouai",
+        "code_postal": null,
+        "id": "0411"
+      },
+      {
+        "name": "أولاد قاسم",
+        "name_latin": "Ouled Gacem",
+        "code_postal": "04041",
+        "id": "0412"
+      },
+      {
+        "name": "بئر الشهداء",
+        "name_latin": "Bir Chouhada",
+        "code_postal": "04021",
+        "id": "0413"
+      },
+      {
+        "name": "بحير الشرقي",
+        "name_latin": "Behir Chergui",
+        "code_postal": "04026",
+        "id": "0414"
+      },
+      {
+        "name": "بريش",
+        "name_latin": "Berriche",
+        "code_postal": "04022",
+        "id": "0415"
+      },
+      {
+        "name": "سوق نعمان",
+        "name_latin": "Souk Naamane",
+        "code_postal": "04010",
+        "id": "0416"
+      },
+      {
+        "name": "سيقوس",
+        "name_latin": "Sigus",
+        "code_postal": "04011",
+        "id": "0417"
+      },
+      {
+        "name": "عين البيضاء",
+        "name_latin": "Ain Beida",
+        "code_postal": "04001",
+        "id": "0418"
+      },
+      {
+        "name": "عين الديس",
+        "name_latin": "Ain Diss",
+        "code_postal": "04025",
+        "id": "0419"
+      },
+      {
+        "name": "عين الزيتون",
+        "name_latin": "Ain Zitoun",
+        "code_postal": "04023",
+        "id": "0420"
+      },
+      {
+        "name": "عين ببوش",
+        "name_latin": "Ain Babouche",
+        "code_postal": "04020",
+        "id": "0421"
+      },
+      {
+        "name": "عين فكرون",
+        "name_latin": "Ain Fekroun",
+        "code_postal": "04005",
+        "id": "0422"
+      },
+      {
+        "name": "عين كرشة",
+        "name_latin": "Ain Kercha",
+        "code_postal": "04006",
+        "id": "0423"
+      },
+      {
+        "name": "عين مليلة",
+        "name_latin": "Ain M'lila",
+        "code_postal": "04002",
+        "id": "0424"
+      },
+      {
+        "name": "فكيرينة",
+        "name_latin": "Fkirina",
+        "code_postal": "04013",
+        "id": "0425"
+      },
+      {
+        "name": "قصر الصباحي",
+        "name_latin": "Ksar Sbahi",
+        "code_postal": "04018",
+        "id": "0426"
+      },
+      {
+        "name": "مسكيانة",
+        "name_latin": "Meskiana",
+        "code_postal": "04004",
+        "id": "0427"
+      },
+      {
+        "name": "هنشير تومغني",
+        "name_latin": "Hanchir Toumghani",
+        "code_postal": "04012",
+        "id": "0428"
+      },
+      {
+        "name": "وادي نيني",
+        "name_latin": "Oued Nini",
+        "code_postal": "04047",
+        "id": "0429"
+      }
+    ]
+  },
+  {
+    "code": "05",
+    "name": "باتنة",
+    "name_latin": "Batna",
+    "communes": [
+      {
+        "name": "أريس",
+        "name_latin": "Arris",
+        "code_postal": "05007",
+        "id": "0501"
+      },
+      {
+        "name": "إشمول",
+        "name_latin": "Ichemoul",
+        "code_postal": "05026",
+        "id": "0502"
+      },
+      {
+        "name": "الحاسي",
+        "name_latin": "El Hassi",
+        "code_postal": "05116",
+        "id": "0503"
+      },
+      {
+        "name": "الرحبات",
+        "name_latin": "Rahbat",
+        "code_postal": "05091",
+        "id": "0504"
+      },
+      {
+        "name": "الشمرة",
+        "name_latin": "Chemora",
+        "code_postal": "05039",
+        "id": "0505"
+      },
+      {
+        "name": "القصبات",
+        "name_latin": "Gosbat",
+        "code_postal": "05090",
+        "id": "0506"
+      },
+      {
+        "name": "القيقبة",
+        "name_latin": "Guigba",
+        "code_postal": "05067",
+        "id": "0507"
+      },
+      {
+        "name": "المعذر",
+        "name_latin": "El Madher",
+        "code_postal": "05015",
+        "id": "0508"
+      },
+      {
+        "name": "أولاد سلام",
+        "name_latin": "Ouled Sellem",
+        "code_postal": "05044",
+        "id": "0509"
+      },
+      {
+        "name": "أولاد سي سليمان",
+        "name_latin": "Ouled Si Slimane",
+        "code_postal": "05066",
+        "id": "0510"
+      },
+      {
+        "name": "أولاد عوف",
+        "name_latin": "Ouled Aouf",
+        "code_postal": "05122",
+        "id": "0511"
+      },
+      {
+        "name": "أولاد فاضل",
+        "name_latin": "Ouled Fadel",
+        "code_postal": "05063",
+        "id": "0512"
+      },
+      {
+        "name": "إينوغيسن",
+        "name_latin": "Inoughissen",
+        "code_postal": "05083",
+        "id": "0513"
+      },
+      {
+        "name": "باتنة",
+        "name_latin": "Batna",
+        "code_postal": "05000",
+        "id": "0514"
+      },
+      {
+        "name": "بني فضالة الحقانية",
+        "name_latin": "Beni Foudhala El Hakania",
+        "code_postal": "05141",
+        "id": "0515"
+      },
+      {
+        "name": "بوزينة",
+        "name_latin": "Bouzina",
+        "code_postal": "05041",
+        "id": "0516"
+      },
+      {
+        "name": "بولهيلات",
+        "name_latin": "Boulhilat",
+        "code_postal": "05062",
+        "id": "0517"
+      },
+      {
+        "name": "بومقر",
+        "name_latin": "Boumagueur",
+        "code_postal": "05057",
+        "id": "0518"
+      },
+      {
+        "name": "بومية",
+        "name_latin": "Boumia",
+        "code_postal": "05104",
+        "id": "0519"
+      },
+      {
+        "name": "تازولت",
+        "name_latin": "Tazoult",
+        "code_postal": "05011",
+        "id": "0520"
+      },
+      {
+        "name": "تاكسلانت",
+        "name_latin": "Taxlent",
+        "code_postal": "05055",
+        "id": "0521"
+      },
+      {
+        "name": "تالخمت",
+        "name_latin": "Talkhamt",
+        "code_postal": null,
+        "id": "0522"
+      },
+      {
+        "name": "تغرغار",
+        "name_latin": "Tigharghar",
+        "code_postal": "05059",
+        "id": "0523"
+      },
+      {
+        "name": "تكوت",
+        "name_latin": "T Kout",
+        "code_postal": "05020",
+        "id": "0524"
+      },
+      {
+        "name": "تيغانمين",
+        "name_latin": "Tighanimine",
+        "code_postal": "05060",
+        "id": "0525"
+      },
+      {
+        "name": "تيمقاد",
+        "name_latin": "Timgad",
+        "code_postal": "05023",
+        "id": "0526"
+      },
+      {
+        "name": "ثنية العابد",
+        "name_latin": "Teniet El Abed",
+        "code_postal": "05035",
+        "id": "0527"
+      },
+      {
+        "name": "جرمة",
+        "name_latin": "Djerma",
+        "code_postal": "05105",
+        "id": "0528"
+      },
+      {
+        "name": "حيدوسة",
+        "name_latin": "Hidoussa",
+        "code_postal": "05033",
+        "id": "0529"
+      },
+      {
+        "name": "رأس العيون",
+        "name_latin": "Ras El Aioun",
+        "code_postal": "05009",
+        "id": "0530"
+      },
+      {
+        "name": "زانة البيضاء",
+        "name_latin": "Zanet El Beida",
+        "code_postal": "05071",
+        "id": "0531"
+      },
+      {
+        "name": "سريانة",
+        "name_latin": "Seriana",
+        "code_postal": "05025",
+        "id": "0532"
+      },
+      {
+        "name": "سفيان",
+        "name_latin": "Sefiane",
+        "code_postal": "05064",
+        "id": "0533"
+      },
+      {
+        "name": "شير",
+        "name_latin": "Chir",
+        "code_postal": "05038",
+        "id": "0534"
+      },
+      {
+        "name": "عين التوتة",
+        "name_latin": "Ain Touta",
+        "code_postal": "05002",
+        "id": "0535"
+      },
+      {
+        "name": "عين جاسر",
+        "name_latin": "Ain Djasser",
+        "code_postal": "05032",
+        "id": "0536"
+      },
+      {
+        "name": "عين ياقوت",
+        "name_latin": "Ain Yagout",
+        "code_postal": "05031",
+        "id": "0537"
+      },
+      {
+        "name": "عيون العصافير",
+        "name_latin": "Ouyoun El Assafir",
+        "code_postal": "05069",
+        "id": "0538"
+      },
+      {
+        "name": "غسيرة",
+        "name_latin": "Ghassira",
+        "code_postal": "05043",
+        "id": "0539"
+      },
+      {
+        "name": "فسديس",
+        "name_latin": "Fesdis",
+        "code_postal": "05077",
+        "id": "0540"
+      },
+      {
+        "name": "فم الطوب",
+        "name_latin": "Foum Toub",
+        "code_postal": "05049",
+        "id": "0541"
+      },
+      {
+        "name": "قصر بلزمة",
+        "name_latin": "Ksar Bellezma",
+        "code_postal": "05047",
+        "id": "0542"
+      },
+      {
+        "name": "كيمل",
+        "name_latin": "Kimmel",
+        "code_postal": "05079",
+        "id": "0543"
+      },
+      {
+        "name": "لارباع",
+        "name_latin": "Larbaa",
+        "code_postal": "09002",
+        "id": "0544"
+      },
+      {
+        "name": "لازرو",
+        "name_latin": "Lazrou",
+        "code_postal": "05117",
+        "id": "0545"
+      },
+      {
+        "name": "لمسان",
+        "name_latin": "Lemcene",
+        "code_postal": null,
+        "id": "0546"
+      },
+      {
+        "name": "مروانة",
+        "name_latin": "Merouana",
+        "code_postal": "05013",
+        "id": "0547"
+      },
+      {
+        "name": "معافة",
+        "name_latin": "Maafa",
+        "code_postal": "05123",
+        "id": "0548"
+      },
+      {
+        "name": "منعة",
+        "name_latin": "Menaa",
+        "code_postal": "05012",
+        "id": "0549"
+      },
+      {
+        "name": "نقاوس",
+        "name_latin": "N Gaous",
+        "code_postal": "05004",
+        "id": "0550"
+      },
+      {
+        "name": "وادي الشعبة",
+        "name_latin": "Oued Chaaba",
+        "code_postal": "05054",
+        "id": "0551"
+      },
+      {
+        "name": "وادي الطاقة",
+        "name_latin": "Oued Taga",
+        "code_postal": "05036",
+        "id": "0552"
+      },
+      {
+        "name": "وادي الماء",
+        "name_latin": "Oued El Ma",
+        "code_postal": "05016",
+        "id": "0553"
+      }
+    ]
+  },
+  {
+    "code": "06",
+    "name": "بجاية",
+    "name_latin": "Béjaïa",
+    "communes": [
+      {
+        "name": "أدكار",
+        "name_latin": "Adekar",
+        "code_postal": "06021",
+        "id": "0601"
+      },
+      {
+        "name": "اغرم",
+        "name_latin": "Ighram",
+        "code_postal": "06048",
+        "id": "0602"
+      },
+      {
+        "name": "إغيل علي",
+        "name_latin": "Ighil-Ali",
+        "code_postal": "06014",
+        "id": "0603"
+      },
+      {
+        "name": "أقبو",
+        "name_latin": "Akbou",
+        "code_postal": "06001",
+        "id": "0604"
+      },
+      {
+        "name": "أكفادو",
+        "name_latin": "Akfadou",
+        "code_postal": "06025",
+        "id": "0605"
+      },
+      {
+        "name": "الفلاي",
+        "name_latin": "Leflaye",
+        "code_postal": "06043",
+        "id": "0606"
+      },
+      {
+        "name": "القصر",
+        "name_latin": "El Kseur",
+        "code_postal": "06003",
+        "id": "0607"
+      },
+      {
+        "name": "أمالو",
+        "name_latin": "Amalou",
+        "code_postal": "06034",
+        "id": "0608"
+      },
+      {
+        "name": "أميزور",
+        "name_latin": "Amizour",
+        "code_postal": "06008",
+        "id": "0609"
+      },
+      {
+        "name": "أوزلاقن",
+        "name_latin": "Ouzellaguen",
+        "code_postal": "06010",
+        "id": "0610"
+      },
+      {
+        "name": "أوقاس",
+        "name_latin": "Aokas",
+        "code_postal": "06007",
+        "id": "0611"
+      },
+      {
+        "name": "أيت إسماعيل",
+        "name_latin": "Ait-Smail",
+        "code_postal": "06044",
+        "id": "0612"
+      },
+      {
+        "name": "أيت رزين",
+        "name_latin": "Ait R'zine",
+        "code_postal": "06013",
+        "id": "0613"
+      },
+      {
+        "name": "بجاية",
+        "name_latin": "Bejaia",
+        "code_postal": "06000",
+        "id": "0614"
+      },
+      {
+        "name": "برباشة",
+        "name_latin": "Barbacha",
+        "code_postal": "06009",
+        "id": "0615"
+      },
+      {
+        "name": "بني جليل",
+        "name_latin": "Beni Djellil",
+        "code_postal": "06067",
+        "id": "0616"
+      },
+      {
+        "name": "بني كسيلة",
+        "name_latin": "Beni K'sila",
+        "code_postal": "06027",
+        "id": "0617"
+      },
+      {
+        "name": "بني معوش",
+        "name_latin": "Benimaouche",
+        "code_postal": "06024",
+        "id": "0618"
+      },
+      {
+        "name": "بني مليكش",
+        "name_latin": "Beni-Mallikeche",
+        "code_postal": "06039",
+        "id": "0619"
+      },
+      {
+        "name": "بو جليل",
+        "name_latin": "Boudjellil",
+        "code_postal": "06018",
+        "id": "0620"
+      },
+      {
+        "name": "بوحمزة",
+        "name_latin": "Bouhamza",
+        "code_postal": "06031",
+        "id": "0621"
+      },
+      {
+        "name": "بوخليفة",
+        "name_latin": "Boukhelifa",
+        "code_postal": "06059",
+        "id": "0622"
+      },
+      {
+        "name": "تازمالت",
+        "name_latin": "Tazmalt",
+        "code_postal": "06006",
+        "id": "0623"
+      },
+      {
+        "name": "تاسكريوت",
+        "name_latin": "Taskriout",
+        "code_postal": "06015",
+        "id": "0624"
+      },
+      {
+        "name": "تالة حمزة",
+        "name_latin": "Tala Hamza",
+        "code_postal": "06066",
+        "id": "0625"
+      },
+      {
+        "name": "تامريجت",
+        "name_latin": "Tamridjet",
+        "code_postal": "06077",
+        "id": "0626"
+      },
+      {
+        "name": "تامقرة",
+        "name_latin": "Tamokra",
+        "code_postal": "06053",
+        "id": "0627"
+      },
+      {
+        "name": "تاوريرت إغيل",
+        "name_latin": "Taourit Ighil",
+        "code_postal": "06035",
+        "id": "0628"
+      },
+      {
+        "name": "توجة",
+        "name_latin": "Toudja",
+        "code_postal": "06030",
+        "id": "0629"
+      },
+      {
+        "name": "تيزي نبربر",
+        "name_latin": "Tizi-N'berber",
+        "code_postal": "06058",
+        "id": "0630"
+      },
+      {
+        "name": "تيشي",
+        "name_latin": "Tichy",
+        "code_postal": "06023",
+        "id": "0631"
+      },
+      {
+        "name": "تيفرة",
+        "name_latin": "Tifra",
+        "code_postal": "06028",
+        "id": "0632"
+      },
+      {
+        "name": "تيمزريت",
+        "name_latin": "Timezrit",
+        "code_postal": "06019",
+        "id": "0633"
+      },
+      {
+        "name": "تينبدار",
+        "name_latin": "Tinebdar",
+        "code_postal": "06037",
+        "id": "0634"
+      },
+      {
+        "name": "خراطة",
+        "name_latin": "Kherrata",
+        "code_postal": "06004",
+        "id": "0635"
+      },
+      {
+        "name": "درقينة",
+        "name_latin": "Darguina",
+        "code_postal": "06016",
+        "id": "0636"
+      },
+      {
+        "name": "ذراع القايد",
+        "name_latin": "Dra El Caid",
+        "code_postal": "06070",
+        "id": "0637"
+      },
+      {
+        "name": "سمعون",
+        "name_latin": "Smaoun",
+        "code_postal": "06020",
+        "id": "0638"
+      },
+      {
+        "name": "سوق اوفلا",
+        "name_latin": "Souk Oufella",
+        "code_postal": "06036",
+        "id": "0639"
+      },
+      {
+        "name": "سوق لإثنين",
+        "name_latin": "Souk El Tenine",
+        "code_postal": "06012",
+        "id": "0640"
+      },
+      {
+        "name": "سيدي عياد",
+        "name_latin": "Sidi Ayad",
+        "code_postal": "06085",
+        "id": "0641"
+      },
+      {
+        "name": "سيدي عيش",
+        "name_latin": "Sidi-Aich",
+        "code_postal": "06005",
+        "id": "0642"
+      },
+      {
+        "name": "شلاطة",
+        "name_latin": "Chellata",
+        "code_postal": "06052",
+        "id": "0643"
+      },
+      {
+        "name": "شميني",
+        "name_latin": "Chemini",
+        "code_postal": "06022",
+        "id": "0644"
+      },
+      {
+        "name": "صدوق",
+        "name_latin": "Seddouk",
+        "code_postal": "06011",
+        "id": "0645"
+      },
+      {
+        "name": "طيبان",
+        "name_latin": "Tibane",
+        "code_postal": "06087",
+        "id": "0646"
+      },
+      {
+        "name": "فرعون",
+        "name_latin": "Feraoun",
+        "code_postal": "06033",
+        "id": "0647"
+      },
+      {
+        "name": "فناية الماثن",
+        "name_latin": "Fenaia Il Maten",
+        "code_postal": "06041",
+        "id": "0648"
+      },
+      {
+        "name": "كنديرة",
+        "name_latin": "Kendira",
+        "code_postal": "06032",
+        "id": "0649"
+      },
+      {
+        "name": "مالبو",
+        "name_latin": "Melbou",
+        "code_postal": "06076",
+        "id": "0650"
+      },
+      {
+        "name": "مسيسنة",
+        "name_latin": "M'cisna",
+        "code_postal": "06038",
+        "id": "0651"
+      },
+      {
+        "name": "وادي غير",
+        "name_latin": "Oued Ghir",
+        "code_postal": "06017",
+        "id": "0652"
+      }
+    ]
+  },
+  {
+    "code": "07",
+    "name": "بسكرة",
+    "name_latin": "Biskra",
+    "communes": [
+      {
+        "name": "الحاجب",
+        "name_latin": "El Hadjab",
+        "code_postal": "07037",
+        "id": "0701"
+      },
+      {
+        "name": "الحوش",
+        "name_latin": "El Haouch",
+        "code_postal": "07028",
+        "id": "0702"
+      },
+      {
+        "name": "الغروس",
+        "name_latin": "El Ghrous",
+        "code_postal": "07027",
+        "id": "0703"
+      },
+      {
+        "name": "الفيض",
+        "name_latin": "El Feidh",
+        "code_postal": "07026",
+        "id": "0704"
+      },
+      {
+        "name": "المزيرعة",
+        "name_latin": "Meziraa",
+        "code_postal": "07043",
+        "id": "0705"
+      },
+      {
+        "name": "أورلال",
+        "name_latin": "Ourlal",
+        "code_postal": "07011",
+        "id": "0706"
+      },
+      {
+        "name": "أوماش",
+        "name_latin": "Oumache",
+        "code_postal": "07035",
+        "id": "0707"
+      },
+      {
+        "name": "برج بن عزوز",
+        "name_latin": "Bordj Ben Azzouz",
+        "code_postal": "07021",
+        "id": "0708"
+      },
+      {
+        "name": "بسكرة",
+        "name_latin": "Biskra",
+        "code_postal": "07000",
+        "id": "0709"
+      },
+      {
+        "name": "بوشقرون",
+        "name_latin": "Bouchakroun",
+        "code_postal": "07022",
+        "id": "0710"
+      },
+      {
+        "name": "خنقة سيدي ناجي",
+        "name_latin": "Khenguet Sidi Nadji",
+        "code_postal": "07032",
+        "id": "0711"
+      },
+      {
+        "name": "زريبة الوادي",
+        "name_latin": "Zeribet El Oued",
+        "code_postal": "07012",
+        "id": "0712"
+      },
+      {
+        "name": "سيدي عقبة",
+        "name_latin": "Sidi Okba",
+        "code_postal": "07005",
+        "id": "0713"
+      },
+      {
+        "name": "شتمة",
+        "name_latin": "Chetma",
+        "code_postal": "07024",
+        "id": "0714"
+      },
+      {
+        "name": "طولقة",
+        "name_latin": "Tolga",
+        "code_postal": "07003",
+        "id": "0715"
+      },
+      {
+        "name": "عين الناقة",
+        "name_latin": "Ain Naga",
+        "code_postal": "07039",
+        "id": "0716"
+      },
+      {
+        "name": "فوغالة",
+        "name_latin": "Foughala",
+        "code_postal": "07031",
+        "id": "0717"
+      },
+      {
+        "name": "ليشانة",
+        "name_latin": "Lichana",
+        "code_postal": "07009",
+        "id": "0718"
+      },
+      {
+        "name": "ليوة",
+        "name_latin": "Lioua",
+        "code_postal": "07033",
+        "id": "0719"
+      },
+      {
+        "name": "مخادمة",
+        "name_latin": "Mekhadma",
+        "code_postal": "07034",
+        "id": "0720"
+      },
+      {
+        "name": "مشونش",
+        "name_latin": "M'chouneche",
+        "code_postal": "07010",
+        "id": "0721"
+      },
+      {
+        "name": "مليلي",
+        "name_latin": "M'lili",
+        "code_postal": "07068",
+        "id": "0722"
+      }
+    ]
+  },
+  {
+    "code": "08",
+    "name": "بشار",
+    "name_latin": "Béchar",
+    "communes": [
+      {
+        "name": "العبادلة",
+        "name_latin": "Abadla",
+        "code_postal": "08003",
+        "id": "0801"
+      },
+      {
+        "name": "القنادسة",
+        "name_latin": "Kenadsa",
+        "code_postal": "08011",
+        "id": "0802"
+      },
+      {
+        "name": "المريجة",
+        "name_latin": "Meridja",
+        "code_postal": "08041",
+        "id": "0803"
+      },
+      {
+        "name": "بشار",
+        "name_latin": "Bechar",
+        "code_postal": "08000",
+        "id": "0804"
+      },
+      {
+        "name": "بني ونيف",
+        "name_latin": "Beni-Ounif",
+        "code_postal": "08010",
+        "id": "0805"
+      },
+      {
+        "name": "بوكايس",
+        "name_latin": "Boukais",
+        "code_postal": "08034",
+        "id": "0806"
+      },
+      {
+        "name": "تاغيت",
+        "name_latin": "Taghit",
+        "code_postal": "08030",
+        "id": "0807"
+      },
+      {
+        "name": "تبلبالة",
+        "name_latin": "Tabelbala",
+        "code_postal": "08029",
+        "id": "0808"
+      },
+      {
+        "name": "عرق فراج",
+        "name_latin": "Erg-Ferradj",
+        "code_postal": "08023",
+        "id": "0809"
+      },
+      {
+        "name": "لحمر",
+        "name_latin": "Lahmar",
+        "code_postal": "08026",
+        "id": "0810"
+      },
+      {
+        "name": "مشرع هواري بومدين",
+        "name_latin": "Machraa-Houari-Boumediene",
+        "code_postal": "08027",
+        "id": "0811"
+      },
+      {
+        "name": "موغل",
+        "name_latin": "Mogheul",
+        "code_postal": "08042",
+        "id": "0812"
+      }
+    ]
+  },
+  {
+    "code": "09",
+    "name": "البليدة",
+    "name_latin": "Blida",
+    "communes": [
+      {
+        "name": "الأربعاء",
+        "name_latin": "Larbaa",
+        "code_postal": "09002",
+        "id": "0901"
+      },
+      {
+        "name": "البليدة",
+        "name_latin": "Blida",
+        "code_postal": "09000",
+        "id": "0902"
+      },
+      {
+        "name": "الشبلي",
+        "name_latin": "Chebli",
+        "code_postal": "09009",
+        "id": "0903"
+      },
+      {
+        "name": "الشريعة",
+        "name_latin": "Chrea",
+        "code_postal": "09027",
+        "id": "0904"
+      },
+      {
+        "name": "الشفة",
+        "name_latin": "Chiffa",
+        "code_postal": "09010",
+        "id": "0905"
+      },
+      {
+        "name": "الصومعة",
+        "name_latin": "Soumaa",
+        "code_postal": "09022",
+        "id": "0906"
+      },
+      {
+        "name": "العفرون",
+        "name_latin": "El-Affroun",
+        "code_postal": "09011",
+        "id": "0907"
+      },
+      {
+        "name": "اولاد سلامة",
+        "name_latin": "Ouled Slama",
+        "code_postal": "09033",
+        "id": "0908"
+      },
+      {
+        "name": "أولاد يعيش",
+        "name_latin": "Ouled Yaich",
+        "code_postal": "09015",
+        "id": "0909"
+      },
+      {
+        "name": "بن خليل",
+        "name_latin": "Benkhelil",
+        "code_postal": "09025",
+        "id": "0910"
+      },
+      {
+        "name": "بني تامو",
+        "name_latin": "Beni-Tamou",
+        "code_postal": "09024",
+        "id": "0911"
+      },
+      {
+        "name": "بني مراد",
+        "name_latin": "Beni Mered",
+        "code_postal": "09003",
+        "id": "0912"
+      },
+      {
+        "name": "بوعرفة",
+        "name_latin": "Bouarfa",
+        "code_postal": "09019",
+        "id": "0913"
+      },
+      {
+        "name": "بوعينان",
+        "name_latin": "Bouinan",
+        "code_postal": "09020",
+        "id": "0914"
+      },
+      {
+        "name": "بوفاريك",
+        "name_latin": "Boufarik",
+        "code_postal": "09001",
+        "id": "0915"
+      },
+      {
+        "name": "بوقرة",
+        "name_latin": "Bougara",
+        "code_postal": "09008",
+        "id": "0916"
+      },
+      {
+        "name": "جبابرة",
+        "name_latin": "Djebabra",
+        "code_postal": "09028",
+        "id": "0917"
+      },
+      {
+        "name": "حمام ملوان",
+        "name_latin": "Hammam Elouane",
+        "code_postal": "09030",
+        "id": "0918"
+      },
+      {
+        "name": "صوحان",
+        "name_latin": "Souhane",
+        "code_postal": "09034",
+        "id": "0919"
+      },
+      {
+        "name": "عين الرمانة",
+        "name_latin": "Ain Romana",
+        "code_postal": "09023",
+        "id": "0920"
+      },
+      {
+        "name": "قرواو",
+        "name_latin": "Guerrouaou",
+        "code_postal": "09029",
+        "id": "0921"
+      },
+      {
+        "name": "مفتاح",
+        "name_latin": "Meftah",
+        "code_postal": "09012",
+        "id": "0922"
+      },
+      {
+        "name": "موزاية",
+        "name_latin": "Mouzaia",
+        "code_postal": "09013",
+        "id": "0923"
+      },
+      {
+        "name": "وادي العلايق",
+        "name_latin": "Oued El Alleug",
+        "code_postal": "09014",
+        "id": "0924"
+      },
+      {
+        "name": "وادي جر",
+        "name_latin": "Oued Djer",
+        "code_postal": "09032",
+        "id": "0925"
+      }
+    ]
+  },
+  {
+    "code": "10",
+    "name": "البويرة",
+    "name_latin": "Bouira",
+    "communes": [
+      {
+        "name": "آث منصور",
+        "name_latin": "Ath Mansour",
+        "code_postal": "10011",
+        "id": "1001"
+      },
+      {
+        "name": "أعمر",
+        "name_latin": "Aomar",
+        "code_postal": "10010",
+        "id": "1002"
+      },
+      {
+        "name": "أغبالو",
+        "name_latin": "Aghbalou",
+        "code_postal": "10007",
+        "id": "1003"
+      },
+      {
+        "name": "الأخضرية",
+        "name_latin": "Lakhdaria",
+        "code_postal": "10002",
+        "id": "1004"
+      },
+      {
+        "name": "الأسنام",
+        "name_latin": "El Asnam",
+        "code_postal": "10022",
+        "id": "1005"
+      },
+      {
+        "name": "البويرة",
+        "name_latin": "Bouira",
+        "code_postal": "10000",
+        "id": "1006"
+      },
+      {
+        "name": "الحاكمية",
+        "name_latin": "El-Hakimia",
+        "code_postal": "10058",
+        "id": "1007"
+      },
+      {
+        "name": "الحجرة الزرقاء",
+        "name_latin": "Hadjera Zerga",
+        "code_postal": "10065",
+        "id": "1008"
+      },
+      {
+        "name": "الخبوزية",
+        "name_latin": "El Khabouzia",
+        "code_postal": "10038",
+        "id": "1009"
+      },
+      {
+        "name": "الدشمية",
+        "name_latin": "Dechmia",
+        "code_postal": "10057",
+        "id": "1010"
+      },
+      {
+        "name": "العجيبة",
+        "name_latin": "El Adjiba",
+        "code_postal": "10021",
+        "id": "1011"
+      },
+      {
+        "name": "المعمورة",
+        "name_latin": "Maamora",
+        "code_postal": "10071",
+        "id": "1012"
+      },
+      {
+        "name": "المقراني",
+        "name_latin": "El-Mokrani",
+        "code_postal": "10060",
+        "id": "1013"
+      },
+      {
+        "name": "الهاشمية",
+        "name_latin": "El Hachimia",
+        "code_postal": "10023",
+        "id": "1014"
+      },
+      {
+        "name": "أمشدالة",
+        "name_latin": "M Chedallah",
+        "code_postal": "10003",
+        "id": "1015"
+      },
+      {
+        "name": "أهل القصر",
+        "name_latin": "Ahl El Ksar",
+        "code_postal": "10008",
+        "id": "1016"
+      },
+      {
+        "name": "أولاد راشد",
+        "name_latin": "Ouled Rached",
+        "code_postal": null,
+        "id": "1017"
+      },
+      {
+        "name": "أيت لعزيز",
+        "name_latin": "Ait Laaziz",
+        "code_postal": "10034",
+        "id": "1018"
+      },
+      {
+        "name": "بئر غبالو",
+        "name_latin": "Bir Ghbalou",
+        "code_postal": "10013",
+        "id": "1019"
+      },
+      {
+        "name": "برج أوخريص",
+        "name_latin": "Bordj Okhriss",
+        "code_postal": "10014",
+        "id": "1020"
+      },
+      {
+        "name": "بشلول",
+        "name_latin": "Bechloul",
+        "code_postal": "10012",
+        "id": "1021"
+      },
+      {
+        "name": "بودربالة",
+        "name_latin": "Bouderbala",
+        "code_postal": "10016",
+        "id": "1022"
+      },
+      {
+        "name": "بوكرم",
+        "name_latin": "Boukram",
+        "code_postal": "10054",
+        "id": "1023"
+      },
+      {
+        "name": "تاغزوت",
+        "name_latin": "Taghzout",
+        "code_postal": "10055",
+        "id": "1024"
+      },
+      {
+        "name": "تاقديت",
+        "name_latin": "Taguedite",
+        "code_postal": "10045",
+        "id": "1025"
+      },
+      {
+        "name": "جباحية",
+        "name_latin": "Djebahia",
+        "code_postal": "10036",
+        "id": "1026"
+      },
+      {
+        "name": "حنيف",
+        "name_latin": "Hanif",
+        "code_postal": "10030",
+        "id": "1027"
+      },
+      {
+        "name": "حيزر",
+        "name_latin": "Haizer",
+        "code_postal": "10024",
+        "id": "1028"
+      },
+      {
+        "name": "ديرة",
+        "name_latin": "Dirah",
+        "code_postal": "10020",
+        "id": "1029"
+      },
+      {
+        "name": "روراوة",
+        "name_latin": "Raouraoua",
+        "code_postal": "10042",
+        "id": "1030"
+      },
+      {
+        "name": "ريدان",
+        "name_latin": "Ridane",
+        "code_postal": "10083",
+        "id": "1031"
+      },
+      {
+        "name": "زبربر",
+        "name_latin": "Z'barbar (El Isseri )",
+        "code_postal": "10047",
+        "id": "1032"
+      },
+      {
+        "name": "سحاريج",
+        "name_latin": "Saharidj",
+        "code_postal": "10043",
+        "id": "1033"
+      },
+      {
+        "name": "سور الغزلان",
+        "name_latin": "Sour El Ghozlane",
+        "code_postal": "10004",
+        "id": "1034"
+      },
+      {
+        "name": "سوق الخميس",
+        "name_latin": "Souk El Khemis",
+        "code_postal": "10044",
+        "id": "1035"
+      },
+      {
+        "name": "شرفة",
+        "name_latin": "Chorfa",
+        "code_postal": "10019",
+        "id": "1036"
+      },
+      {
+        "name": "عين الترك",
+        "name_latin": "Ain Turk",
+        "code_postal": "10033",
+        "id": "1037"
+      },
+      {
+        "name": "عين الحجر",
+        "name_latin": "Ain El Hadjar",
+        "code_postal": "10031",
+        "id": "1038"
+      },
+      {
+        "name": "عين العلوي",
+        "name_latin": "Ain Laloui",
+        "code_postal": "10032",
+        "id": "1039"
+      },
+      {
+        "name": "عين بسام",
+        "name_latin": "Ain-Bessem",
+        "code_postal": "10005",
+        "id": "1040"
+      },
+      {
+        "name": "قادرية",
+        "name_latin": "Kadiria",
+        "code_postal": "10006",
+        "id": "1041"
+      },
+      {
+        "name": "قرومة",
+        "name_latin": "Guerrouma",
+        "code_postal": "10037",
+        "id": "1042"
+      },
+      {
+        "name": "مزدور",
+        "name_latin": "Mezdour",
+        "code_postal": "10040",
+        "id": "1043"
+      },
+      {
+        "name": "معلة",
+        "name_latin": "Maala",
+        "code_postal": "10039",
+        "id": "1044"
+      },
+      {
+        "name": "وادي البردي",
+        "name_latin": "Oued El Berdi",
+        "code_postal": "10075",
+        "id": "1045"
+      }
+    ]
+  },
+  {
+    "code": "11",
+    "name": "تمنراست",
+    "name_latin": "Tamanrasset",
+    "communes": [
+      {
+        "name": "ابلسة",
+        "name_latin": "Abelsa",
+        "code_postal": "11007",
+        "id": "1101"
+      },
+      {
+        "name": "أدلس",
+        "name_latin": "Idles",
+        "code_postal": "11013",
+        "id": "1102"
+      },
+      {
+        "name": "تاظروك",
+        "name_latin": "Tazrouk",
+        "code_postal": "11010",
+        "id": "1103"
+      },
+      {
+        "name": "تمنراست",
+        "name_latin": "Tamanrasset",
+        "code_postal": "11000",
+        "id": "1104"
+      },
+      {
+        "name": "عين امقل",
+        "name_latin": "Ain Amguel",
+        "code_postal": "11003",
+        "id": "1105"
+      }
+    ]
+  },
+  {
+    "code": "12",
+    "name": "تبسة",
+    "name_latin": "Tébessa",
+    "communes": [
+      {
+        "name": "الحمامات",
+        "name_latin": "Hammamet",
+        "code_postal": "12016",
+        "id": "1201"
+      },
+      {
+        "name": "الحويجبات",
+        "name_latin": "El-Houidjbet",
+        "code_postal": "12038",
+        "id": "1202"
+      },
+      {
+        "name": "الشريعة",
+        "name_latin": "Cheria",
+        "code_postal": "12002",
+        "id": "1203"
+      },
+      {
+        "name": "العقلة",
+        "name_latin": "El Ogla",
+        "code_postal": "12015",
+        "id": "1204"
+      },
+      {
+        "name": "العوينات",
+        "name_latin": "El-Aouinet",
+        "code_postal": "12005",
+        "id": "1205"
+      },
+      {
+        "name": "الكويف",
+        "name_latin": "El Kouif",
+        "code_postal": "12006",
+        "id": "1206"
+      },
+      {
+        "name": "الماء الابيض",
+        "name_latin": "El Malabiod",
+        "code_postal": "12014",
+        "id": "1207"
+      },
+      {
+        "name": "المريج",
+        "name_latin": "El Meridj",
+        "code_postal": "12023",
+        "id": "1208"
+      },
+      {
+        "name": "المزرعة",
+        "name_latin": "El Mezeraa",
+        "code_postal": "12042",
+        "id": "1209"
+      },
+      {
+        "name": "الونزة",
+        "name_latin": "Ouenza",
+        "code_postal": "12003",
+        "id": "1210"
+      },
+      {
+        "name": "أم علي",
+        "name_latin": "Oum Ali",
+        "code_postal": "12027",
+        "id": "1211"
+      },
+      {
+        "name": "بئر الذهب",
+        "name_latin": "Bir Dheheb",
+        "code_postal": "12031",
+        "id": "1212"
+      },
+      {
+        "name": "بئر مقدم",
+        "name_latin": "Bir Mokkadem",
+        "code_postal": "12011",
+        "id": "1213"
+      },
+      {
+        "name": "بجن",
+        "name_latin": "Bedjene",
+        "code_postal": "12035",
+        "id": "1214"
+      },
+      {
+        "name": "بكارية",
+        "name_latin": "Bekkaria",
+        "code_postal": "12019",
+        "id": "1215"
+      },
+      {
+        "name": "بوخضرة",
+        "name_latin": "Boukhadra",
+        "code_postal": "12012",
+        "id": "1216"
+      },
+      {
+        "name": "بولحاف الدير",
+        "name_latin": "Boulhaf Dyr",
+        "code_postal": "12039",
+        "id": "1217"
+      },
+      {
+        "name": "تبسة",
+        "name_latin": "Tebessa",
+        "code_postal": "12000",
+        "id": "1218"
+      },
+      {
+        "name": "ثليجان",
+        "name_latin": "Telidjen",
+        "code_postal": "12053",
+        "id": "1219"
+      },
+      {
+        "name": "سطح قنطيس",
+        "name_latin": "Stah Guentis",
+        "code_postal": "12032",
+        "id": "1220"
+      },
+      {
+        "name": "صفصاف الوسرى",
+        "name_latin": "Saf Saf El Ouesra",
+        "code_postal": "12037",
+        "id": "1221"
+      },
+      {
+        "name": "عين الزرقاء",
+        "name_latin": "Ain Zerga",
+        "code_postal": "12008",
+        "id": "1222"
+      },
+      {
+        "name": "قريقر",
+        "name_latin": "Guorriguer",
+        "code_postal": "12046",
+        "id": "1223"
+      },
+      {
+        "name": "مرسط",
+        "name_latin": "Morsott",
+        "code_postal": "12017",
+        "id": "1224"
+      }
+    ]
+  },
+  {
+    "code": "13",
+    "name": "تلمسان",
+    "name_latin": "Tlemcen",
+    "communes": [
+      {
+        "name": "الحناية",
+        "name_latin": "Hennaya",
+        "code_postal": "13009",
+        "id": "1301"
+      },
+      {
+        "name": "الرمشي",
+        "name_latin": "Remchi",
+        "code_postal": "13005",
+        "id": "1302"
+      },
+      {
+        "name": "السواحلية",
+        "name_latin": "Souahlia",
+        "code_postal": "13020",
+        "id": "1303"
+      },
+      {
+        "name": "السواني",
+        "name_latin": "Souani",
+        "code_postal": "13046",
+        "id": "1304"
+      },
+      {
+        "name": "العزايل",
+        "name_latin": "Azail",
+        "code_postal": "13080",
+        "id": "1305"
+      },
+      {
+        "name": "الغزوات",
+        "name_latin": "Ghazaouet",
+        "code_postal": "13002",
+        "id": "1306"
+      },
+      {
+        "name": "الفحول",
+        "name_latin": "El Fehoul",
+        "code_postal": "13033",
+        "id": "1307"
+      },
+      {
+        "name": "أولاد رياح",
+        "name_latin": "Ouled Riyah",
+        "code_postal": "13070",
+        "id": "1308"
+      },
+      {
+        "name": "أولاد ميمون",
+        "name_latin": "Ouled Mimoun",
+        "code_postal": "13010",
+        "id": "1309"
+      },
+      {
+        "name": "باب العسة",
+        "name_latin": "Bab El Assa",
+        "code_postal": "13014",
+        "id": "1310"
+      },
+      {
+        "name": "بن سكران",
+        "name_latin": "Bensekrane",
+        "code_postal": "13008",
+        "id": "1311"
+      },
+      {
+        "name": "بني بهدل",
+        "name_latin": "Beni Bahdel",
+        "code_postal": "13060",
+        "id": "1312"
+      },
+      {
+        "name": "بني بوسعيد",
+        "name_latin": "Beni Boussaid",
+        "code_postal": null,
+        "id": "1313"
+      },
+      {
+        "name": "بني خلاد",
+        "name_latin": "Beni Khellad",
+        "code_postal": "13074",
+        "id": "1314"
+      },
+      {
+        "name": "بني سنوس",
+        "name_latin": "Beni Snous",
+        "code_postal": "13037",
+        "id": "1315"
+      },
+      {
+        "name": "بني صميل",
+        "name_latin": "Beni Smiel",
+        "code_postal": "13083",
+        "id": "1316"
+      },
+      {
+        "name": "بني مستر",
+        "name_latin": "Beni Mester",
+        "code_postal": "13038",
+        "id": "1317"
+      },
+      {
+        "name": "بني وارسوس",
+        "name_latin": "Beni Ouarsous",
+        "code_postal": "13025",
+        "id": "1318"
+      },
+      {
+        "name": "بوحلو",
+        "name_latin": "Bouhlou",
+        "code_postal": "13026",
+        "id": "1319"
+      },
+      {
+        "name": "تلمسان",
+        "name_latin": "Tlemcen",
+        "code_postal": "13000",
+        "id": "1320"
+      },
+      {
+        "name": "تيانت",
+        "name_latin": "Tianet",
+        "code_postal": "13047",
+        "id": "1321"
+      },
+      {
+        "name": "تيرني بني هديل",
+        "name_latin": "Terny Beni Hediel",
+        "code_postal": "13079",
+        "id": "1322"
+      },
+      {
+        "name": "جبالة",
+        "name_latin": "Djebala",
+        "code_postal": "13029",
+        "id": "1323"
+      },
+      {
+        "name": "حمام بوغرارة",
+        "name_latin": "Hammam Boughrara",
+        "code_postal": "13036",
+        "id": "1324"
+      },
+      {
+        "name": "دار يغمراسن",
+        "name_latin": "Dar Yaghmoracen",
+        "code_postal": "13032",
+        "id": "1325"
+      },
+      {
+        "name": "زناتة",
+        "name_latin": "Zenata",
+        "code_postal": "13051",
+        "id": "1326"
+      },
+      {
+        "name": "سبدو",
+        "name_latin": "Sebdou",
+        "code_postal": "13006",
+        "id": "1327"
+      },
+      {
+        "name": "سبعة شيوخ",
+        "name_latin": "Sebbaa Chioukh",
+        "code_postal": "13042",
+        "id": "1328"
+      },
+      {
+        "name": "سوق الثلاثاء",
+        "name_latin": "Souk Tleta",
+        "code_postal": "13078",
+        "id": "1329"
+      },
+      {
+        "name": "سيدي العبدلي",
+        "name_latin": "Sidi Abdelli",
+        "code_postal": "13019",
+        "id": "1330"
+      },
+      {
+        "name": "سيدي مجاهد",
+        "name_latin": "Sidi Medjahed",
+        "code_postal": "13044",
+        "id": "1331"
+      },
+      {
+        "name": "شتوان",
+        "name_latin": "Chetouane",
+        "code_postal": "13048",
+        "id": "1332"
+      },
+      {
+        "name": "صبرة",
+        "name_latin": "Sabra",
+        "code_postal": "13011",
+        "id": "1333"
+      },
+      {
+        "name": "عمير",
+        "name_latin": "Amieur",
+        "code_postal": "13058",
+        "id": "1334"
+      },
+      {
+        "name": "عين الكبيرة",
+        "name_latin": "Ain Kebira",
+        "code_postal": "13049",
+        "id": "1335"
+      },
+      {
+        "name": "عين النحالة",
+        "name_latin": "Ain Nehala",
+        "code_postal": "13054",
+        "id": "1336"
+      },
+      {
+        "name": "عين تالوت",
+        "name_latin": "Ain Tellout",
+        "code_postal": "13012",
+        "id": "1337"
+      },
+      {
+        "name": "عين غرابة",
+        "name_latin": "Ain Ghoraba",
+        "code_postal": "13023",
+        "id": "1338"
+      },
+      {
+        "name": "عين فتاح",
+        "name_latin": "Ain Fetah",
+        "code_postal": "13028",
+        "id": "1339"
+      },
+      {
+        "name": "عين فزة",
+        "name_latin": "Ain Fezza",
+        "code_postal": "13022",
+        "id": "1340"
+      },
+      {
+        "name": "عين يوسف",
+        "name_latin": "Ain Youcef",
+        "code_postal": "13013",
+        "id": "1341"
+      },
+      {
+        "name": "فلاوسن",
+        "name_latin": "Fellaoucene",
+        "code_postal": "13035",
+        "id": "1342"
+      },
+      {
+        "name": "مرسى بن مهيدي",
+        "name_latin": "Marsa Ben M'hidi",
+        "code_postal": "13017",
+        "id": "1343"
+      },
+      {
+        "name": "مسيردة الفواقة",
+        "name_latin": "M'sirda Fouaga",
+        "code_postal": "13024",
+        "id": "1344"
+      },
+      {
+        "name": "مغنية",
+        "name_latin": "Maghnia",
+        "code_postal": "13001",
+        "id": "1345"
+      },
+      {
+        "name": "منصورة",
+        "name_latin": "Mansourah",
+        "code_postal": "13062",
+        "id": "1346"
+      },
+      {
+        "name": "ندرومة",
+        "name_latin": "Nedroma",
+        "code_postal": "13004",
+        "id": "1347"
+      },
+      {
+        "name": "هنين",
+        "name_latin": "Honnaine",
+        "code_postal": "13015",
+        "id": "1348"
+      },
+      {
+        "name": "وادي الخضر",
+        "name_latin": "Oued Lakhdar",
+        "code_postal": "13068",
+        "id": "1349"
+      }
+    ]
+  },
+  {
+    "code": "14",
+    "name": "تيارت",
+    "name_latin": "Tiaret",
+    "communes": [
+      {
+        "name": "الرحوية",
+        "name_latin": "Rahouia",
+        "code_postal": "14005",
+        "id": "1401"
+      },
+      {
+        "name": "السبت",
+        "name_latin": "Sebt",
+        "code_postal": "21018",
+        "id": "1402"
+      },
+      {
+        "name": "السبعين",
+        "name_latin": "Sebaine",
+        "code_postal": "14030",
+        "id": "1403"
+      },
+      {
+        "name": "السوقر",
+        "name_latin": "Sougueur",
+        "code_postal": "14003",
+        "id": "1404"
+      },
+      {
+        "name": "الفايجة",
+        "name_latin": "Faidja",
+        "code_postal": "14049",
+        "id": "1405"
+      },
+      {
+        "name": "الناظورة",
+        "name_latin": "Nadorah",
+        "code_postal": "14058",
+        "id": "1406"
+      },
+      {
+        "name": "النعيمة",
+        "name_latin": "Naima",
+        "code_postal": "14060",
+        "id": "1407"
+      },
+      {
+        "name": "تاقدمت",
+        "name_latin": "Tagdempt",
+        "code_postal": "14068",
+        "id": "1408"
+      },
+      {
+        "name": "تخمرت",
+        "name_latin": "Takhemaret",
+        "code_postal": "14015",
+        "id": "1409"
+      },
+      {
+        "name": "توسنينة",
+        "name_latin": "Tousnina",
+        "code_postal": "14037",
+        "id": "1410"
+      },
+      {
+        "name": "تيارت",
+        "name_latin": "Tiaret",
+        "code_postal": "14000",
+        "id": "1411"
+      },
+      {
+        "name": "تيدة",
+        "name_latin": "Tidda",
+        "code_postal": "14071",
+        "id": "1412"
+      },
+      {
+        "name": "جبيلات الرصفاء",
+        "name_latin": "Djebilet Rosfa",
+        "code_postal": "14061",
+        "id": "1413"
+      },
+      {
+        "name": "جيلالي بن عمار",
+        "name_latin": "Djillali Ben Amar",
+        "code_postal": "14016",
+        "id": "1414"
+      },
+      {
+        "name": "دحموني",
+        "name_latin": "Dahmouni",
+        "code_postal": "14010",
+        "id": "1415"
+      },
+      {
+        "name": "سي عبد الغني",
+        "name_latin": "Si Abdelghani",
+        "code_postal": "14027",
+        "id": "1416"
+      },
+      {
+        "name": "سيدي بختي",
+        "name_latin": "Sidi Bakhti",
+        "code_postal": "14065",
+        "id": "1417"
+      },
+      {
+        "name": "سيدي حسني",
+        "name_latin": "Sidi Hosni",
+        "code_postal": "14029",
+        "id": "1418"
+      },
+      {
+        "name": "سيدي عبد الرحمن",
+        "name_latin": "Sidi Abderrahmane",
+        "code_postal": "02066",
+        "id": "1419"
+      },
+      {
+        "name": "سيدي علي ملال",
+        "name_latin": "Sidi Ali Mellal",
+        "code_postal": "14064",
+        "id": "1420"
+      },
+      {
+        "name": "شحيمة",
+        "name_latin": "Chehaima",
+        "code_postal": "14046",
+        "id": "1421"
+      },
+      {
+        "name": "عين الحديد",
+        "name_latin": "Ain El Hadid",
+        "code_postal": "14008",
+        "id": "1422"
+      },
+      {
+        "name": "عين الذهب",
+        "name_latin": "Ain Deheb",
+        "code_postal": "14007",
+        "id": "1423"
+      },
+      {
+        "name": "عين بوشقيف",
+        "name_latin": "Ain Bouchekif",
+        "code_postal": "14040",
+        "id": "1424"
+      },
+      {
+        "name": "عين دزاريت",
+        "name_latin": "Ain Dzarit",
+        "code_postal": "14017",
+        "id": "1425"
+      },
+      {
+        "name": "عين كرمس",
+        "name_latin": "Ain Kermes",
+        "code_postal": "14009",
+        "id": "1426"
+      },
+      {
+        "name": "فرندة",
+        "name_latin": "Frenda",
+        "code_postal": "14001",
+        "id": "1427"
+      },
+      {
+        "name": "قرطوفة",
+        "name_latin": "Guertoufa",
+        "code_postal": "14019",
+        "id": "1428"
+      },
+      {
+        "name": "مادنة",
+        "name_latin": "Madna",
+        "code_postal": "14055",
+        "id": "1429"
+      },
+      {
+        "name": "مدروسة",
+        "name_latin": "Medroussa",
+        "code_postal": "14023",
+        "id": "1430"
+      },
+      {
+        "name": "مدريسة",
+        "name_latin": "Medrissa",
+        "code_postal": "14013",
+        "id": "1431"
+      },
+      {
+        "name": "مشرع الصفا",
+        "name_latin": "Mechraa Safa",
+        "code_postal": "14012",
+        "id": "1432"
+      },
+      {
+        "name": "مغيلة",
+        "name_latin": "Meghila",
+        "code_postal": "14024",
+        "id": "1433"
+      },
+      {
+        "name": "ملاكو",
+        "name_latin": "Mellakou",
+        "code_postal": "14025",
+        "id": "1434"
+      },
+      {
+        "name": "مهدية",
+        "name_latin": "Mahdia",
+        "code_postal": "14004",
+        "id": "1435"
+      },
+      {
+        "name": "وادي ليلي",
+        "name_latin": "Oued Lilli",
+        "code_postal": "14014",
+        "id": "1436"
+      }
+    ]
+  },
+  {
+    "code": "15",
+    "name": "تيزي وزو",
+    "name_latin": "Tizi Ouzou",
+    "communes": [
+      {
+        "name": "إبودرارن",
+        "name_latin": "Iboudrarene",
+        "code_postal": "15073",
+        "id": "1501"
+      },
+      {
+        "name": "أبي يوسف",
+        "name_latin": "Abi-Youcef",
+        "code_postal": null,
+        "id": "1502"
+      },
+      {
+        "name": "أزفون",
+        "name_latin": "Azeffoun",
+        "code_postal": "15010",
+        "id": "1503"
+      },
+      {
+        "name": "أسي يوسف",
+        "name_latin": "Assi-Youcef",
+        "code_postal": "15025",
+        "id": "1504"
+      },
+      {
+        "name": "إعــكورن",
+        "name_latin": "Yakourene",
+        "code_postal": "15051",
+        "id": "1505"
+      },
+      {
+        "name": "أغريب",
+        "name_latin": "Aghribs",
+        "code_postal": "15021",
+        "id": "1506"
+      },
+      {
+        "name": "إفــرحــونان",
+        "name_latin": "Iferhounene",
+        "code_postal": "15013",
+        "id": "1507"
+      },
+      {
+        "name": "إفليـــسن",
+        "name_latin": "Iflissen",
+        "code_postal": "15068",
+        "id": "1508"
+      },
+      {
+        "name": "اقبيل",
+        "name_latin": "Akbil",
+        "code_postal": "15092",
+        "id": "1509"
+      },
+      {
+        "name": "أقرو",
+        "name_latin": "Akerrou",
+        "code_postal": "15027",
+        "id": "1510"
+      },
+      {
+        "name": "أقني قغران",
+        "name_latin": "Agouni-Gueghrane",
+        "code_postal": "15022",
+        "id": "1511"
+      },
+      {
+        "name": "الأربعــاء ناث إيراثن",
+        "name_latin": "Larbaa Nath Irathen",
+        "code_postal": "15006",
+        "id": "1512"
+      },
+      {
+        "name": "إمســوحال",
+        "name_latin": "Imsouhal",
+        "code_postal": "15023",
+        "id": "1513"
+      },
+      {
+        "name": "أيت أومالو",
+        "name_latin": "Ait-Oumalou",
+        "code_postal": null,
+        "id": "1514"
+      },
+      {
+        "name": "أيت بــوادو",
+        "name_latin": "Ait Bouaddou",
+        "code_postal": "15024",
+        "id": "1515"
+      },
+      {
+        "name": "أيت بومهدي",
+        "name_latin": "Ait Boumahdi",
+        "code_postal": "15084",
+        "id": "1516"
+      },
+      {
+        "name": "أيت تودرت",
+        "name_latin": "Ait-Toudert",
+        "code_postal": "15062",
+        "id": "1517"
+      },
+      {
+        "name": "أيت خليلي",
+        "name_latin": "Ait Khellili",
+        "code_postal": "15079",
+        "id": "1518"
+      },
+      {
+        "name": "أيت شافع",
+        "name_latin": "Ait-Chafaa",
+        "code_postal": "15059",
+        "id": "1519"
+      },
+      {
+        "name": "أيت عقـواشة",
+        "name_latin": "Ait Aggouacha",
+        "code_postal": "15058",
+        "id": "1520"
+      },
+      {
+        "name": "أيت عيسى ميمون",
+        "name_latin": "Ait-Aissa-Mimoun",
+        "code_postal": "15032",
+        "id": "1521"
+      },
+      {
+        "name": "أيت محمود",
+        "name_latin": "Ait-Mahmoud",
+        "code_postal": "15044",
+        "id": "1522"
+      },
+      {
+        "name": "أيت يحي موسى",
+        "name_latin": "Ait Yahia Moussa",
+        "code_postal": "15026",
+        "id": "1523"
+      },
+      {
+        "name": "أيت يحيى",
+        "name_latin": "Ait-Yahia",
+        "code_postal": "15072",
+        "id": "1524"
+      },
+      {
+        "name": "إيجــار",
+        "name_latin": "Idjeur",
+        "code_postal": "15035",
+        "id": "1525"
+      },
+      {
+        "name": "إيرجـــن",
+        "name_latin": "Irdjen",
+        "code_postal": "15038",
+        "id": "1526"
+      },
+      {
+        "name": "إيفيغاء",
+        "name_latin": "Ifigha",
+        "code_postal": "15034",
+        "id": "1527"
+      },
+      {
+        "name": "إيلولة أومـــالو",
+        "name_latin": "Illoula Oumalou",
+        "code_postal": "15037",
+        "id": "1528"
+      },
+      {
+        "name": "إيلـيــلتـن",
+        "name_latin": "Illilten",
+        "code_postal": "15036",
+        "id": "1529"
+      },
+      {
+        "name": "بني دوالة",
+        "name_latin": "Beni-Douala",
+        "code_postal": "15011",
+        "id": "1530"
+      },
+      {
+        "name": "بنــــي زمنزار",
+        "name_latin": "Beni Zmenzer",
+        "code_postal": "15028",
+        "id": "1531"
+      },
+      {
+        "name": "بني زيكــي",
+        "name_latin": "Beni-Zikki",
+        "code_postal": "15118",
+        "id": "1532"
+      },
+      {
+        "name": "بني عيسي",
+        "name_latin": "Beni-Aissi",
+        "code_postal": "15069",
+        "id": "1533"
+      },
+      {
+        "name": "بني يني",
+        "name_latin": "Beni-Yenni",
+        "code_postal": "15029",
+        "id": "1534"
+      },
+      {
+        "name": "بوجيمة",
+        "name_latin": "Boudjima",
+        "code_postal": "15030",
+        "id": "1535"
+      },
+      {
+        "name": "بوزقــن",
+        "name_latin": "Bouzeguene",
+        "code_postal": "15009",
+        "id": "1536"
+      },
+      {
+        "name": "بوغني",
+        "name_latin": "Boghni",
+        "code_postal": "15003",
+        "id": "1537"
+      },
+      {
+        "name": "بونوح",
+        "name_latin": "Bounouh",
+        "code_postal": "15031",
+        "id": "1538"
+      },
+      {
+        "name": "تادمايت",
+        "name_latin": "Tadmait",
+        "code_postal": "15018",
+        "id": "1539"
+      },
+      {
+        "name": "تيرمتين",
+        "name_latin": "Tirmitine",
+        "code_postal": "15048",
+        "id": "1540"
+      },
+      {
+        "name": "تيزي راشد",
+        "name_latin": "Tizi-Rached",
+        "code_postal": "15050",
+        "id": "1541"
+      },
+      {
+        "name": "تيزي غنيف",
+        "name_latin": "Tizi-Gheniff",
+        "code_postal": "15020",
+        "id": "1542"
+      },
+      {
+        "name": "تيزي نثلاثة",
+        "name_latin": "Tizi N'tleta",
+        "code_postal": "15049",
+        "id": "1543"
+      },
+      {
+        "name": "تيزي وزو",
+        "name_latin": "Tizi-Ouzou",
+        "code_postal": "15000",
+        "id": "1544"
+      },
+      {
+        "name": "تيقـزيرت",
+        "name_latin": "Tigzirt",
+        "code_postal": "15019",
+        "id": "1545"
+      },
+      {
+        "name": "تيمـيزار",
+        "name_latin": "Timizart",
+        "code_postal": "15039",
+        "id": "1546"
+      },
+      {
+        "name": "ذراع الميزان",
+        "name_latin": "Draa-El-Mizan",
+        "code_postal": "15005",
+        "id": "1547"
+      },
+      {
+        "name": "ذراع بن خدة",
+        "name_latin": "Draa-Ben-Khedda",
+        "code_postal": "15004",
+        "id": "1548"
+      },
+      {
+        "name": "زكري",
+        "name_latin": "Zekri",
+        "code_postal": "15076",
+        "id": "1549"
+      },
+      {
+        "name": "سوق الإثنين",
+        "name_latin": "Souk-El-Tenine",
+        "code_postal": "15123",
+        "id": "1550"
+      },
+      {
+        "name": "سيدي نعمان",
+        "name_latin": "Sidi Namane",
+        "code_postal": "15042",
+        "id": "1551"
+      },
+      {
+        "name": "صوامـــع",
+        "name_latin": "Souama",
+        "code_postal": "15043",
+        "id": "1552"
+      },
+      {
+        "name": "عزازقة",
+        "name_latin": "Azazga",
+        "code_postal": "15001",
+        "id": "1553"
+      },
+      {
+        "name": "عين الحمام",
+        "name_latin": "Ain-El-Hammam",
+        "code_postal": "15002",
+        "id": "1554"
+      },
+      {
+        "name": "عين الزاوية",
+        "name_latin": "Ain-Zaouia",
+        "code_postal": "15055",
+        "id": "1555"
+      },
+      {
+        "name": "فريحة",
+        "name_latin": "Freha",
+        "code_postal": "15012",
+        "id": "1556"
+      },
+      {
+        "name": "فريقات",
+        "name_latin": "Frikat",
+        "code_postal": "15067",
+        "id": "1557"
+      },
+      {
+        "name": "ماكودة",
+        "name_latin": "Makouda",
+        "code_postal": "15040",
+        "id": "1558"
+      },
+      {
+        "name": "مشطراس",
+        "name_latin": "Mechtras",
+        "code_postal": "15041",
+        "id": "1559"
+      },
+      {
+        "name": "معـــاتقة",
+        "name_latin": "Maatkas",
+        "code_postal": "15017",
+        "id": "1560"
+      },
+      {
+        "name": "مقــلع",
+        "name_latin": "Mekla",
+        "code_postal": "15014",
+        "id": "1561"
+      },
+      {
+        "name": "مكيرة",
+        "name_latin": "M'kira",
+        "code_postal": "15046",
+        "id": "1562"
+      },
+      {
+        "name": "ميزرانـــة",
+        "name_latin": "Mizrana",
+        "code_postal": "15061",
+        "id": "1563"
+      },
+      {
+        "name": "واسيف",
+        "name_latin": "Ouacif",
+        "code_postal": "15015",
+        "id": "1564"
+      },
+      {
+        "name": "واضية",
+        "name_latin": "Ouadhias",
+        "code_postal": "15016",
+        "id": "1565"
+      },
+      {
+        "name": "واقنون",
+        "name_latin": "Ouaguenoun",
+        "code_postal": "15045",
+        "id": "1566"
+      },
+      {
+        "name": "يطــافن",
+        "name_latin": "Yatafene",
+        "code_postal": "15052",
+        "id": "1567"
+      }
+    ]
+  },
+  {
+    "code": "16",
+    "name": "الجزائر",
+    "name_latin": "Alger",
+    "communes": [
+      {
+        "name": "ابن عكنون",
+        "name_latin": "Ben Aknoun",
+        "code_postal": "16028",
+        "id": "1601"
+      },
+      {
+        "name": "الابيار",
+        "name_latin": "El Biar",
+        "code_postal": "16003",
+        "id": "1602"
+      },
+      {
+        "name": "الجزائر الوسطى",
+        "name_latin": "Alger Centre",
+        "code_postal": "16000",
+        "id": "1603"
+      },
+      {
+        "name": "الحراش",
+        "name_latin": "El Harrach",
+        "code_postal": "16004",
+        "id": "1604"
+      },
+      {
+        "name": "الحمامات",
+        "name_latin": "Hammamet",
+        "code_postal": "12016",
+        "id": "1605"
+      },
+      {
+        "name": "الخرايسية",
+        "name_latin": "Khraissia",
+        "code_postal": "16091",
+        "id": "1606"
+      },
+      {
+        "name": "الدار البيضاء",
+        "name_latin": "Dar El Beida",
+        "code_postal": "16033",
+        "id": "1607"
+      },
+      {
+        "name": "الدرارية",
+        "name_latin": "Draria",
+        "code_postal": "16050",
+        "id": "1608"
+      },
+      {
+        "name": "الدويرة",
+        "name_latin": "Douira",
+        "code_postal": "16049",
+        "id": "1609"
+      },
+      {
+        "name": "الرايس حميدو",
+        "name_latin": "Rais Hamidou",
+        "code_postal": "16060",
+        "id": "1610"
+      },
+      {
+        "name": "الرحمانية",
+        "name_latin": "Rahmania",
+        "code_postal": "16121",
+        "id": "1611"
+      },
+      {
+        "name": "الرويبة",
+        "name_latin": "Rouiba",
+        "code_postal": "16017",
+        "id": "1612"
+      },
+      {
+        "name": "السحاولة",
+        "name_latin": "Sehaoula",
+        "code_postal": "16095",
+        "id": "1613"
+      },
+      {
+        "name": "الشراقة",
+        "name_latin": "Cheraga",
+        "code_postal": "16014",
+        "id": "1614"
+      },
+      {
+        "name": "العاشور",
+        "name_latin": "El Achour",
+        "code_postal": "16104",
+        "id": "1615"
+      },
+      {
+        "name": "القبة",
+        "name_latin": "Kouba",
+        "code_postal": "16006",
+        "id": "1616"
+      },
+      {
+        "name": "القصبة",
+        "name_latin": "Casbah",
+        "code_postal": "16001",
+        "id": "1617"
+      },
+      {
+        "name": "الكاليتوس",
+        "name_latin": "Les Eucalyptus",
+        "code_postal": "16057",
+        "id": "1618"
+      },
+      {
+        "name": "المحمدية",
+        "name_latin": "Mohammadia",
+        "code_postal": "16058",
+        "id": "1619"
+      },
+      {
+        "name": "المدنية",
+        "name_latin": "El Madania",
+        "code_postal": "16015",
+        "id": "1620"
+      },
+      {
+        "name": "المرادية",
+        "name_latin": "El Mouradia",
+        "code_postal": "16035",
+        "id": "1621"
+      },
+      {
+        "name": "المرسى",
+        "name_latin": "El Marsa",
+        "code_postal": "02015",
+        "id": "1622"
+      },
+      {
+        "name": "المعالمة",
+        "name_latin": "Maalma",
+        "code_postal": "16093",
+        "id": "1623"
+      },
+      {
+        "name": "المغارية",
+        "name_latin": "El Magharia",
+        "code_postal": "16053",
+        "id": "1624"
+      },
+      {
+        "name": "اولاد شبل",
+        "name_latin": "Ouled Chebel",
+        "code_postal": "16118",
+        "id": "1625"
+      },
+      {
+        "name": "اولاد فايت",
+        "name_latin": "Ouled Fayet",
+        "code_postal": "16094",
+        "id": "1626"
+      },
+      {
+        "name": "باب الزوار",
+        "name_latin": "Bab Ezzouar",
+        "code_postal": "16024",
+        "id": "1627"
+      },
+      {
+        "name": "باب الوادي",
+        "name_latin": "Bab El Oued",
+        "code_postal": "16008",
+        "id": "1628"
+      },
+      {
+        "name": "بابا حسن",
+        "name_latin": "Baba Hassen",
+        "code_postal": "16081",
+        "id": "1629"
+      },
+      {
+        "name": "بئر توتة",
+        "name_latin": "Bir Touta",
+        "code_postal": "16045",
+        "id": "1630"
+      },
+      {
+        "name": "بئر خادم",
+        "name_latin": "Birkhadem",
+        "code_postal": "16029",
+        "id": "1631"
+      },
+      {
+        "name": "بئر مراد رايس",
+        "name_latin": "Bir Mourad Rais",
+        "code_postal": "16013",
+        "id": "1632"
+      },
+      {
+        "name": "باش جراح",
+        "name_latin": "Bachedjerah",
+        "code_postal": "16026",
+        "id": "1633"
+      },
+      {
+        "name": "براقي",
+        "name_latin": "Baraki",
+        "code_postal": "16027",
+        "id": "1634"
+      },
+      {
+        "name": "برج البحري",
+        "name_latin": "Bordj El Bahri",
+        "code_postal": "16046",
+        "id": "1635"
+      },
+      {
+        "name": "برج الكيفان",
+        "name_latin": "Bordj El Kiffan",
+        "code_postal": "16031",
+        "id": "1636"
+      },
+      {
+        "name": "بني مسوس",
+        "name_latin": "Beni Messous",
+        "code_postal": "16044",
+        "id": "1637"
+      },
+      {
+        "name": "بوروبة",
+        "name_latin": "Bourouba",
+        "code_postal": "16054",
+        "id": "1638"
+      },
+      {
+        "name": "بوزريعة",
+        "name_latin": "Bouzareah",
+        "code_postal": "16032",
+        "id": "1639"
+      },
+      {
+        "name": "بولوغين بن زيري",
+        "name_latin": "Bologhine Ibnou Ziri",
+        "code_postal": "16030",
+        "id": "1640"
+      },
+      {
+        "name": "تسالة المرجة",
+        "name_latin": "Tessala El Merdja",
+        "code_postal": "16099",
+        "id": "1641"
+      },
+      {
+        "name": "جسر قسنطينة",
+        "name_latin": "Djasr Kasentina",
+        "code_postal": "16048",
+        "id": "1642"
+      },
+      {
+        "name": "حسين داي",
+        "name_latin": "Hussein Dey",
+        "code_postal": "16005",
+        "id": "1643"
+      },
+      {
+        "name": "حيدرة",
+        "name_latin": "Hydra",
+        "code_postal": "16016",
+        "id": "1644"
+      },
+      {
+        "name": "دالي ابراهيم",
+        "name_latin": "Dely Ibrahim",
+        "code_postal": "16047",
+        "id": "1645"
+      },
+      {
+        "name": "رغاية",
+        "name_latin": "Reghaia",
+        "code_postal": "16036",
+        "id": "1646"
+      },
+      {
+        "name": "زرالدة",
+        "name_latin": "Zeralda",
+        "code_postal": "16063",
+        "id": "1647"
+      },
+      {
+        "name": "سطاوالي",
+        "name_latin": "Staoueli",
+        "code_postal": "16062",
+        "id": "1648"
+      },
+      {
+        "name": "سويدانية",
+        "name_latin": "Souidania",
+        "code_postal": "16097",
+        "id": "1649"
+      },
+      {
+        "name": "سيدي امحمد",
+        "name_latin": "Sidi M'hamed",
+        "code_postal": "16002",
+        "id": "1650"
+      },
+      {
+        "name": "سيدي موسى",
+        "name_latin": "Sidi Moussa",
+        "code_postal": "16189",
+        "id": "1651"
+      },
+      {
+        "name": "عين بنيان",
+        "name_latin": "Ain Benian",
+        "code_postal": "16018",
+        "id": "1652"
+      },
+      {
+        "name": "عين طاية",
+        "name_latin": "Ain Taya",
+        "code_postal": "16019",
+        "id": "1653"
+      },
+      {
+        "name": "محمد بلوزداد",
+        "name_latin": "Mohamed Belouzdad",
+        "code_postal": "16151",
+        "id": "1654"
+      },
+      {
+        "name": "هراوة",
+        "name_latin": "Herraoua",
+        "code_postal": "16116",
+        "id": "1655"
+      },
+      {
+        "name": "وادي السمار",
+        "name_latin": "Oued Smar",
+        "code_postal": "16059",
+        "id": "1656"
+      },
+      {
+        "name": "وادي قريش",
+        "name_latin": "Oued Koriche",
+        "code_postal": "16182",
+        "id": "1657"
+      }
+    ]
+  },
+  {
+    "code": "17",
+    "name": "الجلفة",
+    "name_latin": "Djelfa",
+    "communes": [
+      {
+        "name": "الادريسية",
+        "name_latin": "El Idrissia",
+        "code_postal": "17020",
+        "id": "1701"
+      },
+      {
+        "name": "الجلفة",
+        "name_latin": "Djelfa",
+        "code_postal": "17000",
+        "id": "1702"
+      },
+      {
+        "name": "الشارف",
+        "name_latin": "Charef",
+        "code_postal": "17015",
+        "id": "1703"
+      },
+      {
+        "name": "القديد",
+        "name_latin": "El Guedid",
+        "code_postal": "17019",
+        "id": "1704"
+      },
+      {
+        "name": "بن يعقوب",
+        "name_latin": "Benyagoub",
+        "code_postal": "17026",
+        "id": "1705"
+      },
+      {
+        "name": "تعظميت",
+        "name_latin": "Taadmit",
+        "code_postal": "17037",
+        "id": "1706"
+      },
+      {
+        "name": "حاسي العش",
+        "name_latin": "Hassi El Euch",
+        "code_postal": "17032",
+        "id": "1707"
+      },
+      {
+        "name": "حاسي بحبح",
+        "name_latin": "Hassi Bahbah",
+        "code_postal": "17002",
+        "id": "1708"
+      },
+      {
+        "name": "دار الشيوخ",
+        "name_latin": "Dar Chioukh",
+        "code_postal": "17006",
+        "id": "1709"
+      },
+      {
+        "name": "دويس",
+        "name_latin": "Douis",
+        "code_postal": "17030",
+        "id": "1710"
+      },
+      {
+        "name": "زعفران",
+        "name_latin": "Zaafrane",
+        "code_postal": "17038",
+        "id": "1711"
+      },
+      {
+        "name": "زكار",
+        "name_latin": "Zaccar",
+        "code_postal": "17065",
+        "id": "1712"
+      },
+      {
+        "name": "سيدي بايزيد",
+        "name_latin": "Sidi Baizid",
+        "code_postal": "17052",
+        "id": "1713"
+      },
+      {
+        "name": "عين الإبل",
+        "name_latin": "Ain El Ibel",
+        "code_postal": "17011",
+        "id": "1714"
+      },
+      {
+        "name": "عين الشهداء",
+        "name_latin": "Ain Chouhada",
+        "code_postal": "17039",
+        "id": "1715"
+      },
+      {
+        "name": "عين معبد",
+        "name_latin": "Ain Maabed",
+        "code_postal": "17025",
+        "id": "1716"
+      },
+      {
+        "name": "مجبارة",
+        "name_latin": "Moudjebara",
+        "code_postal": "17058",
+        "id": "1717"
+      },
+      {
+        "name": "مليليحة",
+        "name_latin": "M'liliha",
+        "code_postal": "17036",
+        "id": "1718"
+      }
+    ]
+  },
+  {
+    "code": "18",
+    "name": "جيجل",
+    "name_latin": "Jijel",
+    "communes": [
+      {
+        "name": "أراقن سويسي",
+        "name_latin": "Erraguene Souissi",
+        "code_postal": "18032",
+        "id": "1801"
+      },
+      {
+        "name": "الامير عبد القادر",
+        "name_latin": "Emir Abdelkader",
+        "code_postal": "18010",
+        "id": "1802"
+      },
+      {
+        "name": "الجمعة بني حبيبي",
+        "name_latin": "Djemaa Beni Habibi",
+        "code_postal": "18029",
+        "id": "1803"
+      },
+      {
+        "name": "السطارة",
+        "name_latin": "Settara",
+        "code_postal": "18016",
+        "id": "1804"
+      },
+      {
+        "name": "الشحنة",
+        "name_latin": "Chahna",
+        "code_postal": "18027",
+        "id": "1805"
+      },
+      {
+        "name": "الشقفة",
+        "name_latin": "Chekfa",
+        "code_postal": "18003",
+        "id": "1806"
+      },
+      {
+        "name": "الطاهير",
+        "name_latin": "Taher",
+        "code_postal": "18002",
+        "id": "1807"
+      },
+      {
+        "name": "العنصر",
+        "name_latin": "El Ancer",
+        "code_postal": "18004",
+        "id": "1808"
+      },
+      {
+        "name": "العوانة",
+        "name_latin": "El Aouana",
+        "code_postal": "18005",
+        "id": "1809"
+      },
+      {
+        "name": "القنار نشفي",
+        "name_latin": "El Kennar Nouchfi",
+        "code_postal": "18030",
+        "id": "1810"
+      },
+      {
+        "name": "الميلية",
+        "name_latin": "El Milia",
+        "code_postal": "18001",
+        "id": "1811"
+      },
+      {
+        "name": "أولاد رابح",
+        "name_latin": "Ouled Rabah",
+        "code_postal": "18046",
+        "id": "1812"
+      },
+      {
+        "name": "أولاد يحيى خدروش",
+        "name_latin": "Ouled Yahia Khadrouch",
+        "code_postal": "18021",
+        "id": "1813"
+      },
+      {
+        "name": "برج الطهر",
+        "name_latin": "Bordj T'har",
+        "code_postal": "18041",
+        "id": "1814"
+      },
+      {
+        "name": "بودريعة بني ياجيس",
+        "name_latin": "Boudria Beniyadjis",
+        "code_postal": "18025",
+        "id": "1815"
+      },
+      {
+        "name": "بوراوي بلهادف",
+        "name_latin": "Bouraoui Belhadef",
+        "code_postal": "18023",
+        "id": "1816"
+      },
+      {
+        "name": "بوسيف أولاد عسكر",
+        "name_latin": "Boussif Ouled Askeur",
+        "code_postal": "18036",
+        "id": "1817"
+      },
+      {
+        "name": "تاكسنة",
+        "name_latin": "Texenna",
+        "code_postal": "18006",
+        "id": "1818"
+      },
+      {
+        "name": "جيجل",
+        "name_latin": "Jijel",
+        "code_postal": "18000",
+        "id": "1819"
+      },
+      {
+        "name": "جيملة",
+        "name_latin": "Djimla",
+        "code_postal": "18031",
+        "id": "1820"
+      },
+      {
+        "name": "خيري واد عجول",
+        "name_latin": "Khiri Oued Adjoul",
+        "code_postal": "18024",
+        "id": "1821"
+      },
+      {
+        "name": "زيامة منصورية",
+        "name_latin": "Ziama Mansouriah",
+        "code_postal": "18007",
+        "id": "1822"
+      },
+      {
+        "name": "سلمى بن زيادة",
+        "name_latin": "Selma Benziada",
+        "code_postal": "18049",
+        "id": "1823"
+      },
+      {
+        "name": "سيدي عبد العزيز",
+        "name_latin": "Sidi Abdelaziz",
+        "code_postal": "18017",
+        "id": "1824"
+      },
+      {
+        "name": "سيدي معروف",
+        "name_latin": "Sidi Marouf",
+        "code_postal": "18018",
+        "id": "1825"
+      },
+      {
+        "name": "غبالة",
+        "name_latin": "Ghebala",
+        "code_postal": "18026",
+        "id": "1826"
+      },
+      {
+        "name": "قاوس",
+        "name_latin": "Kaous",
+        "code_postal": "18015",
+        "id": "1827"
+      },
+      {
+        "name": "وجانة",
+        "name_latin": "Oudjana",
+        "code_postal": "18047",
+        "id": "1828"
+      }
+    ]
+  },
+  {
+    "code": "19",
+    "name": "سطيف",
+    "name_latin": "Sétif",
+    "communes": [
+      {
+        "name": "التلة",
+        "name_latin": "Tella",
+        "code_postal": "19087",
+        "id": "1901"
+      },
+      {
+        "name": "الحامة",
+        "name_latin": "Hamma",
+        "code_postal": "19015",
+        "id": "1902"
+      },
+      {
+        "name": "الدهامشة",
+        "name_latin": "Dehamcha",
+        "code_postal": "19041",
+        "id": "1903"
+      },
+      {
+        "name": "الرصفة",
+        "name_latin": "Rosfa",
+        "code_postal": "19060",
+        "id": "1904"
+      },
+      {
+        "name": "الطاية",
+        "name_latin": "Taya",
+        "code_postal": "19067",
+        "id": "1905"
+      },
+      {
+        "name": "العلمة",
+        "name_latin": "El Eulma",
+        "code_postal": "19001",
+        "id": "1906"
+      },
+      {
+        "name": "الولجة",
+        "name_latin": "El-Ouldja",
+        "code_postal": "19046",
+        "id": "1907"
+      },
+      {
+        "name": "أوريسيا",
+        "name_latin": "El Ouricia",
+        "code_postal": "19047",
+        "id": "1908"
+      },
+      {
+        "name": "أولاد تبان",
+        "name_latin": "Ouled Tebben",
+        "code_postal": "19030",
+        "id": "1909"
+      },
+      {
+        "name": "أولاد سي أحمد",
+        "name_latin": "Ouled Si Ahmed",
+        "code_postal": "19121",
+        "id": "1910"
+      },
+      {
+        "name": "أولاد صابر",
+        "name_latin": "Ouled Sabor",
+        "code_postal": "19120",
+        "id": "1911"
+      },
+      {
+        "name": "أولاد عدوان",
+        "name_latin": "Ouled Addouane",
+        "code_postal": "19053",
+        "id": "1912"
+      },
+      {
+        "name": "ايت تيزي",
+        "name_latin": "Ait-Tizi",
+        "code_postal": "19077",
+        "id": "1913"
+      },
+      {
+        "name": "أيت نوال مزادة",
+        "name_latin": "Ait Naoual Mezada",
+        "code_postal": "19076",
+        "id": "1914"
+      },
+      {
+        "name": "بابور",
+        "name_latin": "Babor",
+        "code_postal": "19020",
+        "id": "1915"
+      },
+      {
+        "name": "بئر العرش",
+        "name_latin": "Bir-El-Arch",
+        "code_postal": "19024",
+        "id": "1916"
+      },
+      {
+        "name": "بئر حدادة",
+        "name_latin": "Bir Haddada",
+        "code_postal": "19039",
+        "id": "1917"
+      },
+      {
+        "name": "بازر سكرة",
+        "name_latin": "Bazer-Sakra",
+        "code_postal": "19036",
+        "id": "1918"
+      },
+      {
+        "name": "بلاعة",
+        "name_latin": "Bellaa",
+        "code_postal": "19022",
+        "id": "1919"
+      },
+      {
+        "name": "بني شبانة",
+        "name_latin": "Beni Chebana",
+        "code_postal": "19031",
+        "id": "1920"
+      },
+      {
+        "name": "بني عزيز",
+        "name_latin": "Beni-Aziz",
+        "code_postal": "19010",
+        "id": "1921"
+      },
+      {
+        "name": "بني فودة",
+        "name_latin": "Beni Fouda",
+        "code_postal": "19023",
+        "id": "1922"
+      },
+      {
+        "name": "بني موحلي",
+        "name_latin": "Beni-Mouhli",
+        "code_postal": "19038",
+        "id": "1923"
+      },
+      {
+        "name": "بني ورتيلان",
+        "name_latin": "Beni Ourtilane",
+        "code_postal": "19011",
+        "id": "1924"
+      },
+      {
+        "name": "بني وسين",
+        "name_latin": "Beni Oussine",
+        "code_postal": "19037",
+        "id": "1925"
+      },
+      {
+        "name": "بوسلام",
+        "name_latin": "Bousselam",
+        "code_postal": "19052",
+        "id": "1926"
+      },
+      {
+        "name": "بوطالب",
+        "name_latin": "Boutaleb",
+        "code_postal": "19089",
+        "id": "1927"
+      },
+      {
+        "name": "بوعنداس",
+        "name_latin": "Bouandas",
+        "code_postal": "19012",
+        "id": "1928"
+      },
+      {
+        "name": "بوقاعة",
+        "name_latin": "Bougaa",
+        "code_postal": "19003",
+        "id": "1929"
+      },
+      {
+        "name": "بيضاء برج",
+        "name_latin": "Beidha Bordj",
+        "code_postal": "19021",
+        "id": "1930"
+      },
+      {
+        "name": "تاشودة",
+        "name_latin": "Tachouda",
+        "code_postal": "19125",
+        "id": "1931"
+      },
+      {
+        "name": "تالة إيفاسن",
+        "name_latin": "Tala-Ifacene",
+        "code_postal": "19069",
+        "id": "1932"
+      },
+      {
+        "name": "تيزي نبشار",
+        "name_latin": "Tizi N'bechar",
+        "code_postal": "19068",
+        "id": "1933"
+      },
+      {
+        "name": "جميلة",
+        "name_latin": "Djemila",
+        "code_postal": "19025",
+        "id": "1934"
+      },
+      {
+        "name": "حربيل",
+        "name_latin": "Harbil",
+        "code_postal": "19032",
+        "id": "1935"
+      },
+      {
+        "name": "حمام السخنة",
+        "name_latin": "Hamam Soukhna",
+        "code_postal": "19059",
+        "id": "1936"
+      },
+      {
+        "name": "حمام قرقور",
+        "name_latin": "Hammam Guergour",
+        "code_postal": "19051",
+        "id": "1937"
+      },
+      {
+        "name": "ذراع قبيلة",
+        "name_latin": "Draa-Kebila",
+        "code_postal": "19029",
+        "id": "1938"
+      },
+      {
+        "name": "سرج الغول",
+        "name_latin": "Serdj-El-Ghoul",
+        "code_postal": "19086",
+        "id": "1939"
+      },
+      {
+        "name": "سطيف",
+        "name_latin": "Setif",
+        "code_postal": "19000",
+        "id": "1940"
+      },
+      {
+        "name": "صالح باي",
+        "name_latin": "Salah Bey",
+        "code_postal": "19013",
+        "id": "1941"
+      },
+      {
+        "name": "عموشة",
+        "name_latin": "Amoucha",
+        "code_postal": "19009",
+        "id": "1942"
+      },
+      {
+        "name": "عين أرنات",
+        "name_latin": "Ain Arnat",
+        "code_postal": "19017",
+        "id": "1943"
+      },
+      {
+        "name": "عين أزال",
+        "name_latin": "Ain Azel",
+        "code_postal": "19007",
+        "id": "1944"
+      },
+      {
+        "name": "عين الحجر",
+        "name_latin": "Ain Lahdjar",
+        "code_postal": "19018",
+        "id": "1945"
+      },
+      {
+        "name": "عين الروى",
+        "name_latin": "Ain-Roua",
+        "code_postal": "19019",
+        "id": "1946"
+      },
+      {
+        "name": "عين السبت",
+        "name_latin": "Ain-Sebt",
+        "code_postal": "19033",
+        "id": "1947"
+      },
+      {
+        "name": "عين الكبيرة",
+        "name_latin": "Ain El Kebira",
+        "code_postal": "19008",
+        "id": "1948"
+      },
+      {
+        "name": "عين عباسة",
+        "name_latin": "Ain Abessa",
+        "code_postal": "19016",
+        "id": "1949"
+      },
+      {
+        "name": "عين لقراج",
+        "name_latin": "Ain-Legradj",
+        "code_postal": "19035",
+        "id": "1950"
+      },
+      {
+        "name": "عين ولمان",
+        "name_latin": "Ain Oulmene",
+        "code_postal": "19002",
+        "id": "1951"
+      },
+      {
+        "name": "قجال",
+        "name_latin": "Guidjel",
+        "code_postal": "19027",
+        "id": "1952"
+      },
+      {
+        "name": "قصر الابطال",
+        "name_latin": "Kasr El Abtal",
+        "code_postal": "19054",
+        "id": "1953"
+      },
+      {
+        "name": "قلال",
+        "name_latin": "Guellal",
+        "code_postal": "19050",
+        "id": "1954"
+      },
+      {
+        "name": "قلتة زرقاء",
+        "name_latin": "Guelta Zerka",
+        "code_postal": null,
+        "id": "1955"
+      },
+      {
+        "name": "قنزات",
+        "name_latin": "Guenzet",
+        "code_postal": "19026",
+        "id": "1956"
+      },
+      {
+        "name": "ماوكلان",
+        "name_latin": "Maouaklane",
+        "code_postal": "19028",
+        "id": "1957"
+      },
+      {
+        "name": "مزلوق",
+        "name_latin": "Mezloug",
+        "code_postal": "19056",
+        "id": "1958"
+      },
+      {
+        "name": "معاوية",
+        "name_latin": "Maaouia",
+        "code_postal": "19055",
+        "id": "1959"
+      },
+      {
+        "name": "واد البارد",
+        "name_latin": "Oued El Bared",
+        "code_postal": "19115",
+        "id": "1960"
+      }
+    ]
+  },
+  {
+    "code": "20",
+    "name": "سعيدة",
+    "name_latin": "Saïda",
+    "communes": [
+      {
+        "name": "الحساسنة",
+        "name_latin": "El Hassasna",
+        "code_postal": "20003",
+        "id": "2001"
+      },
+      {
+        "name": "المعمورة",
+        "name_latin": "Maamora",
+        "code_postal": "10071",
+        "id": "2002"
+      },
+      {
+        "name": "أولاد إبراهيم",
+        "name_latin": "Ouled Brahim",
+        "code_postal": "20002",
+        "id": "2003"
+      },
+      {
+        "name": "أولاد خالد",
+        "name_latin": "Ouled Khaled",
+        "code_postal": "20004",
+        "id": "2004"
+      },
+      {
+        "name": "تيرسين",
+        "name_latin": "Tircine",
+        "code_postal": "20035",
+        "id": "2005"
+      },
+      {
+        "name": "دوي ثابت",
+        "name_latin": "Doui Thabet",
+        "code_postal": "20023",
+        "id": "2006"
+      },
+      {
+        "name": "سعيدة",
+        "name_latin": "Saida",
+        "code_postal": "20000",
+        "id": "2007"
+      },
+      {
+        "name": "سيدي احمد",
+        "name_latin": "Sidi Ahmed",
+        "code_postal": "20012",
+        "id": "2008"
+      },
+      {
+        "name": "سيدي بوبكر",
+        "name_latin": "Sidi Boubekeur",
+        "code_postal": "20007",
+        "id": "2009"
+      },
+      {
+        "name": "سيدي عمر",
+        "name_latin": "Sidi Amar",
+        "code_postal": "20019",
+        "id": "2010"
+      },
+      {
+        "name": "عين الحجر",
+        "name_latin": "Ain El Hadjar",
+        "code_postal": "10031",
+        "id": "2011"
+      },
+      {
+        "name": "عين السخونة",
+        "name_latin": "Ain Sekhouna",
+        "code_postal": "20009",
+        "id": "2012"
+      },
+      {
+        "name": "عين السلطان",
+        "name_latin": "Ain Soltane",
+        "code_postal": "20029",
+        "id": "2013"
+      },
+      {
+        "name": "مولاي العربي",
+        "name_latin": "Moulay Larbi",
+        "code_postal": "20014",
+        "id": "2014"
+      },
+      {
+        "name": "هونت",
+        "name_latin": "Hounet",
+        "code_postal": "20025",
+        "id": "2015"
+      },
+      {
+        "name": "يوب",
+        "name_latin": "Youb",
+        "code_postal": "20008",
+        "id": "2016"
+      }
+    ]
+  },
+  {
+    "code": "21",
+    "name": "سكيكدة",
+    "name_latin": "Skikda",
+    "communes": [
+      {
+        "name": "الحدائق",
+        "name_latin": "El Hadaiek",
+        "code_postal": "21015",
+        "id": "2101"
+      },
+      {
+        "name": "الحروش",
+        "name_latin": "El Arrouch",
+        "code_postal": "21003",
+        "id": "2102"
+      },
+      {
+        "name": "الزيتونة",
+        "name_latin": "Zitouna",
+        "code_postal": "21028",
+        "id": "2103"
+      },
+      {
+        "name": "السبت",
+        "name_latin": "Es Sebt",
+        "code_postal": "21018",
+        "id": "2104"
+      },
+      {
+        "name": "الشرايع",
+        "name_latin": "Cheraia",
+        "code_postal": "21030",
+        "id": "2105"
+      },
+      {
+        "name": "الغدير",
+        "name_latin": "El Ghedir",
+        "code_postal": "21057",
+        "id": "2106"
+      },
+      {
+        "name": "القل",
+        "name_latin": "Collo",
+        "code_postal": "21002",
+        "id": "2107"
+      },
+      {
+        "name": "الكركرة",
+        "name_latin": "Kerkara",
+        "code_postal": "21019",
+        "id": "2108"
+      },
+      {
+        "name": "المرسى",
+        "name_latin": "El Marsa",
+        "code_postal": "02015",
+        "id": "2109"
+      },
+      {
+        "name": "الولجة بولبلوط",
+        "name_latin": "Ouldja Boulbalout",
+        "code_postal": null,
+        "id": "2110"
+      },
+      {
+        "name": "أم الطوب",
+        "name_latin": "Oum Toub",
+        "code_postal": "21020",
+        "id": "2111"
+      },
+      {
+        "name": "أولاد حبابة",
+        "name_latin": "Ouled Habbaba",
+        "code_postal": "21043",
+        "id": "2112"
+      },
+      {
+        "name": "أولاد عطية",
+        "name_latin": "Ouled Attia",
+        "code_postal": "21012",
+        "id": "2113"
+      },
+      {
+        "name": "بكوش لخضر",
+        "name_latin": "Bekkouche Lakhdar",
+        "code_postal": "21009",
+        "id": "2114"
+      },
+      {
+        "name": "بن عزوز",
+        "name_latin": "Ben Azzouz",
+        "code_postal": "21010",
+        "id": "2115"
+      },
+      {
+        "name": "بني بشير",
+        "name_latin": "Beni Bechir",
+        "code_postal": "21033",
+        "id": "2116"
+      },
+      {
+        "name": "بني زيد",
+        "name_latin": "Beni Zid",
+        "code_postal": "21016",
+        "id": "2117"
+      },
+      {
+        "name": "بني ولبان",
+        "name_latin": "Beni Oulbane",
+        "code_postal": "21011",
+        "id": "2118"
+      },
+      {
+        "name": "بوشطاطة",
+        "name_latin": "Bouchetata",
+        "code_postal": "21053",
+        "id": "2119"
+      },
+      {
+        "name": "بين الويدان",
+        "name_latin": "Bin El Ouiden",
+        "code_postal": "21052",
+        "id": "2120"
+      },
+      {
+        "name": "تمالوس",
+        "name_latin": "Tamalous",
+        "code_postal": "21005",
+        "id": "2121"
+      },
+      {
+        "name": "جندل سعدي محمد",
+        "name_latin": "Djendel Saadi Mohamed",
+        "code_postal": "21037",
+        "id": "2122"
+      },
+      {
+        "name": "حمادي كرومة",
+        "name_latin": "Hammadi Krouma",
+        "code_postal": "21038",
+        "id": "2123"
+      },
+      {
+        "name": "خناق مايو",
+        "name_latin": "Khenag Maoune",
+        "code_postal": "21059",
+        "id": "2124"
+      },
+      {
+        "name": "رمضان جمال",
+        "name_latin": "Ramdane Djamel",
+        "code_postal": "21004",
+        "id": "2125"
+      },
+      {
+        "name": "زردازة",
+        "name_latin": "Zerdezas",
+        "code_postal": "21047",
+        "id": "2126"
+      },
+      {
+        "name": "سكيكدة",
+        "name_latin": "Skikda",
+        "code_postal": "21000",
+        "id": "2127"
+      },
+      {
+        "name": "سيدي مزغيش",
+        "name_latin": "Sidi Mezghiche",
+        "code_postal": "21023",
+        "id": "2128"
+      },
+      {
+        "name": "صالح بو الشعور",
+        "name_latin": "Salah Bouchaour",
+        "code_postal": "21022",
+        "id": "2129"
+      },
+      {
+        "name": "عزابة",
+        "name_latin": "Azzaba",
+        "code_postal": "21001",
+        "id": "2130"
+      },
+      {
+        "name": "عين بوزيان",
+        "name_latin": "Ain Bouziane",
+        "code_postal": "21031",
+        "id": "2131"
+      },
+      {
+        "name": "عين زويت",
+        "name_latin": "Ain Zouit",
+        "code_postal": "21051",
+        "id": "2132"
+      },
+      {
+        "name": "عين شرشار",
+        "name_latin": "Ain Charchar",
+        "code_postal": "21006",
+        "id": "2133"
+      },
+      {
+        "name": "عين قشرة",
+        "name_latin": "Ain Kechra",
+        "code_postal": "21007",
+        "id": "2134"
+      },
+      {
+        "name": "فلفلة",
+        "name_latin": "Filfila",
+        "code_postal": "21042",
+        "id": "2135"
+      },
+      {
+        "name": "قنواع",
+        "name_latin": "Kanoua",
+        "code_postal": "21062",
+        "id": "2136"
+      },
+      {
+        "name": "مجاز الدشيش",
+        "name_latin": "Emjez Edchich",
+        "code_postal": "21017",
+        "id": "2137"
+      },
+      {
+        "name": "وادي الزهور",
+        "name_latin": "Oued Zhour",
+        "code_postal": "21040",
+        "id": "2138"
+      }
+    ]
+  },
+  {
+    "code": "22",
+    "name": "سيدي بلعباس",
+    "name_latin": "Sidi Bel Abbès",
+    "communes": [
+      {
+        "name": "الحصيبة",
+        "name_latin": "El Hacaiba",
+        "code_postal": "22047",
+        "id": "2201"
+      },
+      {
+        "name": "السهالة الثورة",
+        "name_latin": "Sehala Thaoura",
+        "code_postal": "22060",
+        "id": "2202"
+      },
+      {
+        "name": "الضاية",
+        "name_latin": "Dhaya",
+        "code_postal": "22009",
+        "id": "2203"
+      },
+      {
+        "name": "العمارنة",
+        "name_latin": "Amarnas",
+        "code_postal": "22074",
+        "id": "2204"
+      },
+      {
+        "name": "بئر الحمام",
+        "name_latin": "Bir El Hammam",
+        "code_postal": "22041",
+        "id": "2205"
+      },
+      {
+        "name": "بضرابين المقراني",
+        "name_latin": "Bedrabine El Mokrani",
+        "code_postal": "22038",
+        "id": "2206"
+      },
+      {
+        "name": "بلعربي",
+        "name_latin": "Belarbi",
+        "code_postal": "22023",
+        "id": "2207"
+      },
+      {
+        "name": "بن باديس",
+        "name_latin": "Ben Badis",
+        "code_postal": "22004",
+        "id": "2208"
+      },
+      {
+        "name": "بن عشيبة شلية",
+        "name_latin": "Benachiba Chelia",
+        "code_postal": "22040",
+        "id": "2209"
+      },
+      {
+        "name": "بوجبهة البرج",
+        "name_latin": "Boudjebaa El Bordj",
+        "code_postal": "22043",
+        "id": "2210"
+      },
+      {
+        "name": "بوخنفيس",
+        "name_latin": "Boukhanefis",
+        "code_postal": "22008",
+        "id": "2211"
+      },
+      {
+        "name": "تاودموت",
+        "name_latin": "Taoudmout",
+        "code_postal": "22064",
+        "id": "2212"
+      },
+      {
+        "name": "تسالة",
+        "name_latin": "Tessala",
+        "code_postal": "22033",
+        "id": "2213"
+      },
+      {
+        "name": "تغاليمت",
+        "name_latin": "Teghalimet",
+        "code_postal": "22066",
+        "id": "2214"
+      },
+      {
+        "name": "تفسور",
+        "name_latin": "Tefessour",
+        "code_postal": "22065",
+        "id": "2215"
+      },
+      {
+        "name": "تلاغ",
+        "name_latin": "Telagh",
+        "code_postal": "22007",
+        "id": "2216"
+      },
+      {
+        "name": "تلموني",
+        "name_latin": "Tilmouni",
+        "code_postal": "22044",
+        "id": "2217"
+      },
+      {
+        "name": "تنيرة",
+        "name_latin": "Tenira",
+        "code_postal": "22021",
+        "id": "2218"
+      },
+      {
+        "name": "حاسي دحو",
+        "name_latin": "Hassi Dahou",
+        "code_postal": "22049",
+        "id": "2219"
+      },
+      {
+        "name": "حاسي زهانة",
+        "name_latin": "Hassi Zahana",
+        "code_postal": "22010",
+        "id": "2220"
+      },
+      {
+        "name": "راس الماء",
+        "name_latin": "Ras El Ma",
+        "code_postal": "22069",
+        "id": "2221"
+      },
+      {
+        "name": "رجم دموش",
+        "name_latin": "Redjem Demouche",
+        "code_postal": "22058",
+        "id": "2222"
+      },
+      {
+        "name": "زروالة",
+        "name_latin": "Zerouala",
+        "code_postal": "22068",
+        "id": "2223"
+      },
+      {
+        "name": "سفيزف",
+        "name_latin": "Sfisef",
+        "code_postal": "22001",
+        "id": "2224"
+      },
+      {
+        "name": "سيدي ابراهيم",
+        "name_latin": "Sidi Brahim",
+        "code_postal": "22029",
+        "id": "2225"
+      },
+      {
+        "name": "سيدي بلعباس",
+        "name_latin": "Sidi Bel-Abbes",
+        "code_postal": "22000",
+        "id": "2226"
+      },
+      {
+        "name": "سيدي حمادوش",
+        "name_latin": "Sidi Hamadouche",
+        "code_postal": "22019",
+        "id": "2227"
+      },
+      {
+        "name": "سيدي خالد",
+        "name_latin": "Sidi Khaled",
+        "code_postal": "07004",
+        "id": "2228"
+      },
+      {
+        "name": "سيدي دحو الزاير",
+        "name_latin": "Sidi Dahou Zairs",
+        "code_postal": "22062",
+        "id": "2229"
+      },
+      {
+        "name": "سيدي شعيب",
+        "name_latin": "Sidi Chaib",
+        "code_postal": "22061",
+        "id": "2230"
+      },
+      {
+        "name": "سيدي علي بن يوب",
+        "name_latin": "Sidi Ali Benyoub",
+        "code_postal": "22028",
+        "id": "2231"
+      },
+      {
+        "name": "سيدي علي بوسيدي",
+        "name_latin": "Sidi Ali Boussidi",
+        "code_postal": "22014",
+        "id": "2232"
+      },
+      {
+        "name": "سيدي لحسن",
+        "name_latin": "Sidi Lahcene",
+        "code_postal": "22020",
+        "id": "2233"
+      },
+      {
+        "name": "سيدي يعقوب",
+        "name_latin": "Sidi Yacoub",
+        "code_postal": "22063",
+        "id": "2234"
+      },
+      {
+        "name": "شيطوان البلايلة",
+        "name_latin": "Chetouane Belaila",
+        "code_postal": "22039",
+        "id": "2235"
+      },
+      {
+        "name": "طابية",
+        "name_latin": "Tabia",
+        "code_postal": "22032",
+        "id": "2236"
+      },
+      {
+        "name": "عين أدن",
+        "name_latin": "Ain- Adden",
+        "code_postal": "22034",
+        "id": "2237"
+      },
+      {
+        "name": "عين البرد",
+        "name_latin": "Ain El Berd",
+        "code_postal": "22022",
+        "id": "2238"
+      },
+      {
+        "name": "عين الثريد",
+        "name_latin": "Ain Thrid",
+        "code_postal": "22037",
+        "id": "2239"
+      },
+      {
+        "name": "عين تندمين",
+        "name_latin": "Ain Tindamine",
+        "code_postal": "22036",
+        "id": "2240"
+      },
+      {
+        "name": "عين قادة",
+        "name_latin": "Ain Kada",
+        "code_postal": "22035",
+        "id": "2241"
+      },
+      {
+        "name": "لمطار",
+        "name_latin": "Lamtar",
+        "code_postal": "22024",
+        "id": "2242"
+      },
+      {
+        "name": "مرحوم",
+        "name_latin": "Marhoum",
+        "code_postal": "22011",
+        "id": "2243"
+      },
+      {
+        "name": "مرين",
+        "name_latin": "Merine",
+        "code_postal": "22012",
+        "id": "2244"
+      },
+      {
+        "name": "مزاورو",
+        "name_latin": "Mezaourou",
+        "code_postal": "22025",
+        "id": "2245"
+      },
+      {
+        "name": "مسيد",
+        "name_latin": "M'cid",
+        "code_postal": "22052",
+        "id": "2246"
+      },
+      {
+        "name": "مصطفى بن ابراهيم",
+        "name_latin": "Mostefa Ben Brahim",
+        "code_postal": "22013",
+        "id": "2247"
+      },
+      {
+        "name": "مكدرة",
+        "name_latin": "Makedra",
+        "code_postal": "22051",
+        "id": "2248"
+      },
+      {
+        "name": "مولاي سليسن",
+        "name_latin": "Moulay Slissen",
+        "code_postal": "22026",
+        "id": "2249"
+      },
+      {
+        "name": "وادي السبع",
+        "name_latin": "Oued Sebaa",
+        "code_postal": "22054",
+        "id": "2250"
+      },
+      {
+        "name": "وادي تاوريرة",
+        "name_latin": "Oued Taourira",
+        "code_postal": "22056",
+        "id": "2251"
+      },
+      {
+        "name": "وادي سفيون",
+        "name_latin": "Oued Sefioun",
+        "code_postal": "22055",
+        "id": "2252"
+      }
+    ]
+  },
+  {
+    "code": "23",
+    "name": "عنابة",
+    "name_latin": "Annaba",
+    "communes": [
+      {
+        "name": "البوني",
+        "name_latin": "El Bouni",
+        "code_postal": "23010",
+        "id": "2301"
+      },
+      {
+        "name": "التريعات",
+        "name_latin": "Treat",
+        "code_postal": null,
+        "id": "2302"
+      },
+      {
+        "name": "الحجار",
+        "name_latin": "El Hadjar",
+        "code_postal": "23004",
+        "id": "2303"
+      },
+      {
+        "name": "الشرفة",
+        "name_latin": "Cheurfa",
+        "code_postal": "23025",
+        "id": "2304"
+      },
+      {
+        "name": "العلمة",
+        "name_latin": "El Eulma",
+        "code_postal": "19001",
+        "id": "2305"
+      },
+      {
+        "name": "برحال",
+        "name_latin": "Berrahal",
+        "code_postal": "23009",
+        "id": "2306"
+      },
+      {
+        "name": "سرايدي",
+        "name_latin": "Seraidi",
+        "code_postal": "23015",
+        "id": "2307"
+      },
+      {
+        "name": "سيدي عمار",
+        "name_latin": "Sidi Amar",
+        "code_postal": "23028",
+        "id": "2308"
+      },
+      {
+        "name": "شطايبي",
+        "name_latin": "Chetaibi",
+        "code_postal": "23014",
+        "id": "2309"
+      },
+      {
+        "name": "عنابة",
+        "name_latin": "Annaba",
+        "code_postal": "23000",
+        "id": "2310"
+      },
+      {
+        "name": "عين الباردة",
+        "name_latin": "Ain El Berda",
+        "code_postal": "23006",
+        "id": "2311"
+      },
+      {
+        "name": "واد العنب",
+        "name_latin": "Oued El Aneb",
+        "code_postal": "23021",
+        "id": "2312"
+      }
+    ]
+  },
+  {
+    "code": "24",
+    "name": "قالمة",
+    "name_latin": "Guelma",
+    "communes": [
+      {
+        "name": "الدهوارة",
+        "name_latin": "Dahouara",
+        "code_postal": "24031",
+        "id": "2401"
+      },
+      {
+        "name": "الركنية",
+        "name_latin": "Roknia",
+        "code_postal": "24028",
+        "id": "2402"
+      },
+      {
+        "name": "الفجوج",
+        "name_latin": "El Fedjoudj",
+        "code_postal": "24019",
+        "id": "2403"
+      },
+      {
+        "name": "برج صباط",
+        "name_latin": "Bordj Sabath",
+        "code_postal": "24017",
+        "id": "2404"
+      },
+      {
+        "name": "بلخير",
+        "name_latin": "Belkheir",
+        "code_postal": "24015",
+        "id": "2405"
+      },
+      {
+        "name": "بن جراح",
+        "name_latin": "Bendjarah",
+        "code_postal": "24034",
+        "id": "2406"
+      },
+      {
+        "name": "بني مزلين",
+        "name_latin": "Beni Mezline",
+        "code_postal": null,
+        "id": "2407"
+      },
+      {
+        "name": "بوحشانة",
+        "name_latin": "Bou Hachana",
+        "code_postal": "24037",
+        "id": "2408"
+      },
+      {
+        "name": "بوحمدان",
+        "name_latin": "Bou Hamdane",
+        "code_postal": null,
+        "id": "2409"
+      },
+      {
+        "name": "بوشقوف",
+        "name_latin": "Bouchegouf",
+        "code_postal": "24002",
+        "id": "2410"
+      },
+      {
+        "name": "بوعاتي محمود",
+        "name_latin": "Bouati Mahmoud",
+        "code_postal": "24018",
+        "id": "2411"
+      },
+      {
+        "name": "بومهرة أحمد",
+        "name_latin": "Boumahra Ahmed",
+        "code_postal": "24005",
+        "id": "2412"
+      },
+      {
+        "name": "تاملوكة",
+        "name_latin": "Tamlouka",
+        "code_postal": "24010",
+        "id": "2413"
+      },
+      {
+        "name": "جبالة الخميسي",
+        "name_latin": "Djeballah Khemissi",
+        "code_postal": "24039",
+        "id": "2414"
+      },
+      {
+        "name": "حمام النبايل",
+        "name_latin": "Hammam N'bail",
+        "code_postal": "24024",
+        "id": "2415"
+      },
+      {
+        "name": "حمام دباغ",
+        "name_latin": "Hammam Debagh",
+        "code_postal": "24007",
+        "id": "2416"
+      },
+      {
+        "name": "رأس العقبة",
+        "name_latin": "Ras El Agba",
+        "code_postal": "24049",
+        "id": "2417"
+      },
+      {
+        "name": "سلاوة عنونة",
+        "name_latin": "Sellaoua Announa",
+        "code_postal": "24029",
+        "id": "2418"
+      },
+      {
+        "name": "عين العربي",
+        "name_latin": "Ain Larbi",
+        "code_postal": "24012",
+        "id": "2419"
+      },
+      {
+        "name": "عين بن بيضاء",
+        "name_latin": "Ain Ben Beida",
+        "code_postal": "24011",
+        "id": "2420"
+      },
+      {
+        "name": "عين رقادة",
+        "name_latin": "Ain Regada",
+        "code_postal": "24014",
+        "id": "2421"
+      },
+      {
+        "name": "عين صندل",
+        "name_latin": "Ain Sandel",
+        "code_postal": "24032",
+        "id": "2422"
+      },
+      {
+        "name": "عين مخلوف",
+        "name_latin": "Ain Makhlouf",
+        "code_postal": "24013",
+        "id": "2423"
+      },
+      {
+        "name": "قالمة",
+        "name_latin": "Guelma",
+        "code_postal": "24000",
+        "id": "2424"
+      },
+      {
+        "name": "قلعة بوصبع",
+        "name_latin": "Guelaat Bou Sbaa",
+        "code_postal": "24020",
+        "id": "2425"
+      },
+      {
+        "name": "لخزارة",
+        "name_latin": "Khezaras",
+        "code_postal": null,
+        "id": "2426"
+      },
+      {
+        "name": "مجاز الصفاء",
+        "name_latin": "Medjez Sfa",
+        "code_postal": "24026",
+        "id": "2427"
+      },
+      {
+        "name": "مجاز عمار",
+        "name_latin": "Medjez Amar",
+        "code_postal": "24043",
+        "id": "2428"
+      },
+      {
+        "name": "نشماية",
+        "name_latin": "Nechmaya",
+        "code_postal": "24027",
+        "id": "2429"
+      },
+      {
+        "name": "هواري بومدين",
+        "name_latin": "Houari Boumedienne",
+        "code_postal": "24025",
+        "id": "2430"
+      },
+      {
+        "name": "هيليوبوليس",
+        "name_latin": "Heliopolis",
+        "code_postal": "24008",
+        "id": "2431"
+      },
+      {
+        "name": "وادي الزناتي",
+        "name_latin": "Oued Zenati",
+        "code_postal": "24001",
+        "id": "2432"
+      },
+      {
+        "name": "وادي الشحم",
+        "name_latin": "Oued Cheham",
+        "code_postal": "24009",
+        "id": "2433"
+      },
+      {
+        "name": "وادي فراغة",
+        "name_latin": "Oued Ferragha",
+        "code_postal": "24038",
+        "id": "2434"
+      }
+    ]
+  },
+  {
+    "code": "25",
+    "name": "قسنطينة",
+    "name_latin": "Constantine",
+    "communes": [
+      {
+        "name": "أبن باديس الهرية",
+        "name_latin": "Ben Badis",
+        "code_postal": "25037",
+        "id": "2501"
+      },
+      {
+        "name": "ابن زياد",
+        "name_latin": "Ibn Ziad",
+        "code_postal": "25027",
+        "id": "2502"
+      },
+      {
+        "name": "الخروب",
+        "name_latin": "El Khroub",
+        "code_postal": "25005",
+        "id": "2503"
+      },
+      {
+        "name": "أولاد رحمون",
+        "name_latin": "Ouled Rahmoun",
+        "code_postal": "25028",
+        "id": "2504"
+      },
+      {
+        "name": "بني حميدان",
+        "name_latin": "Beni Hamidane",
+        "code_postal": "25035",
+        "id": "2505"
+      },
+      {
+        "name": "بوجريو مسعود",
+        "name_latin": "Messaoud Boudjeriou",
+        "code_postal": "25032",
+        "id": "2506"
+      },
+      {
+        "name": "حامة بوزيان",
+        "name_latin": "Hamma Bouziane",
+        "code_postal": "25013",
+        "id": "2507"
+      },
+      {
+        "name": "ديدوش مراد",
+        "name_latin": "Didouche Mourad",
+        "code_postal": "25024",
+        "id": "2508"
+      },
+      {
+        "name": "زيغود يوسف",
+        "name_latin": "Zighoud Youcef",
+        "code_postal": "25014",
+        "id": "2509"
+      },
+      {
+        "name": "عين السمارة",
+        "name_latin": "Ain Smara",
+        "code_postal": "25006",
+        "id": "2510"
+      },
+      {
+        "name": "عين عبيد",
+        "name_latin": "Ain Abid",
+        "code_postal": "25015",
+        "id": "2511"
+      },
+      {
+        "name": "قسنطينة",
+        "name_latin": "Constantine",
+        "code_postal": "25000",
+        "id": "2512"
+      }
+    ]
+  },
+  {
+    "code": "26",
+    "name": "المدية",
+    "name_latin": "Médéa",
+    "communes": [
+      {
+        "name": "البرواقية",
+        "name_latin": "Berrouaghia",
+        "code_postal": "26002",
+        "id": "2601"
+      },
+      {
+        "name": "الحمدانية",
+        "name_latin": "El Hamdania",
+        "code_postal": "26060",
+        "id": "2602"
+      },
+      {
+        "name": "الحوضان",
+        "name_latin": "El Haoudane",
+        "code_postal": "26058",
+        "id": "2603"
+      },
+      {
+        "name": "الربعية",
+        "name_latin": "Rebaia",
+        "code_postal": "26039",
+        "id": "2604"
+      },
+      {
+        "name": "الزبيرية",
+        "name_latin": "Zoubiria",
+        "code_postal": "26021",
+        "id": "2605"
+      },
+      {
+        "name": "السواقي",
+        "name_latin": "Souagui",
+        "code_postal": "26020",
+        "id": "2606"
+      },
+      {
+        "name": "العزيزية",
+        "name_latin": "El Azizia",
+        "code_postal": "26018",
+        "id": "2607"
+      },
+      {
+        "name": "العمارية",
+        "name_latin": "El Omaria",
+        "code_postal": "26008",
+        "id": "2608"
+      },
+      {
+        "name": "العيساوية",
+        "name_latin": "Aissaouia",
+        "code_postal": "26022",
+        "id": "2609"
+      },
+      {
+        "name": "القلب الكبير",
+        "name_latin": "El Guelbelkebir",
+        "code_postal": "26030",
+        "id": "2610"
+      },
+      {
+        "name": "المدية",
+        "name_latin": "Medea",
+        "code_postal": "26000",
+        "id": "2611"
+      },
+      {
+        "name": "أولاد إبراهيم",
+        "name_latin": "Ouled Brahim",
+        "code_postal": "20002",
+        "id": "2612"
+      },
+      {
+        "name": "أولاد بوعشرة",
+        "name_latin": "Ouled Bouachra",
+        "code_postal": "26064",
+        "id": "2613"
+      },
+      {
+        "name": "أولاد دايد",
+        "name_latin": "Ouled Deid",
+        "code_postal": "26044",
+        "id": "2614"
+      },
+      {
+        "name": "بئر بن عابد",
+        "name_latin": "Bir Ben Laabed",
+        "code_postal": "26053",
+        "id": "2615"
+      },
+      {
+        "name": "بعطة",
+        "name_latin": "Baata",
+        "code_postal": "26050",
+        "id": "2616"
+      },
+      {
+        "name": "بن شكاو",
+        "name_latin": "Ben Chicao",
+        "code_postal": "26012",
+        "id": "2617"
+      },
+      {
+        "name": "بني سليمان",
+        "name_latin": "Beni Slimane",
+        "code_postal": "26001",
+        "id": "2618"
+      },
+      {
+        "name": "بوسكن",
+        "name_latin": "Bouskene",
+        "code_postal": "26025",
+        "id": "2619"
+      },
+      {
+        "name": "بوشراحيل",
+        "name_latin": "Bouchrahil",
+        "code_postal": "26014",
+        "id": "2620"
+      },
+      {
+        "name": "بوعيشون",
+        "name_latin": "Bouaichoune",
+        "code_postal": "26055",
+        "id": "2621"
+      },
+      {
+        "name": "تابلاط",
+        "name_latin": "Tablat",
+        "code_postal": "26004",
+        "id": "2622"
+      },
+      {
+        "name": "تمسقيدة",
+        "name_latin": "Tamesguida",
+        "code_postal": "26075",
+        "id": "2623"
+      },
+      {
+        "name": "تيزي مهدي",
+        "name_latin": "Tizi Mahdi",
+        "code_postal": "26076",
+        "id": "2624"
+      },
+      {
+        "name": "ثلاث دوائر",
+        "name_latin": "Tletat Ed Douair",
+        "code_postal": "26046",
+        "id": "2625"
+      },
+      {
+        "name": "جواب",
+        "name_latin": "Djouab",
+        "code_postal": "26016",
+        "id": "2626"
+      },
+      {
+        "name": "حناشة",
+        "name_latin": "Hannacha",
+        "code_postal": "26027",
+        "id": "2627"
+      },
+      {
+        "name": "خمس جوامع",
+        "name_latin": "Khams Djouamaa",
+        "code_postal": "26062",
+        "id": "2628"
+      },
+      {
+        "name": "ذراع السمار",
+        "name_latin": "Draa Esmar",
+        "code_postal": "26017",
+        "id": "2629"
+      },
+      {
+        "name": "سدراية",
+        "name_latin": "Sedraya",
+        "code_postal": "26068",
+        "id": "2630"
+      },
+      {
+        "name": "سغوان",
+        "name_latin": "Seghouane",
+        "code_postal": "26041",
+        "id": "2631"
+      },
+      {
+        "name": "سي المحجوب",
+        "name_latin": "Si Mahdjoub",
+        "code_postal": "26045",
+        "id": "2632"
+      },
+      {
+        "name": "سيدي الربيع",
+        "name_latin": "Sidi Rabie",
+        "code_postal": "26070",
+        "id": "2633"
+      },
+      {
+        "name": "سيدي زهار",
+        "name_latin": "Sidi Zahar",
+        "code_postal": "26072",
+        "id": "2634"
+      },
+      {
+        "name": "سيدي زيان",
+        "name_latin": "Sidi Ziane",
+        "code_postal": null,
+        "id": "2635"
+      },
+      {
+        "name": "سيدي نعمان",
+        "name_latin": "Sidi Naamane",
+        "code_postal": "26071",
+        "id": "2636"
+      },
+      {
+        "name": "عوامري",
+        "name_latin": "Ouamri",
+        "code_postal": "26034",
+        "id": "2637"
+      },
+      {
+        "name": "مجبر",
+        "name_latin": "Medjebar",
+        "code_postal": "26033",
+        "id": "2638"
+      },
+      {
+        "name": "مزغنة",
+        "name_latin": "Mezerana",
+        "code_postal": null,
+        "id": "2639"
+      },
+      {
+        "name": "مغراوة",
+        "name_latin": "Maghraoua",
+        "code_postal": "26063",
+        "id": "2640"
+      },
+      {
+        "name": "ميهوب",
+        "name_latin": "Mihoub",
+        "code_postal": "26032",
+        "id": "2641"
+      },
+      {
+        "name": "وادي حربيل",
+        "name_latin": "Oued Harbil",
+        "code_postal": "26061",
+        "id": "2642"
+      },
+      {
+        "name": "وزرة",
+        "name_latin": "Ouzera",
+        "code_postal": "26019",
+        "id": "2643"
+      }
+    ]
+  },
+  {
+    "code": "27",
+    "name": "مستغانم",
+    "name_latin": "Mostaganem",
+    "communes": [
+      {
+        "name": "الحسيان (بني ياحي",
+        "name_latin": "Hassiane",
+        "code_postal": "27033",
+        "id": "2701"
+      },
+      {
+        "name": "السوافلية",
+        "name_latin": "Souaflia",
+        "code_postal": "27046",
+        "id": "2702"
+      },
+      {
+        "name": "الطواهرية",
+        "name_latin": "Touahria",
+        "code_postal": "27013",
+        "id": "2703"
+      },
+      {
+        "name": "أولاد بوغالم",
+        "name_latin": "Ouled Boughalem",
+        "code_postal": "27027",
+        "id": "2704"
+      },
+      {
+        "name": "أولاد مع الله",
+        "name_latin": "Ouled-Maalah",
+        "code_postal": "27028",
+        "id": "2705"
+      },
+      {
+        "name": "بن عبد المالك رمضان",
+        "name_latin": "Benabdelmalek Ramdane",
+        "code_postal": "27008",
+        "id": "2706"
+      },
+      {
+        "name": "بوقيراط",
+        "name_latin": "Bouguirat",
+        "code_postal": "27003",
+        "id": "2707"
+      },
+      {
+        "name": "تزقايت",
+        "name_latin": "Tazgait",
+        "code_postal": "27047",
+        "id": "2708"
+      },
+      {
+        "name": "حاسي ماماش",
+        "name_latin": "Hassi Mameche",
+        "code_postal": "27004",
+        "id": "2709"
+      },
+      {
+        "name": "حجاج",
+        "name_latin": "Hadjadj",
+        "code_postal": "27015",
+        "id": "2710"
+      },
+      {
+        "name": "خضرة",
+        "name_latin": "Khadra",
+        "code_postal": "27005",
+        "id": "2711"
+      },
+      {
+        "name": "خير الدين",
+        "name_latin": "Kheir-Eddine",
+        "code_postal": "27016",
+        "id": "2712"
+      },
+      {
+        "name": "ستيدية",
+        "name_latin": "Stidia",
+        "code_postal": "27023",
+        "id": "2713"
+      },
+      {
+        "name": "سور",
+        "name_latin": "Sour",
+        "code_postal": "27022",
+        "id": "2714"
+      },
+      {
+        "name": "سيدي بلعطار",
+        "name_latin": "Sidi Belaattar",
+        "code_postal": "27029",
+        "id": "2715"
+      },
+      {
+        "name": "سيدي علي",
+        "name_latin": "Sidi Ali",
+        "code_postal": "27032",
+        "id": "2716"
+      },
+      {
+        "name": "سيدي لخضر",
+        "name_latin": "Sidi-Lakhdar",
+        "code_postal": "27007",
+        "id": "2717"
+      },
+      {
+        "name": "سيرات",
+        "name_latin": "Sirat",
+        "code_postal": "27021",
+        "id": "2718"
+      },
+      {
+        "name": "صفصاف",
+        "name_latin": "Safsaf",
+        "code_postal": null,
+        "id": "2719"
+      },
+      {
+        "name": "صيادة",
+        "name_latin": "Sayada",
+        "code_postal": "27045",
+        "id": "2720"
+      },
+      {
+        "name": "عشعاشة",
+        "name_latin": "Achaacha",
+        "code_postal": "27009",
+        "id": "2721"
+      },
+      {
+        "name": "عين بودينار",
+        "name_latin": "Ain-Boudinar",
+        "code_postal": "27031",
+        "id": "2722"
+      },
+      {
+        "name": "عين تادلس",
+        "name_latin": "Ain-Tedles",
+        "code_postal": "27001",
+        "id": "2723"
+      },
+      {
+        "name": "عين سيدي الشريف",
+        "name_latin": "Ain-Sidi Cherif",
+        "code_postal": "27024",
+        "id": "2724"
+      },
+      {
+        "name": "عين نويسي",
+        "name_latin": "Ain-Nouissy",
+        "code_postal": "27010",
+        "id": "2725"
+      },
+      {
+        "name": "فرناقة",
+        "name_latin": "Fornaka",
+        "code_postal": "27014",
+        "id": "2726"
+      },
+      {
+        "name": "ماسرة",
+        "name_latin": "Mesra",
+        "code_postal": "27018",
+        "id": "2727"
+      },
+      {
+        "name": "مزغران",
+        "name_latin": "Mazagran",
+        "code_postal": "27017",
+        "id": "2728"
+      },
+      {
+        "name": "مستغانم",
+        "name_latin": "Mostaganem",
+        "code_postal": "27000",
+        "id": "2729"
+      },
+      {
+        "name": "منصورة",
+        "name_latin": "Mansourah",
+        "code_postal": "13062",
+        "id": "2730"
+      },
+      {
+        "name": "نكمارية",
+        "name_latin": "Nekmaria",
+        "code_postal": "27026",
+        "id": "2731"
+      },
+      {
+        "name": "وادي الخير",
+        "name_latin": "Oued El Kheir",
+        "code_postal": "27020",
+        "id": "2732"
+      }
+    ]
+  },
+  {
+    "code": "28",
+    "name": "المسيلة",
+    "name_latin": "M'Sila",
+    "communes": [
+      {
+        "name": "السوامع",
+        "name_latin": "Souamaa",
+        "code_postal": "28064",
+        "id": "2801"
+      },
+      {
+        "name": "المسيلة",
+        "name_latin": "M'sila",
+        "code_postal": "28000",
+        "id": "2802"
+      },
+      {
+        "name": "المطارفة",
+        "name_latin": "M'tarfa",
+        "code_postal": "01033",
+        "id": "2803"
+      },
+      {
+        "name": "المعاضيد",
+        "name_latin": "Maadid",
+        "code_postal": "28011",
+        "id": "2804"
+      },
+      {
+        "name": "أولاد دراج",
+        "name_latin": "Ouled Derradj",
+        "code_postal": "28022",
+        "id": "2805"
+      },
+      {
+        "name": "أولاد عدي لقبالة",
+        "name_latin": "Ouled Addi Guebala",
+        "code_postal": "28021",
+        "id": "2806"
+      },
+      {
+        "name": "أولاد ماضي",
+        "name_latin": "Ouled Madhi",
+        "code_postal": "28047",
+        "id": "2807"
+      },
+      {
+        "name": "أولاد منصور",
+        "name_latin": "Ouled Mansour",
+        "code_postal": "28060",
+        "id": "2808"
+      },
+      {
+        "name": "برهوم",
+        "name_latin": "Berhoum",
+        "code_postal": "28010",
+        "id": "2809"
+      },
+      {
+        "name": "بلعايبة",
+        "name_latin": "Belaiba",
+        "code_postal": "28026",
+        "id": "2810"
+      },
+      {
+        "name": "بني يلمان",
+        "name_latin": "Beni Ilmane",
+        "code_postal": "28027",
+        "id": "2811"
+      },
+      {
+        "name": "بوطي السايح",
+        "name_latin": "Bouti Sayeh",
+        "code_postal": "28042",
+        "id": "2812"
+      },
+      {
+        "name": "تارمونت",
+        "name_latin": "Tarmount",
+        "code_postal": "28038",
+        "id": "2813"
+      },
+      {
+        "name": "حمام الضلعة",
+        "name_latin": "Hammam Dalaa",
+        "code_postal": "28005",
+        "id": "2814"
+      },
+      {
+        "name": "خطوطي سد الجير",
+        "name_latin": "Khettouti Sed-El-Jir",
+        "code_postal": "28056",
+        "id": "2815"
+      },
+      {
+        "name": "دهاهنة",
+        "name_latin": "Dehahna",
+        "code_postal": "28048",
+        "id": "2816"
+      },
+      {
+        "name": "سيدي عيسى",
+        "name_latin": "Sidi Aissa",
+        "code_postal": "28002",
+        "id": "2817"
+      },
+      {
+        "name": "سيدي هجرس",
+        "name_latin": "Sidi Hadjeres",
+        "code_postal": "28036",
+        "id": "2818"
+      },
+      {
+        "name": "شلال",
+        "name_latin": "Chellal",
+        "code_postal": "28014",
+        "id": "2819"
+      },
+      {
+        "name": "عين الحجل",
+        "name_latin": "Ain El Hadjel",
+        "code_postal": "28003",
+        "id": "2820"
+      },
+      {
+        "name": "عين الخضراء",
+        "name_latin": "Ain Khadra",
+        "code_postal": "28008",
+        "id": "2821"
+      },
+      {
+        "name": "معاريف",
+        "name_latin": "Maarif",
+        "code_postal": "28041",
+        "id": "2822"
+      },
+      {
+        "name": "مقرة",
+        "name_latin": "Magra",
+        "code_postal": "28006",
+        "id": "2823"
+      },
+      {
+        "name": "ونوغة",
+        "name_latin": "Ouanougha",
+        "code_postal": "28017",
+        "id": "2824"
+      }
+    ]
+  },
+  {
+    "code": "29",
+    "name": "معسكر",
+    "name_latin": "Mascara",
+    "communes": [
+      {
+        "name": "البرج",
+        "name_latin": "El Bordj",
+        "code_postal": "29012",
+        "id": "2901"
+      },
+      {
+        "name": "الحشم",
+        "name_latin": "El Hachem",
+        "code_postal": "29013",
+        "id": "2902"
+      },
+      {
+        "name": "السهايلية",
+        "name_latin": "Sehailia",
+        "code_postal": "29063",
+        "id": "2903"
+      },
+      {
+        "name": "الشرفاء",
+        "name_latin": "Chorfa",
+        "code_postal": "29039",
+        "id": "2904"
+      },
+      {
+        "name": "العلايمية",
+        "name_latin": "Alaimia",
+        "code_postal": "29036",
+        "id": "2905"
+      },
+      {
+        "name": "الغمري",
+        "name_latin": "El Ghomri",
+        "code_postal": "29023",
+        "id": "2906"
+      },
+      {
+        "name": "القرط",
+        "name_latin": "El Keurt",
+        "code_postal": "29043",
+        "id": "2907"
+      },
+      {
+        "name": "القطنة",
+        "name_latin": "El Gueitena",
+        "code_postal": "29042",
+        "id": "2908"
+      },
+      {
+        "name": "القعدة",
+        "name_latin": "El Gaada",
+        "code_postal": "29041",
+        "id": "2909"
+      },
+      {
+        "name": "المأمونية",
+        "name_latin": "El Mamounia",
+        "code_postal": "29056",
+        "id": "2910"
+      },
+      {
+        "name": "المحمدية",
+        "name_latin": "Mohammadia",
+        "code_postal": "16058",
+        "id": "2911"
+      },
+      {
+        "name": "المطمور",
+        "name_latin": "Matemore",
+        "code_postal": "29026",
+        "id": "2912"
+      },
+      {
+        "name": "المنور",
+        "name_latin": "El Menaouer",
+        "code_postal": "29044",
+        "id": "2913"
+      },
+      {
+        "name": "بنيان",
+        "name_latin": "Benian",
+        "code_postal": "29038",
+        "id": "2914"
+      },
+      {
+        "name": "بوحنيفية",
+        "name_latin": "Bouhanifia",
+        "code_postal": "29005",
+        "id": "2915"
+      },
+      {
+        "name": "بوهني",
+        "name_latin": "Bou Henni",
+        "code_postal": "29022",
+        "id": "2916"
+      },
+      {
+        "name": "تيزي",
+        "name_latin": "Tizi",
+        "code_postal": null,
+        "id": "2917"
+      },
+      {
+        "name": "تيغنيف",
+        "name_latin": "Tighennif",
+        "code_postal": "29004",
+        "id": "2918"
+      },
+      {
+        "name": "حسين",
+        "name_latin": "Hacine",
+        "code_postal": "29014",
+        "id": "2919"
+      },
+      {
+        "name": "خلوية",
+        "name_latin": "Khalouia",
+        "code_postal": "29025",
+        "id": "2920"
+      },
+      {
+        "name": "رأس عين عميروش",
+        "name_latin": "Ras El Ain Amirouche",
+        "code_postal": "29060",
+        "id": "2921"
+      },
+      {
+        "name": "زلامطة",
+        "name_latin": "Zelamta",
+        "code_postal": "29057",
+        "id": "2922"
+      },
+      {
+        "name": "زهانة",
+        "name_latin": "Zahana",
+        "code_postal": "29019",
+        "id": "2923"
+      },
+      {
+        "name": "سجرارة",
+        "name_latin": "Sedjerara",
+        "code_postal": "29062",
+        "id": "2924"
+      },
+      {
+        "name": "سيدي بوسعيد",
+        "name_latin": "Sidi Boussaid",
+        "code_postal": "29069",
+        "id": "2925"
+      },
+      {
+        "name": "سيدي عبد الجبار",
+        "name_latin": "Sidi Abdeldjebar",
+        "code_postal": "29065",
+        "id": "2926"
+      },
+      {
+        "name": "سيدي عبد المومن",
+        "name_latin": "Sidi Abdelmoumene",
+        "code_postal": "29054",
+        "id": "2927"
+      },
+      {
+        "name": "سيدي قادة",
+        "name_latin": "Sidi Kada",
+        "code_postal": "29030",
+        "id": "2928"
+      },
+      {
+        "name": "سيق",
+        "name_latin": "Sig",
+        "code_postal": "29001",
+        "id": "2929"
+      },
+      {
+        "name": "عقاز",
+        "name_latin": "Oggaz",
+        "code_postal": "29029",
+        "id": "2930"
+      },
+      {
+        "name": "عوف",
+        "name_latin": "Aouf",
+        "code_postal": "29021",
+        "id": "2931"
+      },
+      {
+        "name": "عين أفرص",
+        "name_latin": "Ain Frass",
+        "code_postal": "29034",
+        "id": "2932"
+      },
+      {
+        "name": "عين فارس",
+        "name_latin": "Ain Fares",
+        "code_postal": "28023",
+        "id": "2933"
+      },
+      {
+        "name": "عين فراح",
+        "name_latin": "Ain Ferah",
+        "code_postal": "29032",
+        "id": "2934"
+      },
+      {
+        "name": "عين فكان",
+        "name_latin": "Ain Fekan",
+        "code_postal": "29011",
+        "id": "2935"
+      },
+      {
+        "name": "غروس",
+        "name_latin": "Gharrous",
+        "code_postal": "29047",
+        "id": "2936"
+      },
+      {
+        "name": "غريس",
+        "name_latin": "Ghriss",
+        "code_postal": "29006",
+        "id": "2937"
+      },
+      {
+        "name": "فراقيق",
+        "name_latin": "Ferraguig",
+        "code_postal": "29046",
+        "id": "2938"
+      },
+      {
+        "name": "فروحة",
+        "name_latin": "Froha",
+        "code_postal": "29024",
+        "id": "2939"
+      },
+      {
+        "name": "قرجوم",
+        "name_latin": "Guerdjoum",
+        "code_postal": "29050",
+        "id": "2940"
+      },
+      {
+        "name": "ماقضة",
+        "name_latin": "Makhda",
+        "code_postal": "29055",
+        "id": "2941"
+      },
+      {
+        "name": "ماوسة",
+        "name_latin": "Maoussa",
+        "code_postal": "29015",
+        "id": "2942"
+      },
+      {
+        "name": "معسكر",
+        "name_latin": "Mascara",
+        "code_postal": "29000",
+        "id": "2943"
+      },
+      {
+        "name": "مقطع الدوز",
+        "name_latin": "Mocta-Douz",
+        "code_postal": "29027",
+        "id": "2944"
+      },
+      {
+        "name": "نسمط",
+        "name_latin": "Nesmot",
+        "code_postal": "29058",
+        "id": "2945"
+      },
+      {
+        "name": "وادي الأبطال",
+        "name_latin": "Oued El Abtal",
+        "code_postal": "29016",
+        "id": "2946"
+      },
+      {
+        "name": "وادي التاغية",
+        "name_latin": "Oued Taria",
+        "code_postal": "29017",
+        "id": "2947"
+      }
+    ]
+  },
+  {
+    "code": "30",
+    "name": "ورقلة",
+    "name_latin": "Ouargla",
+    "communes": [
+      {
+        "name": "البرمة",
+        "name_latin": "El Borma",
+        "code_postal": "30025",
+        "id": "3001"
+      },
+      {
+        "name": "الرويسات",
+        "name_latin": "Rouissat",
+        "code_postal": "30013",
+        "id": "3002"
+      },
+      {
+        "name": "انقوسة",
+        "name_latin": "N'goussa",
+        "code_postal": "30026",
+        "id": "3003"
+      },
+      {
+        "name": "حاسي بن عبد الله",
+        "name_latin": "Hassi Ben Abdellah",
+        "code_postal": "30052",
+        "id": "3004"
+      },
+      {
+        "name": "حاسي مسعود",
+        "name_latin": "Hassi Messaoud",
+        "code_postal": "30001",
+        "id": "3005"
+      },
+      {
+        "name": "سيدي خويلد",
+        "name_latin": "Sidi Khouiled",
+        "code_postal": "30035",
+        "id": "3006"
+      },
+      {
+        "name": "عين البيضاء",
+        "name_latin": "Ain Beida",
+        "code_postal": "04001",
+        "id": "3007"
+      },
+      {
+        "name": "ورقلة",
+        "name_latin": "Ouargla",
+        "code_postal": "30000",
+        "id": "3008"
+      }
+    ]
+  },
+  {
+    "code": "31",
+    "name": "وهران",
+    "name_latin": "Oran",
+    "communes": [
+      {
+        "name": "أرزيو",
+        "name_latin": "Arzew",
+        "code_postal": "31004",
+        "id": "3101"
+      },
+      {
+        "name": "البراية",
+        "name_latin": "El Braya",
+        "code_postal": "31070",
+        "id": "3102"
+      },
+      {
+        "name": "السانية",
+        "name_latin": "Es Senia",
+        "code_postal": "31005",
+        "id": "3103"
+      },
+      {
+        "name": "العنصر",
+        "name_latin": "El Ancor",
+        "code_postal": "31043",
+        "id": "3104"
+      },
+      {
+        "name": "الكرمة",
+        "name_latin": "El Kerma",
+        "code_postal": "31026",
+        "id": "3105"
+      },
+      {
+        "name": "المرسى الكبير",
+        "name_latin": "Mers El Kebir",
+        "code_postal": "31019",
+        "id": "3106"
+      },
+      {
+        "name": "بئر الجير",
+        "name_latin": "Bir El Djir",
+        "code_postal": "31001",
+        "id": "3107"
+      },
+      {
+        "name": "بطيوة",
+        "name_latin": "Bethioua",
+        "code_postal": "31015",
+        "id": "3108"
+      },
+      {
+        "name": "بن فريحة",
+        "name_latin": "Ben Freha",
+        "code_postal": "31027",
+        "id": "3109"
+      },
+      {
+        "name": "بوتليليس",
+        "name_latin": "Boutlelis",
+        "code_postal": "31016",
+        "id": "3110"
+      },
+      {
+        "name": "بوسفر",
+        "name_latin": "Bousfer",
+        "code_postal": "31025",
+        "id": "3111"
+      },
+      {
+        "name": "بوفاتيس",
+        "name_latin": "Boufatis",
+        "code_postal": "31024",
+        "id": "3112"
+      },
+      {
+        "name": "حاسي بن عقبة",
+        "name_latin": "Hassi Ben Okba",
+        "code_postal": "31049",
+        "id": "3113"
+      },
+      {
+        "name": "حاسي بونيف",
+        "name_latin": "Hassi Bounif",
+        "code_postal": "31028",
+        "id": "3114"
+      },
+      {
+        "name": "حاسي مفسوخ",
+        "name_latin": "Hassi Mefsoukh",
+        "code_postal": "31046",
+        "id": "3115"
+      },
+      {
+        "name": "سيدي الشحمي",
+        "name_latin": "Sidi Chami",
+        "code_postal": "31038",
+        "id": "3116"
+      },
+      {
+        "name": "سيدي بن يبقى",
+        "name_latin": "Sidi Ben Yebka",
+        "code_postal": "31058",
+        "id": "3117"
+      },
+      {
+        "name": "طفراوي",
+        "name_latin": "Tafraoui",
+        "code_postal": "31077",
+        "id": "3118"
+      },
+      {
+        "name": "عين البية",
+        "name_latin": "Ain Biya",
+        "code_postal": "31040",
+        "id": "3119"
+      },
+      {
+        "name": "عين الترك",
+        "name_latin": "Ain Turk",
+        "code_postal": "10033",
+        "id": "3120"
+      },
+      {
+        "name": "عين الكرمة",
+        "name_latin": "Ain Kerma",
+        "code_postal": "31059",
+        "id": "3121"
+      },
+      {
+        "name": "قديل",
+        "name_latin": "Gdyel",
+        "code_postal": "31017",
+        "id": "3122"
+      },
+      {
+        "name": "مرسى الحجاج",
+        "name_latin": "Marsat El Hadjadj",
+        "code_postal": "31030",
+        "id": "3123"
+      },
+      {
+        "name": "مسرغين",
+        "name_latin": "Messerghin",
+        "code_postal": "31031",
+        "id": "3124"
+      },
+      {
+        "name": "وادي تليلات",
+        "name_latin": "Oued Tlelat",
+        "code_postal": "31037",
+        "id": "3125"
+      },
+      {
+        "name": "وهران",
+        "name_latin": "Oran",
+        "code_postal": "31000",
+        "id": "3126"
+      }
+    ]
+  },
+  {
+    "code": "32",
+    "name": "البيض",
+    "name_latin": "El Bayadh",
+    "communes": [
+      {
+        "name": "البيض",
+        "name_latin": "El Bayadh",
+        "code_postal": "32000",
+        "id": "3201"
+      },
+      {
+        "name": "الخيثر",
+        "name_latin": "El Kheiter",
+        "code_postal": "32011",
+        "id": "3202"
+      },
+      {
+        "name": "الرقاصة",
+        "name_latin": "Rogassa",
+        "code_postal": "32018",
+        "id": "3203"
+      },
+      {
+        "name": "الشقيق",
+        "name_latin": "Cheguig",
+        "code_postal": "32022",
+        "id": "3204"
+      },
+      {
+        "name": "الغاسول",
+        "name_latin": "Ghassoul",
+        "code_postal": "32017",
+        "id": "3205"
+      },
+      {
+        "name": "الكاف الأحمر",
+        "name_latin": "Kef El Ahmar",
+        "code_postal": "32013",
+        "id": "3206"
+      },
+      {
+        "name": "بريزينة",
+        "name_latin": "Brezina",
+        "code_postal": "32002",
+        "id": "3207"
+      },
+      {
+        "name": "بوعلام",
+        "name_latin": "Boualem",
+        "code_postal": "32006",
+        "id": "3208"
+      },
+      {
+        "name": "بوقطب",
+        "name_latin": "Bougtoub",
+        "code_postal": "32001",
+        "id": "3209"
+      },
+      {
+        "name": "توسمولين",
+        "name_latin": "Tousmouline",
+        "code_postal": "32034",
+        "id": "3210"
+      },
+      {
+        "name": "ستيتن",
+        "name_latin": "Stitten",
+        "code_postal": "32033",
+        "id": "3211"
+      },
+      {
+        "name": "سيدي سليمان",
+        "name_latin": "Sidi Slimane",
+        "code_postal": "30030",
+        "id": "3212"
+      },
+      {
+        "name": "سيدي طيفور",
+        "name_latin": "Sidi Tiffour",
+        "code_postal": "32032",
+        "id": "3213"
+      },
+      {
+        "name": "سيدي عامر",
+        "name_latin": "Sidi Ameur",
+        "code_postal": null,
+        "id": "3214"
+      },
+      {
+        "name": "كراكدة",
+        "name_latin": "Krakda",
+        "code_postal": "32027",
+        "id": "3215"
+      }
+    ]
+  },
+  {
+    "code": "33",
+    "name": "إليزي",
+    "name_latin": "Illizi",
+    "communes": [
+      {
+        "name": "إن أمناس",
+        "name_latin": "In Amenas",
+        "code_postal": "33001",
+        "id": "3301"
+      },
+      {
+        "name": "إيليزي",
+        "name_latin": "Illizi",
+        "code_postal": "33000",
+        "id": "3302"
+      },
+      {
+        "name": "برج عمر إدريس",
+        "name_latin": "Bordj Omar Driss",
+        "code_postal": "33003",
+        "id": "3303"
+      },
+      {
+        "name": "دبداب",
+        "name_latin": "Debdeb",
+        "code_postal": "33004",
+        "id": "3304"
+      }
+    ]
+  },
+  {
+    "code": "34",
+    "name": "برج بوعريريج",
+    "name_latin": "Bordj Bou Arreridj",
+    "communes": [
+      {
+        "name": "الحمادية",
+        "name_latin": "Elhammadia",
+        "code_postal": null,
+        "id": "3401"
+      },
+      {
+        "name": "الرابطة",
+        "name_latin": "Rabta",
+        "code_postal": "34035",
+        "id": "3402"
+      },
+      {
+        "name": "العش",
+        "name_latin": "El Euch",
+        "code_postal": "34029",
+        "id": "3403"
+      },
+      {
+        "name": "العناصر",
+        "name_latin": "El Annasseur",
+        "code_postal": "34030",
+        "id": "3404"
+      },
+      {
+        "name": "القصور",
+        "name_latin": "Ksour",
+        "code_postal": "34048",
+        "id": "3405"
+      },
+      {
+        "name": "القلة",
+        "name_latin": "Colla",
+        "code_postal": "34015",
+        "id": "3406"
+      },
+      {
+        "name": "الماين",
+        "name_latin": "El Main",
+        "code_postal": "34018",
+        "id": "3407"
+      },
+      {
+        "name": "المنصورة",
+        "name_latin": "Mansoura",
+        "code_postal": "34008",
+        "id": "3408"
+      },
+      {
+        "name": "المهير",
+        "name_latin": "El M'hir",
+        "code_postal": "34019",
+        "id": "3409"
+      },
+      {
+        "name": "الياشير",
+        "name_latin": "El Achir",
+        "code_postal": "34006",
+        "id": "3410"
+      },
+      {
+        "name": "أولاد أبراهم",
+        "name_latin": "Ouled Brahem",
+        "code_postal": "34032",
+        "id": "3411"
+      },
+      {
+        "name": "أولاد دحمان",
+        "name_latin": "Ouled Dahmane",
+        "code_postal": "34033",
+        "id": "3412"
+      },
+      {
+        "name": "أولاد سيدي ابراهيم",
+        "name_latin": "Ouled Sidi-Brahim",
+        "code_postal": "28032",
+        "id": "3413"
+      },
+      {
+        "name": "بئر قاصد علي",
+        "name_latin": "Bir Kasdali",
+        "code_postal": "34011",
+        "id": "3414"
+      },
+      {
+        "name": "برج الغدير",
+        "name_latin": "Bordj Ghedir",
+        "code_postal": "34004",
+        "id": "3415"
+      },
+      {
+        "name": "برج بوعريرج",
+        "name_latin": "B. B. Arreridj",
+        "code_postal": "34000",
+        "id": "3416"
+      },
+      {
+        "name": "برج زمورة",
+        "name_latin": "Bordj Zemmoura",
+        "code_postal": "34005",
+        "id": "3417"
+      },
+      {
+        "name": "بليمور",
+        "name_latin": "Belimour",
+        "code_postal": "34025",
+        "id": "3418"
+      },
+      {
+        "name": "بن داود",
+        "name_latin": "Ben Daoud",
+        "code_postal": "34073",
+        "id": "3419"
+      },
+      {
+        "name": "تسامرت",
+        "name_latin": "Tassamert",
+        "code_postal": "34026",
+        "id": "3420"
+      },
+      {
+        "name": "تفرق",
+        "name_latin": "Tefreg",
+        "code_postal": "34061",
+        "id": "3421"
+      },
+      {
+        "name": "تقلعيت",
+        "name_latin": "Taglait",
+        "code_postal": "34059",
+        "id": "3422"
+      },
+      {
+        "name": "تيكستار",
+        "name_latin": "Tixter",
+        "code_postal": "34022",
+        "id": "3423"
+      },
+      {
+        "name": "ثنية النصر",
+        "name_latin": "Teniet En Nasr",
+        "code_postal": "34021",
+        "id": "3424"
+      },
+      {
+        "name": "جعافرة",
+        "name_latin": "Djaafra",
+        "code_postal": "34016",
+        "id": "3425"
+      },
+      {
+        "name": "حرازة",
+        "name_latin": "Haraza",
+        "code_postal": "34047",
+        "id": "3426"
+      },
+      {
+        "name": "حسناوة",
+        "name_latin": "Hasnaoua",
+        "code_postal": "34068",
+        "id": "3427"
+      },
+      {
+        "name": "خليل",
+        "name_latin": "Khelil",
+        "code_postal": "34028",
+        "id": "3428"
+      },
+      {
+        "name": "رأس الوادي",
+        "name_latin": "Ras El Oued",
+        "code_postal": "34001",
+        "id": "3429"
+      },
+      {
+        "name": "سيدي أمبارك",
+        "name_latin": "Sidi-Embarek",
+        "code_postal": "34020",
+        "id": "3430"
+      },
+      {
+        "name": "عين تاغروت",
+        "name_latin": "Ain Taghrout",
+        "code_postal": "34010",
+        "id": "3431"
+      },
+      {
+        "name": "عين تسرة",
+        "name_latin": "Ain Tesra",
+        "code_postal": "34027",
+        "id": "3432"
+      },
+      {
+        "name": "غيلاسة",
+        "name_latin": "Ghailasa",
+        "code_postal": "34031",
+        "id": "3433"
+      },
+      {
+        "name": "مجانة",
+        "name_latin": "Medjana",
+        "code_postal": "34009",
+        "id": "3434"
+      }
+    ]
+  },
+  {
+    "code": "35",
+    "name": "بومرداس",
+    "name_latin": "Boumerdès",
+    "communes": [
+      {
+        "name": "أعفير",
+        "name_latin": "Afir",
+        "code_postal": "35022",
+        "id": "3501"
+      },
+      {
+        "name": "الاربعطاش",
+        "name_latin": "Larbatache",
+        "code_postal": "35017",
+        "id": "3502"
+      },
+      {
+        "name": "الثنية",
+        "name_latin": "Thenia",
+        "code_postal": "35005",
+        "id": "3503"
+      },
+      {
+        "name": "الخروبة",
+        "name_latin": "El Kharrouba",
+        "code_postal": null,
+        "id": "3504"
+      },
+      {
+        "name": "الناصرية",
+        "name_latin": "Naciria",
+        "code_postal": "35018",
+        "id": "3505"
+      },
+      {
+        "name": "أولاد عيسى",
+        "name_latin": "Ouled Aissa",
+        "code_postal": "01051",
+        "id": "3506"
+      },
+      {
+        "name": "أولاد موسى",
+        "name_latin": "Ouled Moussa",
+        "code_postal": "35011",
+        "id": "3507"
+      },
+      {
+        "name": "أولاد هداج",
+        "name_latin": "Ouled Hedadj",
+        "code_postal": "35052",
+        "id": "3508"
+      },
+      {
+        "name": "برج منايل",
+        "name_latin": "Bordj Menaiel",
+        "code_postal": "35001",
+        "id": "3509"
+      },
+      {
+        "name": "بغلية",
+        "name_latin": "Baghlia",
+        "code_postal": "35013",
+        "id": "3510"
+      },
+      {
+        "name": "بن شود",
+        "name_latin": "Ben Choud",
+        "code_postal": "35033",
+        "id": "3511"
+      },
+      {
+        "name": "بني عمران",
+        "name_latin": "Beni Amrane",
+        "code_postal": "35006",
+        "id": "3512"
+      },
+      {
+        "name": "بودواو",
+        "name_latin": "Boudouaou",
+        "code_postal": "35003",
+        "id": "3513"
+      },
+      {
+        "name": "بودواو البحري",
+        "name_latin": "Boudouaou El Bahri",
+        "code_postal": "35023",
+        "id": "3514"
+      },
+      {
+        "name": "بوزقزة قدارة",
+        "name_latin": "Bouzegza Keddara",
+        "code_postal": "35038",
+        "id": "3515"
+      },
+      {
+        "name": "بومرداس",
+        "name_latin": "Boumerdes",
+        "code_postal": "35000",
+        "id": "3516"
+      },
+      {
+        "name": "تاورقة",
+        "name_latin": "Taourga",
+        "code_postal": "35029",
+        "id": "3517"
+      },
+      {
+        "name": "تيجلابين",
+        "name_latin": "Tidjelabine",
+        "code_postal": "35021",
+        "id": "3518"
+      },
+      {
+        "name": "تيمزريت",
+        "name_latin": "Timezrit",
+        "code_postal": "06019",
+        "id": "3519"
+      },
+      {
+        "name": "جنات",
+        "name_latin": "Djinet",
+        "code_postal": "35024",
+        "id": "3520"
+      },
+      {
+        "name": "حمادي",
+        "name_latin": "Hammedi",
+        "code_postal": "35015",
+        "id": "3521"
+      },
+      {
+        "name": "خميس الخشنة",
+        "name_latin": "Khemis El Khechna",
+        "code_postal": "35010",
+        "id": "3522"
+      },
+      {
+        "name": "دلس",
+        "name_latin": "Dellys",
+        "code_postal": "35004",
+        "id": "3523"
+      },
+      {
+        "name": "زموري",
+        "name_latin": "Zemmouri",
+        "code_postal": "35012",
+        "id": "3524"
+      },
+      {
+        "name": "سوق الحد",
+        "name_latin": "Souk El Had",
+        "code_postal": null,
+        "id": "3525"
+      },
+      {
+        "name": "سي مصطفى",
+        "name_latin": "Si Mustapha",
+        "code_postal": "35028",
+        "id": "3526"
+      },
+      {
+        "name": "سيدي داود",
+        "name_latin": "Sidi Daoud",
+        "code_postal": "35019",
+        "id": "3527"
+      },
+      {
+        "name": "شعبة العامر",
+        "name_latin": "Chabet El Ameur",
+        "code_postal": "35008",
+        "id": "3528"
+      },
+      {
+        "name": "عمال",
+        "name_latin": "Ammal",
+        "code_postal": "35031",
+        "id": "3529"
+      },
+      {
+        "name": "قورصو",
+        "name_latin": "Corso",
+        "code_postal": "35014",
+        "id": "3530"
+      },
+      {
+        "name": "لقاطة",
+        "name_latin": "Leghata",
+        "code_postal": "35026",
+        "id": "3531"
+      },
+      {
+        "name": "يسر",
+        "name_latin": "Isser",
+        "code_postal": "35009",
+        "id": "3532"
+      }
+    ]
+  },
+  {
+    "code": "36",
+    "name": "الطارف",
+    "name_latin": "El Tarf",
+    "communes": [
+      {
+        "name": "البسباس",
+        "name_latin": "Besbes",
+        "code_postal": "36017",
+        "id": "3601"
+      },
+      {
+        "name": "الذرعـان",
+        "name_latin": "Drean",
+        "code_postal": "36001",
+        "id": "3602"
+      },
+      {
+        "name": "الزيتونة",
+        "name_latin": "Zitouna",
+        "code_postal": "21028",
+        "id": "3603"
+      },
+      {
+        "name": "السوارخ",
+        "name_latin": "Souarekh",
+        "code_postal": "36020",
+        "id": "3604"
+      },
+      {
+        "name": "الشافية",
+        "name_latin": "Chefia",
+        "code_postal": "36032",
+        "id": "3605"
+      },
+      {
+        "name": "الشط",
+        "name_latin": "Echatt",
+        "code_postal": "36025",
+        "id": "3606"
+      },
+      {
+        "name": "الطارف",
+        "name_latin": "El Tarf",
+        "code_postal": "36000",
+        "id": "3607"
+      },
+      {
+        "name": "العيون",
+        "name_latin": "El Aioun",
+        "code_postal": "36018",
+        "id": "3608"
+      },
+      {
+        "name": "القالة",
+        "name_latin": "El Kala",
+        "code_postal": "36002",
+        "id": "3609"
+      },
+      {
+        "name": "بحيرة الطيور",
+        "name_latin": "Lac Des Oiseaux",
+        "code_postal": "36019",
+        "id": "3610"
+      },
+      {
+        "name": "بريحان",
+        "name_latin": "Berrihane",
+        "code_postal": "36027",
+        "id": "3611"
+      },
+      {
+        "name": "بن مهيدي",
+        "name_latin": "Ben M Hidi",
+        "code_postal": "36003",
+        "id": "3612"
+      },
+      {
+        "name": "بوثلجة",
+        "name_latin": "Bouteldja",
+        "code_postal": "36006",
+        "id": "3613"
+      },
+      {
+        "name": "بوحجار",
+        "name_latin": "Bouhadjar",
+        "code_postal": "36005",
+        "id": "3614"
+      },
+      {
+        "name": "بوقوس",
+        "name_latin": "Bougous",
+        "code_postal": "36029",
+        "id": "3615"
+      },
+      {
+        "name": "حمام بني صالح",
+        "name_latin": "Hammam Beni Salah",
+        "code_postal": "36036",
+        "id": "3616"
+      },
+      {
+        "name": "رمل السوق",
+        "name_latin": "Raml Souk",
+        "code_postal": "36021",
+        "id": "3617"
+      },
+      {
+        "name": "زريزر",
+        "name_latin": "Zerizer",
+        "code_postal": "36015",
+        "id": "3618"
+      },
+      {
+        "name": "شبيطة مختار",
+        "name_latin": "Chebaita Mokhtar",
+        "code_postal": "36013",
+        "id": "3619"
+      },
+      {
+        "name": "شحاني",
+        "name_latin": "Chihani",
+        "code_postal": "36014",
+        "id": "3620"
+      },
+      {
+        "name": "عصفور",
+        "name_latin": "Asfour",
+        "code_postal": "36012",
+        "id": "3621"
+      },
+      {
+        "name": "عين العسل",
+        "name_latin": "Ain El Assel",
+        "code_postal": "36010",
+        "id": "3622"
+      },
+      {
+        "name": "عين الكرمة",
+        "name_latin": "Ain Kerma",
+        "code_postal": "31059",
+        "id": "3623"
+      },
+      {
+        "name": "وادي الزيتون",
+        "name_latin": "Oued Zitoun",
+        "code_postal": "36044",
+        "id": "3624"
+      }
+    ]
+  },
+  {
+    "code": "37",
+    "name": "تندوف",
+    "name_latin": "Tindouf",
+    "communes": [
+      {
+        "name": "أم العسل",
+        "name_latin": "Oum El Assel",
+        "code_postal": "37003",
+        "id": "3701"
+      },
+      {
+        "name": "تندوف",
+        "name_latin": "Tindouf",
+        "code_postal": "37000",
+        "id": "3702"
+      }
+    ]
+  },
+  {
+    "code": "38",
+    "name": "تيسمسيلت",
+    "name_latin": "Tissemsilt",
+    "communes": [
+      {
+        "name": "الأربعاء",
+        "name_latin": "Larbaa",
+        "code_postal": "09002",
+        "id": "3801"
+      },
+      {
+        "name": "الأزهرية",
+        "name_latin": "Lazharia",
+        "code_postal": "38008",
+        "id": "3802"
+      },
+      {
+        "name": "العيون",
+        "name_latin": "Layoune",
+        "code_postal": "38007",
+        "id": "3803"
+      },
+      {
+        "name": "المعاصم",
+        "name_latin": "Maacem",
+        "code_postal": "38023",
+        "id": "3804"
+      },
+      {
+        "name": "الملعب",
+        "name_latin": "Melaab",
+        "code_postal": "38013",
+        "id": "3805"
+      },
+      {
+        "name": "اليوسفية",
+        "name_latin": "Youssoufia",
+        "code_postal": "38031",
+        "id": "3806"
+      },
+      {
+        "name": "أولاد بسام",
+        "name_latin": "Ouled Bessam",
+        "code_postal": "38014",
+        "id": "3807"
+      },
+      {
+        "name": "برج الأمير عبد القادر",
+        "name_latin": "Bordj El Emir Abdelkader",
+        "code_postal": "38041",
+        "id": "3808"
+      },
+      {
+        "name": "برج بونعامة",
+        "name_latin": "Bordj Bounaama",
+        "code_postal": "38001",
+        "id": "3809"
+      },
+      {
+        "name": "بني شعيب",
+        "name_latin": "Beni Chaib",
+        "code_postal": "38019",
+        "id": "3810"
+      },
+      {
+        "name": "بني لحسن",
+        "name_latin": "Beni Lahcene",
+        "code_postal": "38020",
+        "id": "3811"
+      },
+      {
+        "name": "بوقائد",
+        "name_latin": "Boucaid",
+        "code_postal": "38005",
+        "id": "3812"
+      },
+      {
+        "name": "تملاحت",
+        "name_latin": "Tamellahet",
+        "code_postal": "38029",
+        "id": "3813"
+      },
+      {
+        "name": "تيسمسيلت",
+        "name_latin": "Tissemsilt",
+        "code_postal": "38000",
+        "id": "3814"
+      },
+      {
+        "name": "ثنية الاحد",
+        "name_latin": "Theniet El Had",
+        "code_postal": "38003",
+        "id": "3815"
+      },
+      {
+        "name": "خميستي",
+        "name_latin": "Khemisti",
+        "code_postal": "38016",
+        "id": "3816"
+      },
+      {
+        "name": "سيدي العنتري",
+        "name_latin": "Sidi Lantri",
+        "code_postal": "38027",
+        "id": "3817"
+      },
+      {
+        "name": "سيدي بوتوشنت",
+        "name_latin": "Sidi Boutouchent",
+        "code_postal": "38026",
+        "id": "3818"
+      },
+      {
+        "name": "سيدي سليمان",
+        "name_latin": "Sidi Slimane",
+        "code_postal": "30030",
+        "id": "3819"
+      },
+      {
+        "name": "سيدي عابد",
+        "name_latin": "Sidi Abed",
+        "code_postal": "38025",
+        "id": "3820"
+      },
+      {
+        "name": "عماري",
+        "name_latin": "Ammari",
+        "code_postal": "38012",
+        "id": "3821"
+      },
+      {
+        "name": "لرجام",
+        "name_latin": "Lardjem",
+        "code_postal": "38002",
+        "id": "3822"
+      }
+    ]
+  },
+  {
+    "code": "39",
+    "name": "الوادي",
+    "name_latin": "El Oued",
+    "communes": [
+      {
+        "name": "البياضة",
+        "name_latin": "Bayadha",
+        "code_postal": "39007",
+        "id": "3901"
+      },
+      {
+        "name": "الحمراية",
+        "name_latin": "Hamraia",
+        "code_postal": "39061",
+        "id": "3902"
+      },
+      {
+        "name": "الدبيلة",
+        "name_latin": "Debila",
+        "code_postal": "39003",
+        "id": "3903"
+      },
+      {
+        "name": "الرباح",
+        "name_latin": "Robbah",
+        "code_postal": "39017",
+        "id": "3904"
+      },
+      {
+        "name": "الرقيبة",
+        "name_latin": "Reguiba",
+        "code_postal": "39016",
+        "id": "3905"
+      },
+      {
+        "name": "الطالب العربي",
+        "name_latin": "Taleb Larbi",
+        "code_postal": "39019",
+        "id": "3906"
+      },
+      {
+        "name": "الطريفاوي",
+        "name_latin": "Trifaoui",
+        "code_postal": "39044",
+        "id": "3907"
+      },
+      {
+        "name": "العقلة",
+        "name_latin": "El Ogla",
+        "code_postal": "12015",
+        "id": "3908"
+      },
+      {
+        "name": "المقرن",
+        "name_latin": "Magrane",
+        "code_postal": "39015",
+        "id": "3909"
+      },
+      {
+        "name": "النخلة",
+        "name_latin": "Nakhla",
+        "code_postal": "39031",
+        "id": "3910"
+      },
+      {
+        "name": "الوادي",
+        "name_latin": "El-Oued",
+        "code_postal": "39000",
+        "id": "3911"
+      },
+      {
+        "name": "اميه وانسة",
+        "name_latin": "Mih Ouansa",
+        "code_postal": "39030",
+        "id": "3912"
+      },
+      {
+        "name": "بن قشة",
+        "name_latin": "Ben Guecha",
+        "code_postal": "39048",
+        "id": "3913"
+      },
+      {
+        "name": "تغزوت",
+        "name_latin": "Taghzout",
+        "code_postal": "39083",
+        "id": "3914"
+      },
+      {
+        "name": "حاسي خليفة",
+        "name_latin": "Hassi Khalifa",
+        "code_postal": "39013",
+        "id": "3915"
+      },
+      {
+        "name": "حساني عبد الكريم",
+        "name_latin": "Hassani Abdelkrim",
+        "code_postal": "39020",
+        "id": "3916"
+      },
+      {
+        "name": "دوار الماء",
+        "name_latin": "Douar El Maa",
+        "code_postal": "39024",
+        "id": "3917"
+      },
+      {
+        "name": "سيدي عون",
+        "name_latin": "Sidi Aoun",
+        "code_postal": "39037",
+        "id": "3918"
+      },
+      {
+        "name": "قمار",
+        "name_latin": "Guemar",
+        "code_postal": "39002",
+        "id": "3919"
+      },
+      {
+        "name": "كوينين",
+        "name_latin": "Kouinine",
+        "code_postal": "39014",
+        "id": "3920"
+      },
+      {
+        "name": "وادي العلندة",
+        "name_latin": "Oued El Alenda",
+        "code_postal": "39033",
+        "id": "3921"
+      },
+      {
+        "name": "ورماس",
+        "name_latin": "Ourmes",
+        "code_postal": "39035",
+        "id": "3922"
+      }
+    ]
+  },
+  {
+    "code": "40",
+    "name": "خنشلة",
+    "name_latin": "Khenchela",
+    "communes": [
+      {
+        "name": "الحامة",
+        "name_latin": "El Hamma",
+        "code_postal": "40031",
+        "id": "4001"
+      },
+      {
+        "name": "الرميلة",
+        "name_latin": "Remila",
+        "code_postal": "40041",
+        "id": "4002"
+      },
+      {
+        "name": "المحمل",
+        "name_latin": "El Mahmal",
+        "code_postal": "40012",
+        "id": "4003"
+      },
+      {
+        "name": "الولجة",
+        "name_latin": "El Oueldja",
+        "code_postal": "19046",
+        "id": "4004"
+      },
+      {
+        "name": "انسيغة",
+        "name_latin": "Ensigha",
+        "code_postal": "40043",
+        "id": "4005"
+      },
+      {
+        "name": "أولاد رشاش",
+        "name_latin": "Ouled Rechache",
+        "code_postal": "40013",
+        "id": "4006"
+      },
+      {
+        "name": "بابار",
+        "name_latin": "Babar",
+        "code_postal": "40006",
+        "id": "4007"
+      },
+      {
+        "name": "بغاي",
+        "name_latin": "Baghai",
+        "code_postal": "40014",
+        "id": "4008"
+      },
+      {
+        "name": "بوحمامة",
+        "name_latin": "Bouhmama",
+        "code_postal": "40007",
+        "id": "4009"
+      },
+      {
+        "name": "تاوزيانت",
+        "name_latin": "Taouzianat",
+        "code_postal": "40011",
+        "id": "4010"
+      },
+      {
+        "name": "جلال",
+        "name_latin": "Djellal",
+        "code_postal": "40015",
+        "id": "4011"
+      },
+      {
+        "name": "خنشلة",
+        "name_latin": "Khenchela",
+        "code_postal": "40000",
+        "id": "4012"
+      },
+      {
+        "name": "خيران",
+        "name_latin": "Khirane",
+        "code_postal": "40036",
+        "id": "4013"
+      },
+      {
+        "name": "ششار",
+        "name_latin": "Chechar",
+        "code_postal": "40008",
+        "id": "4014"
+      },
+      {
+        "name": "شلية",
+        "name_latin": "Chelia",
+        "code_postal": "40030",
+        "id": "4015"
+      },
+      {
+        "name": "طامزة",
+        "name_latin": "Tamza",
+        "code_postal": "40024",
+        "id": "4016"
+      },
+      {
+        "name": "عين الطويلة",
+        "name_latin": "Ain Touila",
+        "code_postal": "40028",
+        "id": "4017"
+      },
+      {
+        "name": "قايس",
+        "name_latin": "Kais",
+        "code_postal": "40001",
+        "id": "4018"
+      },
+      {
+        "name": "متوسة",
+        "name_latin": "M'toussa",
+        "code_postal": "40021",
+        "id": "4019"
+      },
+      {
+        "name": "مصارة",
+        "name_latin": "M'sara",
+        "code_postal": "40039",
+        "id": "4020"
+      },
+      {
+        "name": "يابوس",
+        "name_latin": "Yabous",
+        "code_postal": "40023",
+        "id": "4021"
+      }
+    ]
+  },
+  {
+    "code": "41",
+    "name": "سوق أهراس",
+    "name_latin": "Souk Ahras",
+    "communes": [
+      {
+        "name": "الحدادة",
+        "name_latin": "Haddada",
+        "code_postal": "41012",
+        "id": "4101"
+      },
+      {
+        "name": "الحنانشة",
+        "name_latin": "Hanencha",
+        "code_postal": "41016",
+        "id": "4102"
+      },
+      {
+        "name": "الخضارة",
+        "name_latin": "Khedara",
+        "code_postal": "41013",
+        "id": "4103"
+      },
+      {
+        "name": "الدريعة",
+        "name_latin": "Drea",
+        "code_postal": "41015",
+        "id": "4104"
+      },
+      {
+        "name": "الراقوبة",
+        "name_latin": "Ragouba",
+        "code_postal": "41033",
+        "id": "4105"
+      },
+      {
+        "name": "الزعرورية",
+        "name_latin": "Zaarouria",
+        "code_postal": "41025",
+        "id": "4106"
+      },
+      {
+        "name": "الزوابي",
+        "name_latin": "Zouabi",
+        "code_postal": "41039",
+        "id": "4107"
+      },
+      {
+        "name": "المراهنة",
+        "name_latin": "Merahna",
+        "code_postal": "41004",
+        "id": "4108"
+      },
+      {
+        "name": "المشروحة",
+        "name_latin": "Machroha",
+        "code_postal": "41010",
+        "id": "4109"
+      },
+      {
+        "name": "أم العظايم",
+        "name_latin": "Oum El Adhaim",
+        "code_postal": "41019",
+        "id": "4110"
+      },
+      {
+        "name": "أولاد إدريس",
+        "name_latin": "Ouled Driss",
+        "code_postal": "41005",
+        "id": "4111"
+      },
+      {
+        "name": "أولاد مومن",
+        "name_latin": "Ouled Moumen",
+        "code_postal": "41034",
+        "id": "4112"
+      },
+      {
+        "name": "بئر بوحوش",
+        "name_latin": "Bir Bouhouche",
+        "code_postal": "41011",
+        "id": "4113"
+      },
+      {
+        "name": "تاورة",
+        "name_latin": "Taoura",
+        "code_postal": "41009",
+        "id": "4114"
+      },
+      {
+        "name": "ترقالت",
+        "name_latin": "Terraguelt",
+        "code_postal": "41037",
+        "id": "4115"
+      },
+      {
+        "name": "تيفاش",
+        "name_latin": "Tiffech",
+        "code_postal": "41038",
+        "id": "4116"
+      },
+      {
+        "name": "خميسة",
+        "name_latin": "Khemissa",
+        "code_postal": "41031",
+        "id": "4117"
+      },
+      {
+        "name": "سافل الويدان",
+        "name_latin": "Safel El Ouiden",
+        "code_postal": "41035",
+        "id": "4118"
+      },
+      {
+        "name": "سدراتة",
+        "name_latin": "Sedrata",
+        "code_postal": "41006",
+        "id": "4119"
+      },
+      {
+        "name": "سوق أهراس",
+        "name_latin": "Souk Ahras",
+        "code_postal": "41000",
+        "id": "4120"
+      },
+      {
+        "name": "سيدي فرج",
+        "name_latin": "Sidi Fredj",
+        "code_postal": null,
+        "id": "4121"
+      },
+      {
+        "name": "عين الزانة",
+        "name_latin": "Ain Zana",
+        "code_postal": "41027",
+        "id": "4122"
+      },
+      {
+        "name": "عين سلطان",
+        "name_latin": "Ain Soltane",
+        "code_postal": "20029",
+        "id": "4123"
+      },
+      {
+        "name": "مداوروش",
+        "name_latin": "M'daourouche",
+        "code_postal": "41001",
+        "id": "4124"
+      },
+      {
+        "name": "وادي الكبريت",
+        "name_latin": "Oued Kebrit",
+        "code_postal": "41018",
+        "id": "4125"
+      },
+      {
+        "name": "ويلان",
+        "name_latin": "Ouillen",
+        "code_postal": "41029",
+        "id": "4126"
+      }
+    ]
+  },
+  {
+    "code": "42",
+    "name": "تيبازة",
+    "name_latin": "Tipaza",
+    "communes": [
+      {
+        "name": "أحمر العين",
+        "name_latin": "Ahmer El Ain",
+        "code_postal": "42005",
+        "id": "4201"
+      },
+      {
+        "name": "أغبال",
+        "name_latin": "Aghbal",
+        "code_postal": "42035",
+        "id": "4202"
+      },
+      {
+        "name": "الأرهاط",
+        "name_latin": "Larhat",
+        "code_postal": "42017",
+        "id": "4203"
+      },
+      {
+        "name": "الحطاطبة",
+        "name_latin": "Attatba",
+        "code_postal": "42008",
+        "id": "4204"
+      },
+      {
+        "name": "الداموس",
+        "name_latin": "Damous",
+        "code_postal": "42014",
+        "id": "4205"
+      },
+      {
+        "name": "الشعيبة",
+        "name_latin": "Chaiba",
+        "code_postal": "42047",
+        "id": "4206"
+      },
+      {
+        "name": "القليعة",
+        "name_latin": "Kolea",
+        "code_postal": "42003",
+        "id": "4207"
+      },
+      {
+        "name": "الناظور",
+        "name_latin": "Nador",
+        "code_postal": "42039",
+        "id": "4208"
+      },
+      {
+        "name": "بني ميلك",
+        "name_latin": "Beni Mileuk",
+        "code_postal": "42024",
+        "id": "4209"
+      },
+      {
+        "name": "بواسماعيل",
+        "name_latin": "Bou Ismail",
+        "code_postal": "42004",
+        "id": "4210"
+      },
+      {
+        "name": "بورقيقة",
+        "name_latin": "Bourkika",
+        "code_postal": "42011",
+        "id": "4211"
+      },
+      {
+        "name": "بوهارون",
+        "name_latin": "Bou Haroun",
+        "code_postal": "42009",
+        "id": "4212"
+      },
+      {
+        "name": "تيبازة",
+        "name_latin": "Tipaza",
+        "code_postal": "42000",
+        "id": "4213"
+      },
+      {
+        "name": "حجرة النص",
+        "name_latin": "Hadjret Ennous",
+        "code_postal": "42029",
+        "id": "4214"
+      },
+      {
+        "name": "حجوط",
+        "name_latin": "Hadjout",
+        "code_postal": "42001",
+        "id": "4215"
+      },
+      {
+        "name": "خميستي",
+        "name_latin": "Khemisti",
+        "code_postal": "38016",
+        "id": "4216"
+      },
+      {
+        "name": "دواودة",
+        "name_latin": "Douaouda",
+        "code_postal": "42015",
+        "id": "4217"
+      },
+      {
+        "name": "سيدي راشد",
+        "name_latin": "Sidi Rached",
+        "code_postal": "42040",
+        "id": "4218"
+      },
+      {
+        "name": "سيدي سميان",
+        "name_latin": "Sidi Semiane",
+        "code_postal": "42041",
+        "id": "4219"
+      },
+      {
+        "name": "سيدي عامر",
+        "name_latin": "Sidi-Amar",
+        "code_postal": "20019",
+        "id": "4220"
+      },
+      {
+        "name": "سيدي غيلاس",
+        "name_latin": "Sidi Ghiles",
+        "code_postal": "42021",
+        "id": "4221"
+      },
+      {
+        "name": "شرشال",
+        "name_latin": "Cherchell",
+        "code_postal": "42002",
+        "id": "4222"
+      },
+      {
+        "name": "عين تاقورايت",
+        "name_latin": "Ain Tagourait",
+        "code_postal": "42023",
+        "id": "4223"
+      },
+      {
+        "name": "فوكة",
+        "name_latin": "Fouka",
+        "code_postal": "42006",
+        "id": "4224"
+      },
+      {
+        "name": "قوراية",
+        "name_latin": "Gouraya",
+        "code_postal": "42007",
+        "id": "4225"
+      },
+      {
+        "name": "مراد",
+        "name_latin": "Merad",
+        "code_postal": "42019",
+        "id": "4226"
+      },
+      {
+        "name": "مسلمون",
+        "name_latin": "Messelmoun",
+        "code_postal": "42036",
+        "id": "4227"
+      },
+      {
+        "name": "مناصر",
+        "name_latin": "Menaceur",
+        "code_postal": "42018",
+        "id": "4228"
+      }
+    ]
+  },
+  {
+    "code": "43",
+    "name": "ميلة",
+    "name_latin": "Mila",
+    "communes": [
+      {
+        "name": "أحمد راشدي",
+        "name_latin": "Ahmed Rachedi",
+        "code_postal": "43013",
+        "id": "4301"
+      },
+      {
+        "name": "اعميرة اراس",
+        "name_latin": "Amira Arres",
+        "code_postal": "43017",
+        "id": "4302"
+      },
+      {
+        "name": "التلاغمة",
+        "name_latin": "Teleghma",
+        "code_postal": "43008",
+        "id": "4303"
+      },
+      {
+        "name": "الرواشد",
+        "name_latin": "Rouached",
+        "code_postal": "43009",
+        "id": "4304"
+      },
+      {
+        "name": "الشيقارة",
+        "name_latin": "Chigara",
+        "code_postal": "43025",
+        "id": "4305"
+      },
+      {
+        "name": "العياضي برباس",
+        "name_latin": "El Ayadi Barbes",
+        "code_postal": "43050",
+        "id": "4306"
+      },
+      {
+        "name": "القرارم قوقة",
+        "name_latin": "Grarem Gouga",
+        "code_postal": "43004",
+        "id": "4307"
+      },
+      {
+        "name": "أولاد اخلوف",
+        "name_latin": "Ouled Khalouf",
+        "code_postal": "43032",
+        "id": "4308"
+      },
+      {
+        "name": "بن يحي عبد الرحمن",
+        "name_latin": "Benyahia Abderrahmane",
+        "code_postal": "43020",
+        "id": "4309"
+      },
+      {
+        "name": "بوحاتم",
+        "name_latin": "Bouhatem",
+        "code_postal": "43022",
+        "id": "4310"
+      },
+      {
+        "name": "تاجنانت",
+        "name_latin": "Tadjenanet",
+        "code_postal": "43007",
+        "id": "4311"
+      },
+      {
+        "name": "ترعي باينان",
+        "name_latin": "Terrai Bainen",
+        "code_postal": "43018",
+        "id": "4312"
+      },
+      {
+        "name": "تسالة لمطاعي",
+        "name_latin": "Tassala Lematai",
+        "code_postal": "43034",
+        "id": "4313"
+      },
+      {
+        "name": "تسدان حدادة",
+        "name_latin": "Tassadane Haddada",
+        "code_postal": "43033",
+        "id": "4314"
+      },
+      {
+        "name": "تيبرقنت",
+        "name_latin": "Tiberguent",
+        "code_postal": "43035",
+        "id": "4315"
+      },
+      {
+        "name": "حمالة",
+        "name_latin": "Hamala",
+        "code_postal": "43052",
+        "id": "4316"
+      },
+      {
+        "name": "دراحي بوصلاح",
+        "name_latin": "Derrahi Bousselah",
+        "code_postal": "43046",
+        "id": "4317"
+      },
+      {
+        "name": "زغاية",
+        "name_latin": "Zeghaia",
+        "code_postal": "43012",
+        "id": "4318"
+      },
+      {
+        "name": "سيدي خليفة",
+        "name_latin": "Sidi Khelifa",
+        "code_postal": "43058",
+        "id": "4319"
+      },
+      {
+        "name": "سيدي مروان",
+        "name_latin": "Sidi Merouane",
+        "code_postal": "43010",
+        "id": "4320"
+      },
+      {
+        "name": "شلغوم العيد",
+        "name_latin": "Chelghoum Laid",
+        "code_postal": "43001",
+        "id": "4321"
+      },
+      {
+        "name": "عين البيضاء أحريش",
+        "name_latin": "Ain Beida Harriche",
+        "code_postal": "43014",
+        "id": "4322"
+      },
+      {
+        "name": "عين التين",
+        "name_latin": "Ain Tine",
+        "code_postal": "43016",
+        "id": "4323"
+      },
+      {
+        "name": "عين الملوك",
+        "name_latin": "Ain Mellouk",
+        "code_postal": "43015",
+        "id": "4324"
+      },
+      {
+        "name": "فرجيوة",
+        "name_latin": "Ferdjioua",
+        "code_postal": "43002",
+        "id": "4325"
+      },
+      {
+        "name": "مشيرة",
+        "name_latin": "El Mechira",
+        "code_postal": "43026",
+        "id": "4326"
+      },
+      {
+        "name": "ميلة",
+        "name_latin": "Mila",
+        "code_postal": "43000",
+        "id": "4327"
+      },
+      {
+        "name": "مينار زارزة",
+        "name_latin": "Minar Zarza",
+        "code_postal": "43036",
+        "id": "4328"
+      },
+      {
+        "name": "وادي العثمانية",
+        "name_latin": "Oued Athmenia",
+        "code_postal": "43005",
+        "id": "4329"
+      },
+      {
+        "name": "وادي النجاء",
+        "name_latin": "Oued Endja",
+        "code_postal": "43006",
+        "id": "4330"
+      },
+      {
+        "name": "وادي سقان",
+        "name_latin": "Oued Seguen",
+        "code_postal": "43031",
+        "id": "4331"
+      },
+      {
+        "name": "يحي بني قشة",
+        "name_latin": "Yahia Beniguecha",
+        "code_postal": "43071",
+        "id": "4332"
+      }
+    ]
+  },
+  {
+    "code": "44",
+    "name": "عين الدفلى",
+    "name_latin": "Aïn Defla",
+    "communes": [
+      {
+        "name": "الحسانية",
+        "name_latin": "Hassania",
+        "code_postal": "44022",
+        "id": "4401"
+      },
+      {
+        "name": "الحسينية",
+        "name_latin": "Hoceinia",
+        "code_postal": "44048",
+        "id": "4402"
+      },
+      {
+        "name": "الروينة",
+        "name_latin": "Rouina",
+        "code_postal": "44017",
+        "id": "4403"
+      },
+      {
+        "name": "العامرة",
+        "name_latin": "El-Amra",
+        "code_postal": "44010",
+        "id": "4404"
+      },
+      {
+        "name": "العبادية",
+        "name_latin": "El-Abadia",
+        "code_postal": "44006",
+        "id": "4405"
+      },
+      {
+        "name": "العطاف",
+        "name_latin": "El-Attaf",
+        "code_postal": "44002",
+        "id": "4406"
+      },
+      {
+        "name": "الماين",
+        "name_latin": "El-Maine",
+        "code_postal": "44051",
+        "id": "4407"
+      },
+      {
+        "name": "المخاطرية",
+        "name_latin": "Mekhatria",
+        "code_postal": "44050",
+        "id": "4408"
+      },
+      {
+        "name": "بئر ولد خليفة",
+        "name_latin": "Bir-Ould-Khelifa",
+        "code_postal": "44043",
+        "id": "4409"
+      },
+      {
+        "name": "بربوش",
+        "name_latin": "Birbouche",
+        "code_postal": "44042",
+        "id": "4410"
+      },
+      {
+        "name": "برج الأمير خالد",
+        "name_latin": "Bordj-Emir-Khaled",
+        "code_postal": "44021",
+        "id": "4411"
+      },
+      {
+        "name": "بطحية",
+        "name_latin": "Bathia",
+        "code_postal": "44041",
+        "id": "4412"
+      },
+      {
+        "name": "بلعاص",
+        "name_latin": "Belaas",
+        "code_postal": "44038",
+        "id": "4413"
+      },
+      {
+        "name": "بن علال",
+        "name_latin": "Ben Allal",
+        "code_postal": "44040",
+        "id": "4414"
+      },
+      {
+        "name": "بوراشد",
+        "name_latin": "Bourached",
+        "code_postal": "44044",
+        "id": "4415"
+      },
+      {
+        "name": "بومدفع",
+        "name_latin": "Boumedfaa",
+        "code_postal": "44004",
+        "id": "4416"
+      },
+      {
+        "name": "تاشتة زقاغة",
+        "name_latin": "Tacheta Zegagha",
+        "code_postal": "44028",
+        "id": "4417"
+      },
+      {
+        "name": "تبركانين",
+        "name_latin": "Tiberkanine",
+        "code_postal": "44030",
+        "id": "4418"
+      },
+      {
+        "name": "جليدة",
+        "name_latin": "Djelida",
+        "code_postal": "44009",
+        "id": "4419"
+      },
+      {
+        "name": "جمعة أولاد الشيخ",
+        "name_latin": "Djemaa Ouled Cheikh",
+        "code_postal": "44047",
+        "id": "4420"
+      },
+      {
+        "name": "جندل",
+        "name_latin": "Djendel",
+        "code_postal": "44005",
+        "id": "4421"
+      },
+      {
+        "name": "حمام ريغة",
+        "name_latin": "Hammam-Righa",
+        "code_postal": "44023",
+        "id": "4422"
+      },
+      {
+        "name": "خميس مليانة",
+        "name_latin": "Khemis-Miliana",
+        "code_postal": "44001",
+        "id": "4423"
+      },
+      {
+        "name": "زدين",
+        "name_latin": "Zeddine",
+        "code_postal": "44031",
+        "id": "4424"
+      },
+      {
+        "name": "سيدي الأخضر",
+        "name_latin": "Sidi-Lakhdar",
+        "code_postal": "27007",
+        "id": "4425"
+      },
+      {
+        "name": "طارق بن زياد",
+        "name_latin": "Tarik-Ibn-Ziad",
+        "code_postal": "44029",
+        "id": "4426"
+      },
+      {
+        "name": "عريب",
+        "name_latin": "Arib",
+        "code_postal": "44008",
+        "id": "4427"
+      },
+      {
+        "name": "عين الاشياخ",
+        "name_latin": "Ain-Lechiakh",
+        "code_postal": "44018",
+        "id": "4428"
+      },
+      {
+        "name": "عين البنيان",
+        "name_latin": "Ain-Benian",
+        "code_postal": "44035",
+        "id": "4429"
+      },
+      {
+        "name": "عين التركي",
+        "name_latin": "Ain-Torki",
+        "code_postal": "44020",
+        "id": "4430"
+      },
+      {
+        "name": "عين الدفلى",
+        "name_latin": "Ain-Defla",
+        "code_postal": "44000",
+        "id": "4431"
+      },
+      {
+        "name": "عين السلطان",
+        "name_latin": "Ain-Soltane",
+        "code_postal": "20029",
+        "id": "4432"
+      },
+      {
+        "name": "عين بويحيى",
+        "name_latin": "Ain-Bouyahia",
+        "code_postal": "44032",
+        "id": "4433"
+      },
+      {
+        "name": "مليانة",
+        "name_latin": "Miliana",
+        "code_postal": "44003",
+        "id": "4434"
+      },
+      {
+        "name": "واد الجمعة",
+        "name_latin": "Oued Djemaa",
+        "code_postal": "44049",
+        "id": "4435"
+      },
+      {
+        "name": "وادي الشرفاء",
+        "name_latin": "Oued Chorfa",
+        "code_postal": "44024",
+        "id": "4436"
+      }
+    ]
+  },
+  {
+    "code": "45",
+    "name": "النعامة",
+    "name_latin": "Naâma",
+    "communes": [
+      {
+        "name": "البيوض",
+        "name_latin": "El Biodh",
+        "code_postal": "45004",
+        "id": "4501"
+      },
+      {
+        "name": "القصدير",
+        "name_latin": "Kasdir",
+        "code_postal": "45024",
+        "id": "4502"
+      },
+      {
+        "name": "المشرية",
+        "name_latin": "Mecheria",
+        "code_postal": "45002",
+        "id": "4503"
+      },
+      {
+        "name": "النعامة",
+        "name_latin": "Naama",
+        "code_postal": "45000",
+        "id": "4504"
+      },
+      {
+        "name": "تيوت",
+        "name_latin": "Tiout",
+        "code_postal": "45030",
+        "id": "4505"
+      },
+      {
+        "name": "جنين بورزق",
+        "name_latin": "Djenienne Bourezg",
+        "code_postal": "45013",
+        "id": "4506"
+      },
+      {
+        "name": "سفيسيفة",
+        "name_latin": "Sfissifa",
+        "code_postal": "45021",
+        "id": "4507"
+      },
+      {
+        "name": "عسلة",
+        "name_latin": "Asla",
+        "code_postal": "45012",
+        "id": "4508"
+      },
+      {
+        "name": "عين الصفراء",
+        "name_latin": "Ain Sefra",
+        "code_postal": "45001",
+        "id": "4509"
+      },
+      {
+        "name": "عين بن خليل",
+        "name_latin": "Ain Ben Khelil",
+        "code_postal": "45008",
+        "id": "4510"
+      },
+      {
+        "name": "مغرار",
+        "name_latin": "Moghrar",
+        "code_postal": "45014",
+        "id": "4511"
+      },
+      {
+        "name": "مكمن بن عمار",
+        "name_latin": "Makmen Ben Amar",
+        "code_postal": "45005",
+        "id": "4512"
+      }
+    ]
+  },
+  {
+    "code": "46",
+    "name": "عين تموشنت",
+    "name_latin": "Aïn Témouchent",
+    "communes": [
+      {
+        "name": "أغلال",
+        "name_latin": "Aghlal",
+        "code_postal": "46016",
+        "id": "4601"
+      },
+      {
+        "name": "الأمير عبد القادر",
+        "name_latin": "Emir Abdelkader",
+        "code_postal": "18010",
+        "id": "4602"
+      },
+      {
+        "name": "الحساسنة",
+        "name_latin": "Hassasna",
+        "code_postal": "20003",
+        "id": "4603"
+      },
+      {
+        "name": "العامرية",
+        "name_latin": "El Amria",
+        "code_postal": "46006",
+        "id": "4604"
+      },
+      {
+        "name": "المالح",
+        "name_latin": "El Maleh",
+        "code_postal": "46067",
+        "id": "4605"
+      },
+      {
+        "name": "المساعيد",
+        "name_latin": "El Messaid",
+        "code_postal": "46035",
+        "id": "4606"
+      },
+      {
+        "name": "أولاد الكيحل",
+        "name_latin": "Ouled Kihal",
+        "code_postal": "46038",
+        "id": "4607"
+      },
+      {
+        "name": "أولاد بوجمعة",
+        "name_latin": "Ouled Boudjemaa",
+        "code_postal": "46043",
+        "id": "4608"
+      },
+      {
+        "name": "بني صاف",
+        "name_latin": "Beni Saf",
+        "code_postal": "46001",
+        "id": "4609"
+      },
+      {
+        "name": "بوزجار",
+        "name_latin": "Bouzedjar",
+        "code_postal": "46033",
+        "id": "4610"
+      },
+      {
+        "name": "تارقة",
+        "name_latin": "Terga",
+        "code_postal": "46015",
+        "id": "4611"
+      },
+      {
+        "name": "تامزورة",
+        "name_latin": "Tamzoura",
+        "code_postal": "46026",
+        "id": "4612"
+      },
+      {
+        "name": "حاسي الغلة",
+        "name_latin": "Hassi El Ghella",
+        "code_postal": "46012",
+        "id": "4613"
+      },
+      {
+        "name": "حمام بوحجر",
+        "name_latin": "Hammam Bou Hadjar",
+        "code_postal": "46005",
+        "id": "4614"
+      },
+      {
+        "name": "سيدي بن عدة",
+        "name_latin": "Sidi Ben Adda",
+        "code_postal": "46013",
+        "id": "4615"
+      },
+      {
+        "name": "سيدي بومدين",
+        "name_latin": "Sidi Boumediene",
+        "code_postal": "46051",
+        "id": "4616"
+      },
+      {
+        "name": "سيدي صافي",
+        "name_latin": "Sidi Safi",
+        "code_postal": "46025",
+        "id": "4617"
+      },
+      {
+        "name": "سيدي ورياش",
+        "name_latin": "Sidi Ouriache",
+        "code_postal": "46024",
+        "id": "4618"
+      },
+      {
+        "name": "شعبة اللحم",
+        "name_latin": "Chaabat El Ham",
+        "code_postal": "46011",
+        "id": "4619"
+      },
+      {
+        "name": "شنتوف",
+        "name_latin": "Chentouf",
+        "code_postal": null,
+        "id": "4620"
+      },
+      {
+        "name": "عقب الليل",
+        "name_latin": "Aoubellil",
+        "code_postal": "46017",
+        "id": "4621"
+      },
+      {
+        "name": "عين الأربعاء",
+        "name_latin": "Ain El Arbaa",
+        "code_postal": "46009",
+        "id": "4622"
+      },
+      {
+        "name": "عين الطلبة",
+        "name_latin": "Ain Tolba",
+        "code_postal": "46010",
+        "id": "4623"
+      },
+      {
+        "name": "عين الكيحل",
+        "name_latin": "Ain Kihal",
+        "code_postal": "46008",
+        "id": "4624"
+      },
+      {
+        "name": "عين تموشنت",
+        "name_latin": "Ain Temouchent",
+        "code_postal": "46000",
+        "id": "4625"
+      },
+      {
+        "name": "وادي الصباح",
+        "name_latin": "Oued Sebbah",
+        "code_postal": "46023",
+        "id": "4626"
+      },
+      {
+        "name": "وادي برقش",
+        "name_latin": "Oued Berkeche",
+        "code_postal": "46022",
+        "id": "4627"
+      },
+      {
+        "name": "ولهاصة الغرابة",
+        "name_latin": "Oulhaca El Gheraba",
+        "code_postal": "46053",
+        "id": "4628"
+      }
+    ]
+  },
+  {
+    "code": "47",
+    "name": "غرداية",
+    "name_latin": "Ghardaïa",
+    "communes": [
+      {
+        "name": "العطف",
+        "name_latin": "El Atteuf",
+        "code_postal": "47012",
+        "id": "4701"
+      },
+      {
+        "name": "القرارة",
+        "name_latin": "El Guerrara",
+        "code_postal": "47004",
+        "id": "4702"
+      },
+      {
+        "name": "المنصورة",
+        "name_latin": "Mansoura",
+        "code_postal": "34008",
+        "id": "4703"
+      },
+      {
+        "name": "بريان",
+        "name_latin": "Berriane",
+        "code_postal": "47003",
+        "id": "4704"
+      },
+      {
+        "name": "بونورة",
+        "name_latin": "Bounoura",
+        "code_postal": "47005",
+        "id": "4705"
+      },
+      {
+        "name": "زلفانة",
+        "name_latin": "Zelfana",
+        "code_postal": "47007",
+        "id": "4706"
+      },
+      {
+        "name": "سبسب",
+        "name_latin": "Sebseb",
+        "code_postal": "47025",
+        "id": "4707"
+      },
+      {
+        "name": "ضاية بن ضحوة",
+        "name_latin": "Dhayet Bendhahoua",
+        "code_postal": "47011",
+        "id": "4708"
+      },
+      {
+        "name": "غرداية",
+        "name_latin": "Ghardaia",
+        "code_postal": "47000",
+        "id": "4709"
+      },
+      {
+        "name": "متليلي",
+        "name_latin": "Metlili",
+        "code_postal": "47002",
+        "id": "4710"
+      }
+    ]
+  },
+  {
+    "code": "48",
+    "name": "غليزان",
+    "name_latin": "Relizane",
+    "communes": [
+      {
+        "name": "الحاسي",
+        "name_latin": "El Hassi",
+        "code_postal": "05116",
+        "id": "4801"
+      },
+      {
+        "name": "الحمادنة",
+        "name_latin": "El H'madna",
+        "code_postal": "48017",
+        "id": "4802"
+      },
+      {
+        "name": "الرمكة",
+        "name_latin": "Ramka",
+        "code_postal": "48024",
+        "id": "4803"
+      },
+      {
+        "name": "القطار",
+        "name_latin": "El-Guettar",
+        "code_postal": "48016",
+        "id": "4804"
+      },
+      {
+        "name": "القلعة",
+        "name_latin": "Kalaa",
+        "code_postal": "48018",
+        "id": "4805"
+      },
+      {
+        "name": "المطمر",
+        "name_latin": "El-Matmar",
+        "code_postal": "48009",
+        "id": "4806"
+      },
+      {
+        "name": "الولجة",
+        "name_latin": "El Ouldja",
+        "code_postal": "19046",
+        "id": "4807"
+      },
+      {
+        "name": "أولاد سيدي الميهوب",
+        "name_latin": "Ouled Sidi Mihoub",
+        "code_postal": "48061",
+        "id": "4808"
+      },
+      {
+        "name": "أولاد يعيش",
+        "name_latin": "Ouled Aiche",
+        "code_postal": "48019",
+        "id": "4809"
+      },
+      {
+        "name": "بلعسل بوزقزة",
+        "name_latin": "Belaassel Bouzagza",
+        "code_postal": "48036",
+        "id": "4810"
+      },
+      {
+        "name": "بن داود",
+        "name_latin": "Bendaoud",
+        "code_postal": "48053",
+        "id": "4811"
+      },
+      {
+        "name": "بني درقن",
+        "name_latin": "Beni Dergoun",
+        "code_postal": "48039",
+        "id": "4812"
+      },
+      {
+        "name": "بني زنطيس",
+        "name_latin": "Beni Zentis",
+        "code_postal": "48041",
+        "id": "4813"
+      },
+      {
+        "name": "جديوية",
+        "name_latin": "Djidiouia",
+        "code_postal": "48005",
+        "id": "4814"
+      },
+      {
+        "name": "حد الشكالة",
+        "name_latin": "Had Echkalla",
+        "code_postal": "48050",
+        "id": "4815"
+      },
+      {
+        "name": "حمري",
+        "name_latin": "Hamri",
+        "code_postal": "48051",
+        "id": "4816"
+      },
+      {
+        "name": "دار بن عبد الله",
+        "name_latin": "Dar Ben Abdelah",
+        "code_postal": "48044",
+        "id": "4817"
+      },
+      {
+        "name": "زمورة",
+        "name_latin": "Zemmoura",
+        "code_postal": "48008",
+        "id": "4818"
+      },
+      {
+        "name": "سوق الحد",
+        "name_latin": "Souk El Had",
+        "code_postal": null,
+        "id": "4819"
+      },
+      {
+        "name": "سيدي أمحمد بن علي",
+        "name_latin": "Sidi M'hamed Benali",
+        "code_postal": "48003",
+        "id": "4820"
+      },
+      {
+        "name": "سيدي امحمد بن عودة",
+        "name_latin": "Sidi M'hamed Benaouda",
+        "code_postal": "48030",
+        "id": "4821"
+      },
+      {
+        "name": "سيدي خطاب",
+        "name_latin": "Sidi Khettab",
+        "code_postal": "48029",
+        "id": "4822"
+      },
+      {
+        "name": "سيدي سعادة",
+        "name_latin": "Sidi Saada",
+        "code_postal": "48067",
+        "id": "4823"
+      },
+      {
+        "name": "سيدي لزرق",
+        "name_latin": "Sidi Lazreg",
+        "code_postal": "48065",
+        "id": "4824"
+      },
+      {
+        "name": "عمي موسى",
+        "name_latin": "Ammi Moussa",
+        "code_postal": "48004",
+        "id": "4825"
+      },
+      {
+        "name": "عين الرحمة",
+        "name_latin": "Ain Rahma",
+        "code_postal": "48033",
+        "id": "4826"
+      },
+      {
+        "name": "عين طارق",
+        "name_latin": "Ain-Tarek",
+        "code_postal": "48015",
+        "id": "4827"
+      },
+      {
+        "name": "غليزان",
+        "name_latin": "Relizane",
+        "code_postal": "48000",
+        "id": "4828"
+      },
+      {
+        "name": "لحلاف",
+        "name_latin": "Lahlef",
+        "code_postal": "48020",
+        "id": "4829"
+      },
+      {
+        "name": "مازونة",
+        "name_latin": "Mazouna",
+        "code_postal": "48002",
+        "id": "4830"
+      },
+      {
+        "name": "مديونة",
+        "name_latin": "Mediouna",
+        "code_postal": "48011",
+        "id": "4831"
+      },
+      {
+        "name": "مرجة سيدي عابد",
+        "name_latin": "Merdja Sidi Abed",
+        "code_postal": "48056",
+        "id": "4832"
+      },
+      {
+        "name": "منداس",
+        "name_latin": "Mendes",
+        "code_postal": "48012",
+        "id": "4833"
+      },
+      {
+        "name": "وادي الجمعة",
+        "name_latin": "Oued El Djemaa",
+        "code_postal": "48021",
+        "id": "4834"
+      },
+      {
+        "name": "وادي السلام",
+        "name_latin": "Oued Essalem",
+        "code_postal": "48022",
+        "id": "4835"
+      },
+      {
+        "name": "وادي رهيو",
+        "name_latin": "Oued-Rhiou",
+        "code_postal": "48001",
+        "id": "4836"
+      },
+      {
+        "name": "واريزان",
+        "name_latin": "Ouarizane",
+        "code_postal": "48013",
+        "id": "4837"
+      },
+      {
+        "name": "يلل",
+        "name_latin": "Yellel",
+        "code_postal": "48006",
+        "id": "4838"
+      }
+    ]
+  },
+  {
+    "code": "49",
+    "name": "تيميمون",
+    "name_latin": "Timimoun",
+    "communes": [
+      {
+        "name": "المطارفة",
+        "name_latin": "Metarfa",
+        "code_postal": "01033",
+        "id": "4901"
+      },
+      {
+        "name": "أوقروت",
+        "name_latin": "Aougrout",
+        "code_postal": "01012",
+        "id": "4902"
+      },
+      {
+        "name": "أولاد السعيد",
+        "name_latin": "Ouled Said",
+        "code_postal": "01039",
+        "id": "4903"
+      },
+      {
+        "name": "أولاد عيسى",
+        "name_latin": "Ouled Aissa",
+        "code_postal": "01051",
+        "id": "4904"
+      },
+      {
+        "name": "تنركوك",
+        "name_latin": "Tinerkouk",
+        "code_postal": "01013",
+        "id": "4905"
+      },
+      {
+        "name": "تيميمون",
+        "name_latin": "Timimoun",
+        "code_postal": "01001",
+        "id": "4906"
+      },
+      {
+        "name": "دلدول",
+        "name_latin": "Deldoul",
+        "code_postal": "17046",
+        "id": "4907"
+      },
+      {
+        "name": "شروين",
+        "name_latin": "Charouine",
+        "code_postal": "01014",
+        "id": "4908"
+      },
+      {
+        "name": "طالمين",
+        "name_latin": "Talmine",
+        "code_postal": "01034",
+        "id": "4909"
+      },
+      {
+        "name": "قصر قدور",
+        "name_latin": "Ksar Kaddour",
+        "code_postal": "01035",
+        "id": "4910"
+      }
+    ]
+  },
+  {
+    "code": "50",
+    "name": "برج باجي مختار",
+    "name_latin": "Bordj Badji Mokhtar",
+    "communes": [
+      {
+        "name": "برج باجي مختار",
+        "name_latin": "Bordj Badji Mokhtar",
+        "code_postal": "01010",
+        "id": "5001"
+      },
+      {
+        "name": "تيمياوين",
+        "name_latin": "Timiaouine",
+        "code_postal": "01042",
+        "id": "5002"
+      }
+    ]
+  },
+  {
+    "code": "51",
+    "name": "أولاد جلال",
+    "name_latin": "Ouled Djellal",
+    "communes": [
+      {
+        "name": "الدوسن",
+        "name_latin": "Doucen",
+        "code_postal": "07007",
+        "id": "5101"
+      },
+      {
+        "name": "الشعيبة",
+        "name_latin": "Chaiba",
+        "code_postal": "42047",
+        "id": "5102"
+      },
+      {
+        "name": "أولاد جلال",
+        "name_latin": "Ouled Djellal",
+        "code_postal": "07002",
+        "id": "5103"
+      },
+      {
+        "name": "بسباس",
+        "name_latin": "Besbes",
+        "code_postal": "07044",
+        "id": "5104"
+      },
+      {
+        "name": "رأس الميعاد",
+        "name_latin": "Ras El Miad",
+        "code_postal": "07062",
+        "id": "5105"
+      },
+      {
+        "name": "سيدي خالد",
+        "name_latin": "Sidi Khaled",
+        "code_postal": "07004",
+        "id": "5106"
+      }
+    ]
+  },
+  {
+    "code": "52",
+    "name": "بني عباس",
+    "name_latin": "Béni Abbès",
+    "communes": [
+      {
+        "name": "إقلي",
+        "name_latin": "Igli",
+        "code_postal": "08021",
+        "id": "5201"
+      },
+      {
+        "name": "القصابي",
+        "name_latin": "Ksabi",
+        "code_postal": "08039",
+        "id": "5202"
+      },
+      {
+        "name": "الواتة",
+        "name_latin": "El Ouata",
+        "code_postal": "08020",
+        "id": "5203"
+      },
+      {
+        "name": "أولاد خضير",
+        "name_latin": "Ouled-Khodeir",
+        "code_postal": "08028",
+        "id": "5204"
+      },
+      {
+        "name": "بن يخلف",
+        "name_latin": "Beni-Ikhlef",
+        "code_postal": "08025",
+        "id": "5205"
+      },
+      {
+        "name": "بني عباس",
+        "name_latin": "Beni-Abbes",
+        "code_postal": "08002",
+        "id": "5206"
+      },
+      {
+        "name": "تامترت",
+        "name_latin": "Tamtert",
+        "code_postal": "08046",
+        "id": "5207"
+      },
+      {
+        "name": "تيمودي",
+        "name_latin": "Timoudi",
+        "code_postal": "08031",
+        "id": "5208"
+      },
+      {
+        "name": "كرزاز",
+        "name_latin": "Kerzaz",
+        "code_postal": "08022",
+        "id": "5209"
+      }
+    ]
+  },
+  {
+    "code": "53",
+    "name": "عين صالح",
+    "name_latin": "In Salah",
+    "communes": [
+      {
+        "name": "إينغر",
+        "name_latin": "Inghar",
+        "code_postal": "11004",
+        "id": "5301"
+      },
+      {
+        "name": "عين صالح",
+        "name_latin": "Ain Salah",
+        "code_postal": "11001",
+        "id": "5302"
+      },
+      {
+        "name": "فقارة الزوى",
+        "name_latin": "Foggaret Ezzoua",
+        "code_postal": "11016",
+        "id": "5303"
+      }
+    ]
+  },
+  {
+    "code": "54",
+    "name": "عين قزام",
+    "name_latin": "In Guezzam",
+    "communes": [
+      {
+        "name": "تين زواتين",
+        "name_latin": "Tin Zouatine",
+        "code_postal": "11011",
+        "id": "5401"
+      },
+      {
+        "name": "عين قزام",
+        "name_latin": "Ain Guezzam",
+        "code_postal": "11005",
+        "id": "5402"
+      }
+    ]
+  },
+  {
+    "code": "55",
+    "name": "تقرت",
+    "name_latin": "Touggourt",
+    "communes": [
+      {
+        "name": "الحجيرة",
+        "name_latin": "El-Hadjira",
+        "code_postal": "30006",
+        "id": "5501"
+      },
+      {
+        "name": "الزاوية العابدية",
+        "name_latin": "Zaouia El Abidia",
+        "code_postal": "30018",
+        "id": "5502"
+      },
+      {
+        "name": "الطيبات",
+        "name_latin": "Taibet",
+        "code_postal": "30015",
+        "id": "5503"
+      },
+      {
+        "name": "العالية",
+        "name_latin": "El Alia",
+        "code_postal": "30023",
+        "id": "5504"
+      },
+      {
+        "name": "المقارين",
+        "name_latin": "Megarine",
+        "code_postal": "30009",
+        "id": "5505"
+      },
+      {
+        "name": "المنقر",
+        "name_latin": "M'naguer",
+        "code_postal": "30029",
+        "id": "5506"
+      },
+      {
+        "name": "النزلة",
+        "name_latin": "Nezla",
+        "code_postal": "30004",
+        "id": "5507"
+      },
+      {
+        "name": "بلدة اعمر",
+        "name_latin": "Blidet Amor",
+        "code_postal": "30005",
+        "id": "5508"
+      },
+      {
+        "name": "بن ناصر",
+        "name_latin": "Benaceur",
+        "code_postal": "30020",
+        "id": "5509"
+      },
+      {
+        "name": "تبسبست",
+        "name_latin": "Tebesbest",
+        "code_postal": "30058",
+        "id": "5510"
+      },
+      {
+        "name": "تقرت",
+        "name_latin": "Touggourt",
+        "code_postal": "30002",
+        "id": "5511"
+      },
+      {
+        "name": "تماسين",
+        "name_latin": "Temacine",
+        "code_postal": "30003",
+        "id": "5512"
+      },
+      {
+        "name": "سيدي سليمان",
+        "name_latin": "Sidi Slimane",
+        "code_postal": "30030",
+        "id": "5513"
+      }
+    ]
+  },
+  {
+    "code": "56",
+    "name": "جانت",
+    "name_latin": "Djanet",
+    "communes": [
+      {
+        "name": "برج الحواس",
+        "name_latin": "Bordj El Haouass",
+        "code_postal": "33008",
+        "id": "5601"
+      },
+      {
+        "name": "جانت",
+        "name_latin": "Djanet",
+        "code_postal": "33002",
+        "id": "5602"
+      }
+    ]
+  },
+  {
+    "code": "57",
+    "name": "المغير",
+    "name_latin": "El M'Ghair",
+    "communes": [
+      {
+        "name": "المرارة",
+        "name_latin": "M'rara",
+        "code_postal": "39067",
+        "id": "5701"
+      },
+      {
+        "name": "المغير",
+        "name_latin": "El-M'ghaier",
+        "code_postal": "39005",
+        "id": "5702"
+      },
+      {
+        "name": "أم الطيور",
+        "name_latin": "Oum Touyour",
+        "code_postal": "39034",
+        "id": "5703"
+      },
+      {
+        "name": "تندلة",
+        "name_latin": "Tenedla",
+        "code_postal": "39042",
+        "id": "5704"
+      },
+      {
+        "name": "جامعة",
+        "name_latin": "Djamaa",
+        "code_postal": "39004",
+        "id": "5705"
+      },
+      {
+        "name": "سطيل",
+        "name_latin": "Still",
+        "code_postal": "39039",
+        "id": "5706"
+      },
+      {
+        "name": "سيدي خليل",
+        "name_latin": "Sidi Khelil",
+        "code_postal": "39038",
+        "id": "5707"
+      },
+      {
+        "name": "سيدي عمران",
+        "name_latin": "Sidi Amrane",
+        "code_postal": "39021",
+        "id": "5708"
+      }
+    ]
+  },
+  {
+    "code": "58",
+    "name": "المنيعة",
+    "name_latin": "El Meniaa",
+    "communes": [
+      {
+        "name": "المنيعة",
+        "name_latin": "El Meniaa",
+        "code_postal": "47001",
+        "id": "5801"
+      },
+      {
+        "name": "حاسي الفحل",
+        "name_latin": "Hassi Fehal",
+        "code_postal": "47021",
+        "id": "5802"
+      },
+      {
+        "name": "حاسي القارة",
+        "name_latin": "Hassi Gara",
+        "code_postal": "47006",
+        "id": "5803"
+      }
+    ]
+  },
+  {
+    "code": "59",
+    "name": "أفلو",
+    "name_latin": "Aflou",
+    "communes": [
+      {
+        "name": "أفلو",
+        "name_latin": "Aflou",
+        "code_postal": "03001",
+        "id": "5901"
+      },
+      {
+        "name": "البيضاء",
+        "name_latin": "El Beidha",
+        "code_postal": "03013",
+        "id": "5902"
+      },
+      {
+        "name": "الحاج مشري",
+        "name_latin": "Hadj Mechri",
+        "code_postal": "03038",
+        "id": "5903"
+      },
+      {
+        "name": "الغيشة",
+        "name_latin": "El Ghicha",
+        "code_postal": "03023",
+        "id": "5904"
+      },
+      {
+        "name": "بريدة",
+        "name_latin": "Brida",
+        "code_postal": "03005",
+        "id": "5905"
+      },
+      {
+        "name": "تاويالة",
+        "name_latin": "Taouiala",
+        "code_postal": "03026",
+        "id": "5906"
+      },
+      {
+        "name": "سبقاق",
+        "name_latin": "Sebgag",
+        "code_postal": "03034",
+        "id": "5907"
+      },
+      {
+        "name": "سيدي بوزيد",
+        "name_latin": "Sidi Bouzid",
+        "code_postal": "03024",
+        "id": "5908"
+      },
+      {
+        "name": "عين سيدي علي",
+        "name_latin": "Ain Sidi Ali",
+        "code_postal": "03028",
+        "id": "5909"
+      },
+      {
+        "name": "قلتة سيدي سعد",
+        "name_latin": "Gueltat Sidi Saad",
+        "code_postal": "03025",
+        "id": "5910"
+      },
+      {
+        "name": "وادي مرة",
+        "name_latin": "Oued Morra",
+        "code_postal": "03027",
+        "id": "5911"
+      },
+      {
+        "name": "وادي مزي",
+        "name_latin": "Oued M'zi",
+        "code_postal": "03041",
+        "id": "5912"
+      }
+    ]
+  },
+  {
+    "code": "60",
+    "name": "بريكة",
+    "name_latin": "Barika",
+    "communes": [
+      {
+        "name": "الجزار",
+        "name_latin": "El Djezar",
+        "code_postal": "05046",
+        "id": "6001"
+      },
+      {
+        "name": "أمدوكال",
+        "name_latin": "M'Doukal",
+        "code_postal": "05037",
+        "id": "6002"
+      },
+      {
+        "name": "أولاد عمار",
+        "name_latin": "Ouled Ammar",
+        "code_postal": "05121",
+        "id": "6003"
+      },
+      {
+        "name": "بريكة",
+        "name_latin": "Barika",
+        "code_postal": "05001",
+        "id": "6004"
+      },
+      {
+        "name": "بيطام",
+        "name_latin": "Bitam",
+        "code_postal": "05045",
+        "id": "6005"
+      },
+      {
+        "name": "تيلاطو",
+        "name_latin": "Tilatou",
+        "code_postal": "05127",
+        "id": "6006"
+      },
+      {
+        "name": "سقانة",
+        "name_latin": "Seggana",
+        "code_postal": "05027",
+        "id": "6007"
+      },
+      {
+        "name": "عزيل عبد القادر",
+        "name_latin": "Azil Abedelkader",
+        "code_postal": "05087",
+        "id": "6008"
+      }
+    ]
+  },
+  {
+    "code": "61",
+    "name": "القنطرة",
+    "name_latin": "El Kantara",
+    "communes": [
+      {
+        "name": "البرانس",
+        "name_latin": "Branis",
+        "code_postal": "07023",
+        "id": "6101"
+      },
+      {
+        "name": "القنطرة",
+        "name_latin": "El Kantara",
+        "code_postal": "07008",
+        "id": "6102"
+      },
+      {
+        "name": "الوطاية",
+        "name_latin": "El Outaya",
+        "code_postal": "07030",
+        "id": "6103"
+      },
+      {
+        "name": "جمورة",
+        "name_latin": "Djemorah",
+        "code_postal": "07025",
+        "id": "6104"
+      },
+      {
+        "name": "عين زعطوط",
+        "name_latin": "Ain Zaatout",
+        "code_postal": "07013",
+        "id": "6105"
+      }
+    ]
+  },
+  {
+    "code": "62",
+    "name": "بئر العاتر",
+    "name_latin": "Bir El Ater",
+    "communes": [
+      {
+        "name": "العقلة المالحة",
+        "name_latin": "El Ogla El Malha",
+        "code_postal": "12043",
+        "id": "6201"
+      },
+      {
+        "name": "بئر العاتر",
+        "name_latin": "Bir El Ater",
+        "code_postal": "12001",
+        "id": "6202"
+      },
+      {
+        "name": "فركان",
+        "name_latin": "Ferkane",
+        "code_postal": "12044",
+        "id": "6203"
+      },
+      {
+        "name": "نقرين",
+        "name_latin": "Negrine",
+        "code_postal": "12024",
+        "id": "6204"
+      }
+    ]
+  },
+  {
+    "code": "63",
+    "name": "العريشة",
+    "name_latin": "El Aricha",
+    "communes": [
+      {
+        "name": "البويهي",
+        "name_latin": "Bouihi",
+        "code_postal": "13030",
+        "id": "6301"
+      },
+      {
+        "name": "العريشة",
+        "name_latin": "El Aricha",
+        "code_postal": "13031",
+        "id": "6302"
+      },
+      {
+        "name": "القور",
+        "name_latin": "El Gor",
+        "code_postal": "13034",
+        "id": "6303"
+      },
+      {
+        "name": "سيدي الجيلالي",
+        "name_latin": "Sidi Djillali",
+        "code_postal": "13043",
+        "id": "6304"
+      }
+    ]
+  },
+  {
+    "code": "64",
+    "name": "قصر الشلالة",
+    "name_latin": "Ksar Chellala",
+    "communes": [
+      {
+        "name": "الحمادية",
+        "name_latin": "El Hamadia",
+        "code_postal": "14020",
+        "id": "6401"
+      },
+      {
+        "name": "الرشايقة",
+        "name_latin": "Rechaiga",
+        "code_postal": "14026",
+        "id": "6402"
+      },
+      {
+        "name": "بوقرة",
+        "name_latin": "Bougara",
+        "code_postal": "09008",
+        "id": "6403"
+      },
+      {
+        "name": "زمالة الأمير عبد القادر",
+        "name_latin": "Zmalet El Emir Abdelkade",
+        "code_postal": "14038",
+        "id": "6404"
+      },
+      {
+        "name": "سرغين",
+        "name_latin": "Serghine",
+        "code_postal": "14051",
+        "id": "6405"
+      },
+      {
+        "name": "قصر الشلالة",
+        "name_latin": "Ksar Chellala",
+        "code_postal": "14002",
+        "id": "6406"
+      }
+    ]
+  },
+  {
+    "code": "65",
+    "name": "عين وسارة",
+    "name_latin": "Ain Oussera",
+    "communes": [
+      {
+        "name": "الخميس",
+        "name_latin": "El Khemis",
+        "code_postal": "17051",
+        "id": "6501"
+      },
+      {
+        "name": "بنهار",
+        "name_latin": "Benhar",
+        "code_postal": "17043",
+        "id": "6502"
+      },
+      {
+        "name": "بويرة الأحداب",
+        "name_latin": "Bouira Lahdab",
+        "code_postal": "17044",
+        "id": "6503"
+      },
+      {
+        "name": "بيرين",
+        "name_latin": "Birine",
+        "code_postal": "17014",
+        "id": "6504"
+      },
+      {
+        "name": "حاسي فدول",
+        "name_latin": "Hassi Fedoul",
+        "code_postal": "17056",
+        "id": "6505"
+      },
+      {
+        "name": "حد الصحاري",
+        "name_latin": "Had Sahary",
+        "code_postal": "17022",
+        "id": "6506"
+      },
+      {
+        "name": "سيدي لعجال",
+        "name_latin": "Sidi Laadjel",
+        "code_postal": "17024",
+        "id": "6507"
+      },
+      {
+        "name": "عين فقه",
+        "name_latin": "Ain Fekka",
+        "code_postal": "17040",
+        "id": "6508"
+      },
+      {
+        "name": "عين وسارة",
+        "name_latin": "Ain Oussera",
+        "code_postal": "17001",
+        "id": "6509"
+      },
+      {
+        "name": "قرنيني",
+        "name_latin": "Guernini",
+        "code_postal": "17054",
+        "id": "6510"
+      }
+    ]
+  },
+  {
+    "code": "66",
+    "name": "مسعد",
+    "name_latin": "Messaad",
+    "communes": [
+      {
+        "name": "أم العظام",
+        "name_latin": "Oum Laadham",
+        "code_postal": "17061",
+        "id": "6601"
+      },
+      {
+        "name": "دلدول",
+        "name_latin": "Deldoul",
+        "code_postal": "17046",
+        "id": "6602"
+      },
+      {
+        "name": "سد الرحال",
+        "name_latin": "Sed Rahal",
+        "code_postal": "17062",
+        "id": "6603"
+      },
+      {
+        "name": "سلمانة",
+        "name_latin": "Selmana",
+        "code_postal": "17063",
+        "id": "6604"
+      },
+      {
+        "name": "عمورة",
+        "name_latin": "Amourah",
+        "code_postal": "17042",
+        "id": "6605"
+      },
+      {
+        "name": "فيض البطمة",
+        "name_latin": "Faidh El Botma",
+        "code_postal": "17021",
+        "id": "6606"
+      },
+      {
+        "name": "قطارة",
+        "name_latin": "Guettara",
+        "code_postal": "17055",
+        "id": "6607"
+      },
+      {
+        "name": "مسعد",
+        "name_latin": "Messaad",
+        "code_postal": "17003",
+        "id": "6608"
+      }
+    ]
+  },
+  {
+    "code": "67",
+    "name": "قصر البخاري",
+    "name_latin": "Ksar El Boukhari",
+    "communes": [
+      {
+        "name": "السانق",
+        "name_latin": "Saneg",
+        "code_postal": "26067",
+        "id": "6701"
+      },
+      {
+        "name": "الشهبونية",
+        "name_latin": "Chabounia",
+        "code_postal": "26026",
+        "id": "6702"
+      },
+      {
+        "name": "العوينات",
+        "name_latin": "El Ouinet",
+        "code_postal": "12005",
+        "id": "6703"
+      },
+      {
+        "name": "الكاف الاخضر",
+        "name_latin": "Kef Lakhdar",
+        "code_postal": "26051",
+        "id": "6704"
+      },
+      {
+        "name": "المفاتحة",
+        "name_latin": "El M'Fatha",
+        "code_postal": "26049",
+        "id": "6705"
+      },
+      {
+        "name": "أم الجليل",
+        "name_latin": "Oum El Djellil",
+        "code_postal": "26042",
+        "id": "6706"
+      },
+      {
+        "name": "أولاد امعرف",
+        "name_latin": "Ouled Emaaraf",
+        "code_postal": "26038",
+        "id": "6707"
+      },
+      {
+        "name": "أولاد عنتر",
+        "name_latin": "Ouled Antar",
+        "code_postal": "26035",
+        "id": "6708"
+      },
+      {
+        "name": "أولاد هلال",
+        "name_latin": "Ouled Hellal",
+        "code_postal": "26037",
+        "id": "6709"
+      },
+      {
+        "name": "بوعيش",
+        "name_latin": "Bouaiche",
+        "code_postal": null,
+        "id": "6710"
+      },
+      {
+        "name": "بوغار",
+        "name_latin": "Boghar",
+        "code_postal": "26013",
+        "id": "6711"
+      },
+      {
+        "name": "بوغزول",
+        "name_latin": "Boughzoul",
+        "code_postal": "26023",
+        "id": "6712"
+      },
+      {
+        "name": "تفراوت",
+        "name_latin": "Tafraout",
+        "code_postal": "26074",
+        "id": "6713"
+      },
+      {
+        "name": "دراق",
+        "name_latin": "Derrag",
+        "code_postal": "26015",
+        "id": "6714"
+      },
+      {
+        "name": "سيدي دامد",
+        "name_latin": "Sidi Demed",
+        "code_postal": "26069",
+        "id": "6715"
+      },
+      {
+        "name": "شلالة العذاورة",
+        "name_latin": "Chelalet El Adhaoura",
+        "code_postal": "26007",
+        "id": "6716"
+      },
+      {
+        "name": "شنيقل",
+        "name_latin": "Cheniguel",
+        "code_postal": "26057",
+        "id": "6717"
+      },
+      {
+        "name": "عزيز",
+        "name_latin": "Aziz",
+        "code_postal": "26040",
+        "id": "6718"
+      },
+      {
+        "name": "عين اقصير",
+        "name_latin": "Ain Ouksir",
+        "code_postal": "26048",
+        "id": "6719"
+      },
+      {
+        "name": "عين بوسيف",
+        "name_latin": "Ain Boucif",
+        "code_postal": "26005",
+        "id": "6720"
+      },
+      {
+        "name": "قصر البخاري",
+        "name_latin": "Ksar El Boukhari",
+        "code_postal": "26003",
+        "id": "6721"
+      }
+    ]
+  },
+  {
+    "code": "68",
+    "name": "بوسعادة",
+    "name_latin": "Bou Saâda",
+    "communes": [
+      {
+        "name": "الحوامد",
+        "name_latin": "El Houamed",
+        "code_postal": null,
+        "id": "6801"
+      },
+      {
+        "name": "الخبانة",
+        "name_latin": "Khoubana",
+        "code_postal": "28030",
+        "id": "6802"
+      },
+      {
+        "name": "الزرزور",
+        "name_latin": "Zarzour",
+        "code_postal": "28067",
+        "id": "6803"
+      },
+      {
+        "name": "الهامل",
+        "name_latin": "El Hamel",
+        "code_postal": "28015",
+        "id": "6804"
+      },
+      {
+        "name": "امجدل",
+        "name_latin": "Medjedel",
+        "code_postal": "28016",
+        "id": "6805"
+      },
+      {
+        "name": "أولاد سليمان",
+        "name_latin": "Ouled Slimane",
+        "code_postal": "28031",
+        "id": "6806"
+      },
+      {
+        "name": "أولاد سيدي ابراهيم",
+        "name_latin": "Ouled Sidi Brahim",
+        "code_postal": "28032",
+        "id": "6807"
+      },
+      {
+        "name": "بئر الفضة",
+        "name_latin": "Bir Foda",
+        "code_postal": "28043",
+        "id": "6808"
+      },
+      {
+        "name": "بن زوه",
+        "name_latin": "Benzouh",
+        "code_postal": "28028",
+        "id": "6809"
+      },
+      {
+        "name": "بن سرور",
+        "name_latin": "Ben Srour",
+        "code_postal": "28009",
+        "id": "6810"
+      },
+      {
+        "name": "بوسعادة",
+        "name_latin": "Bou Saada",
+        "code_postal": "28001",
+        "id": "6811"
+      },
+      {
+        "name": "تامسة",
+        "name_latin": "Tamsa",
+        "code_postal": "28065",
+        "id": "6812"
+      },
+      {
+        "name": "جبل امساعد",
+        "name_latin": "Djebel Messaad",
+        "code_postal": "28024",
+        "id": "6813"
+      },
+      {
+        "name": "سليم",
+        "name_latin": "Slim",
+        "code_postal": "28037",
+        "id": "6814"
+      },
+      {
+        "name": "سيدي امحمد",
+        "name_latin": "Sidi M'hamed",
+        "code_postal": "16002",
+        "id": "6815"
+      },
+      {
+        "name": "سيدي عامر",
+        "name_latin": "Sidi Ameur",
+        "code_postal": null,
+        "id": "6816"
+      },
+      {
+        "name": "عين الريش",
+        "name_latin": "Ain Rich",
+        "code_postal": "28025",
+        "id": "6817"
+      },
+      {
+        "name": "عين الملح",
+        "name_latin": "Ain El Melh",
+        "code_postal": "28004",
+        "id": "6818"
+      },
+      {
+        "name": "عين فارس",
+        "name_latin": "Ain Fares",
+        "code_postal": "28023",
+        "id": "6819"
+      },
+      {
+        "name": "محمد بوضياف",
+        "name_latin": "Mohamed Boudiaf",
+        "code_postal": "28033",
+        "id": "6820"
+      },
+      {
+        "name": "مسيف",
+        "name_latin": "M'cif",
+        "code_postal": "28029",
+        "id": "6821"
+      },
+      {
+        "name": "مناعة",
+        "name_latin": "Menaa",
+        "code_postal": "05012",
+        "id": "6822"
+      },
+      {
+        "name": "ولتام",
+        "name_latin": "Oulteme",
+        "code_postal": "28054",
+        "id": "6823"
+      }
+    ]
+  },
+  {
+    "code": "69",
+    "name": "الأبيض سيدي الشيخ",
+    "name_latin": "El Abiodh Sidi Cheikh",
+    "communes": [
+      {
+        "name": "أربوات",
+        "name_latin": "Arbaouat",
+        "code_postal": "32005",
+        "id": "6901"
+      },
+      {
+        "name": "الأبيض سيدي الشيخ",
+        "name_latin": "El Abiodh Sidi Cheikh",
+        "code_postal": "32003",
+        "id": "6902"
+      },
+      {
+        "name": "البنود",
+        "name_latin": "El Bnoud",
+        "code_postal": "32025",
+        "id": "6903"
+      },
+      {
+        "name": "الشلالة",
+        "name_latin": "Chellala",
+        "code_postal": "32015",
+        "id": "6904"
+      },
+      {
+        "name": "المحرة",
+        "name_latin": "El Mehara",
+        "code_postal": "32024",
+        "id": "6905"
+      },
+      {
+        "name": "بوسمغون",
+        "name_latin": "Boussemghoun",
+        "code_postal": "32014",
+        "id": "6906"
+      },
+      {
+        "name": "عين العراك",
+        "name_latin": "Ain El Orak",
+        "code_postal": "32019",
+        "id": "6907"
+      }
+    ]
+  }
+];
+export default ALGERIA_LOCATIONS;
