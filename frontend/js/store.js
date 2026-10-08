@@ -92,7 +92,7 @@ import { db } from "./firebase-config.js";
 
         return `
     <div class="card">
-      <a class="card-link" href="product.html?id=${encodeURIComponent(p.id)}" aria-label="${esc(p.name)}">
+      <a class="card-link" href="/product?id=${encodeURIComponent(p.id)}" aria-label="${esc(p.name)}">
         <div class="card-img">
           ${badgeHTML}
           <button type="button" class="fav ${isLiked ? 'liked' : ''}" aria-label="مفضلة" onclick="event.preventDefault();event.stopPropagation();toggleFav('${p.id}',this)">
@@ -221,19 +221,19 @@ import { db } from "./firebase-config.js";
       const isSaleActive = view === 'sale';
       const isFavActive = view === 'fav';
 
-      let desktopHtml = `<a href="index.html" data-view="all" class="${isAllActive ? 'active' : ''}">الكل</a>`;
+      let desktopHtml = `<a href="/" data-view="all" class="${isAllActive ? 'active' : ''}">الكل</a>`;
       let mobileHtml = `<button type="button" class="mobile-cat-pill ${isAllActive ? 'active' : ''}" data-view="all">الكل</button>`;
 
       // Render ONLY categories from Cloud Firestore categories collection
       categories.forEach(cat => {
         const isCatActive = view === 'cat' && selectedCatId === cat.id;
-        desktopHtml += `<a href="index.html?cat=${encodeURIComponent(cat.id)}" data-view="cat" data-cat-id="${esc(cat.id)}" class="${isCatActive ? 'active' : ''}">${esc(cat.name)}</a>`;
+        desktopHtml += `<a href="/?cat=${encodeURIComponent(cat.id)}" data-view="cat" data-cat-id="${esc(cat.id)}" class="${isCatActive ? 'active' : ''}">${esc(cat.name)}</a>`;
         mobileHtml += `<button type="button" class="mobile-cat-pill ${isCatActive ? 'active' : ''}" data-view="cat" data-cat-id="${esc(cat.id)}">${esc(cat.name)}</button>`;
       });
 
       desktopHtml += `
-        <a href="index.html?view=sale" data-view="sale" class="${isSaleActive ? 'active' : ''}">الخصومات</a>
-        <a href="index.html?view=fav" data-view="fav" class="${isFavActive ? 'active' : ''}">المفضلة</a>
+        <a href="/?view=sale" data-view="sale" class="${isSaleActive ? 'active' : ''}">الخصومات</a>
+        <a href="/?view=fav" data-view="fav" class="${isFavActive ? 'active' : ''}">المفضلة</a>
       `;
 
       mobileHtml += `
@@ -264,7 +264,7 @@ import { db } from "./firebase-config.js";
             url.searchParams.delete('cat');
             url.searchParams.delete('category');
             url.searchParams.delete('view');
-            window.history.pushState({}, '', url.pathname + (url.search ? url.search : ''));
+            window.history.pushState({}, '', '/');
           } catch (_) {}
         } else if (v === 'cat') {
           view = 'cat';
@@ -273,7 +273,7 @@ import { db } from "./firebase-config.js";
             const url = new URL(window.location.href);
             url.searchParams.set('cat', catId);
             url.searchParams.delete('view');
-            window.history.pushState({}, '', url);
+            window.history.pushState({}, '', '/?cat=' + encodeURIComponent(catId));
           } catch (_) {}
         } else if (v === 'sale') {
           view = 'sale';
@@ -283,7 +283,7 @@ import { db } from "./firebase-config.js";
             url.searchParams.set('view', 'sale');
             url.searchParams.delete('cat');
             url.searchParams.delete('category');
-            window.history.pushState({}, '', url);
+            window.history.pushState({}, '', '/?view=sale');
           } catch (_) {}
         } else if (v === 'fav') {
           view = 'fav';
@@ -293,7 +293,7 @@ import { db } from "./firebase-config.js";
             url.searchParams.set('view', 'fav');
             url.searchParams.delete('cat');
             url.searchParams.delete('category');
-            window.history.pushState({}, '', url);
+            window.history.pushState({}, '', '/?view=fav');
           } catch (_) {}
         }
 
@@ -378,7 +378,7 @@ import { db } from "./firebase-config.js";
       if (!q) { sResults.innerHTML = ''; return; }
       const hits = products.filter(p => p.name.toLowerCase().includes(q));
       sResults.innerHTML = hits.length ? hits.map(p => `
-    <a class="sr-item" href="product.html?id=${encodeURIComponent(p.id)}">
+    <a class="sr-item" href="/product?id=${encodeURIComponent(p.id)}">
       <img src="${esc(p.img || p.mainImage)}" alt="${esc(p.name)}">
       <div><div class="sr-name">${esc(p.name)}</div><div class="sr-price">${p.price} دج</div></div>
     </a>`) : '<div class="search-empty">لا توجد نتائج مطابقة لبحثك</div>';

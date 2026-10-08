@@ -61,7 +61,7 @@ async function verifyIsAdmin(user) {
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     await verifyIsAdmin(user);
-    window.location.replace("admin.html");
+    window.location.replace("/admin");
   }
 });
 
@@ -144,7 +144,7 @@ DOM.form.addEventListener("submit", async (e) => {
   try {
     const cred = await signInWithEmailAndPassword(auth, email, password);
     await verifyIsAdmin(cred.user);
-    window.location.replace("admin.html");
+    window.location.replace("/admin");
   } catch (error) {
     console.error("Login failed:", error.code, error.message);
     setLoading(false);

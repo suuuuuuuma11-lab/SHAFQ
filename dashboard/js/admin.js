@@ -2033,7 +2033,7 @@ function initCropEditorEvents() {
 async function handleLogout() {
   try {
     await signOut(auth);
-    window.location.replace("login.html");
+    window.location.replace("/login");
   } catch (err) {
     console.error("Logout error:", err);
     toast("تعذر تسجيل الخروج", false);
@@ -2087,7 +2087,7 @@ onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
     // Unauthenticated user -> kick out to login page
-    window.location.replace("login.html");
+    window.location.replace("/login");
     return;
   }
 
@@ -2096,7 +2096,7 @@ onAuthStateChanged(auth, async (user) => {
   if (!isAdmin) {
     console.warn("Unauthorized user blocked from dashboard:", user.uid);
     await signOut(auth);
-    window.location.replace("login.html?error=unauthorized");
+    window.location.replace("/login?error=unauthorized");
     return;
   }
 

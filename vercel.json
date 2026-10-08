@@ -1,37 +1,42 @@
 {
-  "cleanUrls": false,
-  "trailingSlash": true,
-  "redirects": [
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
     {
       "source": "/",
-      "destination": "/frontend/",
-      "permanent": false
+      "destination": "/frontend/index.html"
     },
     {
-      "source": "/frontend",
-      "destination": "/frontend/",
-      "permanent": false
+      "source": "/product",
+      "destination": "/frontend/product.html"
     },
     {
       "source": "/admin",
-      "destination": "/dashboard/admin.html",
-      "permanent": false
-    },
-    {
-      "source": "/dashboard",
-      "destination": "/dashboard/admin.html",
-      "permanent": false
+      "destination": "/dashboard/admin.html"
     },
     {
       "source": "/login",
-      "destination": "/dashboard/login.html",
-      "permanent": false
-    }
-  ],
-  "rewrites": [
+      "destination": "/dashboard/login.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/dashboard/admin.html"
+    },
     {
       "source": "/dashboard/img/:path*",
       "destination": "/frontend/img/:path*"
+    },
+    {
+      "source": "/product/img/:path*",
+      "destination": "/frontend/img/:path*"
+    },
+    {
+      "source": "/product/css/:path*",
+      "destination": "/frontend/css/:path*"
+    },
+    {
+      "source": "/product/js/:path*",
+      "destination": "/frontend/js/:path*"
     },
     {
       "source": "/css/admin.css",

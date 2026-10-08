@@ -425,7 +425,7 @@ sInput?.addEventListener('input', () => {
   const hits = products.filter(pr => pr.name.toLowerCase().includes(q));
   if(sResults) {
     sResults.innerHTML = hits.length ? hits.map(pr => `
-      <a class="sr-item" href="product.html?id=${encodeURIComponent(pr.id)}">
+      <a class="sr-item" href="/product?id=${encodeURIComponent(pr.id)}">
         <img src="${esc(pr.img || pr.mainImage)}" alt="${esc(pr.name)}">
         <div><div class="sr-name">${esc(pr.name)}</div><div class="sr-price">${pr.price} دج</div></div>
       </a>`).join('') : '<div class="search-empty">لا توجد نتائج مطابقة لبحثك</div>';
@@ -500,18 +500,18 @@ function renderProductHeaderCategories() {
   const currentCatId = currentTargetProduct ? (currentTargetProduct.categoryId || '') : '';
   const currentCatName = currentTargetProduct ? (currentTargetProduct.category || '') : '';
 
-  let desktopHtml = `<a href="index.html">الكل</a>`;
-  let mobileHtml = `<a href="index.html" class="mobile-cat-pill">الكل</a>`;
+  let desktopHtml = `<a href="/">الكل</a>`;
+  let mobileHtml = `<a href="/" class="mobile-cat-pill">الكل</a>`;
 
   // Render ONLY categories from Cloud Firestore
   categoriesList.forEach(cat => {
     const isActive = (currentCatId && cat.id === currentCatId) || (currentCatName && cat.name.trim().toLowerCase() === currentCatName.trim().toLowerCase());
-    desktopHtml += `<a href="index.html?cat=${encodeURIComponent(cat.id)}" class="${isActive ? 'active' : ''}">${esc(cat.name)}</a>`;
-    mobileHtml += `<a href="index.html?cat=${encodeURIComponent(cat.id)}" class="mobile-cat-pill ${isActive ? 'active' : ''}">${esc(cat.name)}</a>`;
+    desktopHtml += `<a href="/?cat=${encodeURIComponent(cat.id)}" class="${isActive ? 'active' : ''}">${esc(cat.name)}</a>`;
+    mobileHtml += `<a href="/?cat=${encodeURIComponent(cat.id)}" class="mobile-cat-pill ${isActive ? 'active' : ''}">${esc(cat.name)}</a>`;
   });
 
-  desktopHtml += `<a href="index.html?view=sale">الخصومات</a><a href="index.html?view=fav">المفضلة</a>`;
-  mobileHtml += `<a href="index.html?view=sale" class="mobile-cat-pill">الخصومات</a><a href="index.html?view=fav" class="mobile-cat-pill">المفضلة</a>`;
+  desktopHtml += `<a href="/?view=sale">الخصومات</a><a href="/?view=fav">المفضلة</a>`;
+  mobileHtml += `<a href="/?view=sale" class="mobile-cat-pill">الخصومات</a><a href="/?view=fav" class="mobile-cat-pill">المفضلة</a>`;
 
   if (mainNav) mainNav.innerHTML = desktopHtml;
   if (mobileScroller) mobileScroller.innerHTML = mobileHtml;
@@ -522,13 +522,13 @@ function renderProductHeaderCategories() {
     const matchedCat = categoriesList.find(c => c.id === currentCatId || c.name.trim().toLowerCase() === currentCatName.trim().toLowerCase());
     if (matchedCat) {
       crumbCatLink.textContent = matchedCat.name;
-      crumbCatLink.href = `index.html?cat=${encodeURIComponent(matchedCat.id)}`;
+      crumbCatLink.href = `/?cat=${encodeURIComponent(matchedCat.id)}`;
     } else if (currentCatName) {
       crumbCatLink.textContent = currentCatName;
-      crumbCatLink.href = 'index.html';
+      crumbCatLink.href = '/';
     } else {
       crumbCatLink.textContent = 'المنتجات';
-      crumbCatLink.href = 'index.html';
+      crumbCatLink.href = '/';
     }
   }
 }
@@ -598,7 +598,7 @@ async function loadProductFromFirestore() {
         <div class="empty-state">
           <h3>المنتج غير متوفر حالياً</h3>
           <p>قد يكون المنتج قد تم حذفه أو غير متاح للبيع.</p>
-          <a href="index.html" class="btn-order" style="display:inline-block;margin-top:16px">العودة للمتجر</a>
+          <a href="/" class="btn-order" style="display:inline-block;margin-top:16px">العودة للمتجر</a>
         </div>`;
     }
   } catch (err) {
