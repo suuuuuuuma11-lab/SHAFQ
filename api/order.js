@@ -248,9 +248,10 @@ export default async function handler(req, res) {
     }
 
     // 7. Dispatch Telegram Notification
+    let telegramSent = false;
     try {
-      const token = process.env.TELEGRAM_BOT_TOKEN;
-      const chatId = process.env.TELEGRAM_CHAT_ID;
+      const token = process.env.TELEGRAM_BOT_TOKEN || "8916406368:AAFIJTPkAykiL54hn_mmbv6AqGax6lvq08U";
+      const chatId = process.env.TELEGRAM_CHAT_ID || "6609345622";
       if (token && chatId) {
         const methodDesc = method === "home" ? "توصيل للمنزل" : "استلام من المكتب";
         const itemsText = sanitizedItems.map(it => 
@@ -280,11 +281,13 @@ export default async function handler(req, res) {
           `📅 التاريخ: ${new Date().toLocaleString("ar-DZ")}`
         ].join("\n");
 
-        await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        const tgRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ chat_id: chatId, text: msg })
         });
+        const tgData = await tgRes.json().catch(() => ({}));
+        telegramSent = Boolean(tgData && tgData.ok);
       }
     } catch (tgErr) {
       console.warn("[TELEGRAM DISPATCH WARNING]:", tgErr.message);
@@ -293,7 +296,8 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       orderId: createdOrderId,
-      order: orderPayload
+      order: orderPayload,
+      telegramSent
     });
 
   } catch (err) {

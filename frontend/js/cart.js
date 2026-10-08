@@ -697,6 +697,7 @@ export async function handleCheckoutSubmit(e) {
 
   let createdOrderId = null;
   let savedOrderData = null;
+  let telegramAlreadySent = false;
 
   try {
     // 1. Authoritative Backend Calculation & Verification
@@ -722,6 +723,7 @@ export async function handleCheckoutSubmit(e) {
       if (backendData.success && backendData.orderId) {
         createdOrderId = backendData.orderId;
         savedOrderData = backendData.order;
+        telegramAlreadySent = Boolean(backendData.telegramSent);
       }
     }
   } catch (apiErr) {
@@ -756,20 +758,26 @@ export async function handleCheckoutSubmit(e) {
       const docRef = await addDoc(collection(db, "orders"), orderPayload);
       createdOrderId = docRef.id;
       savedOrderData = orderPayload;
+    }
 
-      // Dispatch Telegram notification directly on fallback
-      await sendTelegramOrderNotification({
-        name,
-        phone,
-        wilaya,
-        commune,
-        address,
-        items: orderItems,
-        deliveryMethod,
-        shippingPrice,
-        subtotal,
-        total: calculatedTotal.toLocaleString("ar-DZ")
-      }, createdOrderId);
+    // Always guarantee Telegram notification is dispatched
+    if (!telegramAlreadySent) {
+      try {
+        await sendTelegramOrderNotification({
+          name,
+          phone,
+          wilaya,
+          commune,
+          address,
+          items: orderItems,
+          deliveryMethod,
+          shippingPrice,
+          subtotal,
+          total: calculatedTotal.toLocaleString("ar-DZ")
+        }, createdOrderId);
+      } catch (tgErr) {
+        console.warn("Direct Telegram notification warning:", tgErr);
+      }
     }
 
     // 3. Clear Cart

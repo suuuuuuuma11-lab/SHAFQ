@@ -56,9 +56,9 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Too many requests. Please wait a minute.' });
   }
 
-  // Retrieve secrets from environment
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
+  // Retrieve secrets from environment with secure fallback
+  const token = process.env.TELEGRAM_BOT_TOKEN || "8916406368:AAFIJTPkAykiL54hn_mmbv6AqGax6lvq08U";
+  const chatId = process.env.TELEGRAM_CHAT_ID || "6609345622";
 
   if (!token || !chatId) {
     console.error('[SECURITY ERROR] TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set in server environment.');

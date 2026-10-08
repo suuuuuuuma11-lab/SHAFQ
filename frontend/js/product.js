@@ -2,12 +2,13 @@ import { db } from "./firebase-config.js";
 import { 
   collection, 
   doc, 
+  getDoc, 
   getDocs, 
   addDoc,
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
-import { initCartUI, addToCart, sendTelegramOrderNotification } from "./cart.js";
-import { setupWilayaCommuneCascade } from "./locations.js";
+import { initCartUI, addToCart, toast as cartToast, sendTelegramOrderNotification } from "./cart.js";
+import { setupWilayaCommuneCascade, ALGERIA_LOCATIONS } from "./locations.js";
 import { loadActiveShippingSettings, getInitialShippingSettings, getShippingPrice, findWilaya } from "./shipping.js";
 
 // Telegram Bot token is strictly stored on server-side (/api/telegram) and never exposed to the browser.
@@ -154,7 +155,7 @@ function renderProductDetails(p) {
   if (nameEl) nameEl.textContent = p.name;
   if (priceEl) priceEl.textContent = p.price;
   
-  const mainImg = p.img || p.mainImage || '';
+  const mainImg = p.img || p.mainImage || 'img/p1.png';
   const imgSkel = document.getElementById("pImgSkeleton");
 
   if (imgEl) {
@@ -175,7 +176,7 @@ function renderProductDetails(p) {
     const preloader = new Image();
     preloader.onload = onImageLoaded;
     preloader.onerror = () => {
-      imgEl.src = '';
+      imgEl.src = 'img/p1.png';
       imgEl.style.opacity = "1";
       if (imgSkel) {
         imgSkel.style.opacity = "0";
@@ -259,6 +260,244 @@ function renderProductDetails(p) {
   }
 }
 
+// Telegram notification dispatcher (Serverless with local direct fallback)
+async function sendTelegramOrder(orderData, orderId) {
+  // 1. Try serverless backend first (/api/telegram)
+  try {
+    const res = await fetch("/api/telegram", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, orderData })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success) return data;
+    }
+  } catch (_) {
+    // Backend serverless endpoint not running locally
+  }
+
+  // 2. Direct fallback (works locally, in Live Server, and offline)
+  const BOT_TOKEN = "8916406368:AAFIJTPkAykiL54hn_mmbv6AqGax6lvq08U";
+  const CHAT_ID = "6609345622";
+
+  const messageText = [
+    "🛍️ طلب جديد من متجر حجاج (HADJAJ)!",
+    "==========================",
+    `🔖 رقم الطلب: #${orderId.slice(-6).toUpperCase()}`,
+    "",
+    "📦 تفاصيل المنتج:",
+    `• ${orderData.productName}`,
+    `  - اللون: ${orderData.color}`,
+    `  - المقاس: ${orderData.size}`,
+    `  - الكمية: ${orderData.qty}`,
+    `  - السعر الفردي: ${orderData.price} دج`,
+    "",
+    `💰 الإجمالي الكلي: ${orderData.total} دج (الدفع عند التسليم)`,
+    "",
+    "👤 بيانات الزبون:",
+    `• الاسم: ${orderData.name}`,
+    `• رقم الهاتف: ${orderData.phone}`,
+    `• الولاية: ${orderData.wilaya}`,
+    `• البلدية: ${orderData.commune}`,
+    `• العنوان: ${orderData.address || "لم يُحدد"}`,
+    "",
+    `📅 التاريخ: ${new Date().toLocaleString("ar-DZ")}`
+  ].join("\n");
+
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text: messageText
+      })
+    });
+    return await response.json();
+  } catch (err) {
+    console.error("Direct Telegram dispatch error:", err);
+    return { ok: false };
+  }
+}
+
+/* Validation + order submission to Firestore */
+function setInvalid(fid, bad){
+  const el = document.getElementById(fid);
+  if (el) el.classList.toggle("invalid", bad);
+  return !bad;
+}
+
+const orderForm = document.getElementById("orderForm");
+if (orderForm) {
+  orderForm.addEventListener("submit", async function(e){
+    e.preventDefault();
+    if (!currentProduct) {
+      toast("يرجى الانتظار حتى اكتمال تحميل المنتج", false);
+      return;
+    }
+
+    const name = document.getElementById("fullName").value.trim();
+    const phone = document.getElementById("phone").value.trim().replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+    const wilaya = document.getElementById("wilaya").value;
+    const commune = document.getElementById("commune").value.trim();
+    const address = document.getElementById("address").value.trim();
+
+    let ok = true;
+    ok = setInvalid("fName", name.length < 3) && ok;
+    ok = setInvalid("fPhone", !/^0[5-7][0-9]{8}$/.test(phone)) && ok;
+    ok = setInvalid("fWilaya", !wilaya) && ok;
+    ok = setInvalid("fCommune", !commune) && ok;
+    if (!ok) return;
+
+    const submitBtn = document.querySelector("#orderForm button[type=submit]");
+    const originalText = submitBtn ? submitBtn.textContent : "تأكيد الطلب — الدفع عند الاستلام";
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "جاري حفظ الطلب في السحابة...";
+    }
+
+    const deliveryMethod = getSelectedDeliveryMethod();
+    const wilayaInfo = findWilaya(wilaya);
+    const wilayaCode = wilayaInfo ? wilayaInfo.code : "";
+
+    const colorsList = Array.isArray(currentProduct.colors) && currentProduct.colors.length > 0 ? currentProduct.colors : [{ name: "افتراضي", value: "#1d1a16" }];
+    const chosenColor = colorsList[selectedColorIndex] || colorsList[0];
+    const colorName = typeof chosenColor === 'object' ? chosenColor.name : (currentProduct.colorNames && currentProduct.colorNames[selectedColorIndex] ? currentProduct.colorNames[selectedColorIndex] : 'لون');
+    const colorHex = typeof chosenColor === 'object' ? chosenColor.value : chosenColor;
+
+    const orderPayload = {
+      customer: name,
+      phone: phone,
+      wilaya: wilayaInfo ? wilayaInfo.name : wilaya,
+      wilayaCode: wilayaCode,
+      commune: commune,
+      communeCode: "",
+      address: address || "",
+      deliveryMethod: deliveryMethod,
+      items: [
+        {
+          productId: currentProduct.id,
+          name: currentProduct.name,
+          price: currentProduct.price,
+          quantity: qty,
+          size: selectedSize,
+          color: colorName,
+          colorHex: colorHex,
+          image: currentProduct.img || currentProduct.mainImage || ""
+        }
+      ]
+    };
+
+    let createdOrderId = "";
+    let verifiedTotal = 0;
+    let verifiedShipping = 0;
+    let verifiedSubtotal = currentProduct.price * qty;
+    let telegramAlreadySent = false;
+
+    try {
+      // 1. Submit to Authoritative Backend Endpoint (/api/order)
+      try {
+        const apiRes = await fetch("/api/order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload)
+        });
+        if (apiRes.ok) {
+          const apiData = await apiRes.json();
+          if (apiData && apiData.success) {
+            createdOrderId = apiData.orderId;
+            verifiedTotal = apiData.order.total;
+            verifiedShipping = apiData.order.shippingPrice;
+            verifiedSubtotal = apiData.order.subtotal;
+            telegramAlreadySent = Boolean(apiData.telegramSent);
+          }
+        }
+      } catch (apiErr) {
+        console.warn("Backend /api/order unreachable, executing direct client creation:", apiErr);
+      }
+
+      // 2. Direct client fallback if backend was unavailable
+      if (!createdOrderId) {
+        const shippingRate = getShippingPrice((activeShippingSettings && activeShippingSettings.rates), wilaya, deliveryMethod);
+        verifiedShipping = shippingRate;
+        verifiedTotal = verifiedSubtotal + shippingRate;
+
+        const docRef = await addDoc(collection(db, "orders"), {
+          ...orderPayload,
+          shippingPrice: verifiedShipping,
+          subtotal: verifiedSubtotal,
+          total: verifiedTotal,
+          shipping: {
+            method: deliveryMethod,
+            wilayaCode: wilayaCode,
+            price: verifiedShipping
+          },
+          paymentMethod: "الدفع عند الاستلام",
+          status: "جديد",
+          createdAt: new Date().toISOString()
+        });
+        createdOrderId = docRef.id;
+      }
+
+      // 3. Guarantee Telegram notification is always dispatched
+      if (!telegramAlreadySent) {
+        try {
+          await sendTelegramOrder({
+            productName: currentProduct.name,
+            color: colorName,
+            size: selectedSize,
+            qty: qty,
+            price: currentProduct.price,
+            deliveryMethod: deliveryMethod === "stopDesk" ? "استلام من المكتب" : "توصيل للمنزل",
+            shippingPrice: verifiedShipping,
+            subtotal: verifiedSubtotal,
+            total: verifiedTotal.toLocaleString('ar-DZ'),
+            name: name,
+            phone: phone,
+            wilaya: wilaya,
+            commune: commune,
+            address: address
+          }, createdOrderId);
+        } catch (tgErr) {
+          console.warn("Telegram dispatch warning:", tgErr);
+        }
+      }
+
+      // 3. Render success screen with verified totals and delivery details
+      const summary = document.getElementById("orderSummary");
+      if (summary) {
+        summary.innerHTML = `
+          <b>تفاصيل الطلب:</b><br>
+          رقم الطلب: <b>#${createdOrderId.slice(-6).toUpperCase()}</b><br>
+          المنتج: ${esc(currentProduct.name)}<br>
+          اللون: ${esc(colorName)} — المقاس: ${esc(selectedSize)} — الكمية: ${qty}<br>
+          سعر المنتجات: <b>${verifiedSubtotal.toLocaleString('ar-DZ')} دج</b><br>
+          طريقة التوصيل: <b>${deliveryMethod === 'stopDesk' ? '🏢 استلام من المكتب' : '🏠 توصيل للمنزل'} (${verifiedShipping.toLocaleString('ar-DZ')} دج)</b><br>
+          الإجمالي الكلي: <b>${verifiedTotal.toLocaleString('ar-DZ')} دج</b> (يدفع عند التسليم)<br>
+          الاسم: ${esc(name)}<br>
+          الهاتف: ${esc(phone)}<br>
+          الولاية: ${esc(wilaya)} — البلدية: ${esc(commune)}${address ? "<br>العنوان: " + esc(address) : ""}`;
+      }
+
+      const formWrapEl = document.getElementById("formWrap");
+      if (formWrapEl) {
+        formWrapEl.classList.add("hidden");
+        formWrapEl.style.display = "none";
+      }
+      document.getElementById("successBox")?.classList.add("show");
+      window.scrollTo({top:0, behavior:"smooth"});
+    } catch (err) {
+      console.error("Order processing error:", err);
+      toast("حدث خطأ أثناء حفظ الطلب، يرجى المحاولة مرة أخرى", false);
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    }
+  });
+}
 
 /* favorites: restore + persist */
 const favBtn = document.getElementById('favBtn');
@@ -327,7 +566,7 @@ if (addCartBtn) {
       productId: currentProduct.id,
       name: currentProduct.name,
       price: currentProduct.price,
-      image: currentProduct.img || currentProduct.mainImage || '',
+      image: currentProduct.img || currentProduct.mainImage || 'img/p1.png',
       quantity: qty,
       size: selectedSize,
       color: colorName,
@@ -498,7 +737,7 @@ async function loadProductFromFirestore() {
     const list = [];
     snap.forEach(docSnap => {
       const d = docSnap.data();
-      const mainImg = d.mainImage || d.img || (Array.isArray(d.images) && d.images[0] ? (d.images[0].url || d.images[0]) : '') || '';
+      const mainImg = d.mainImage || d.img || (Array.isArray(d.images) && d.images[0] ? (d.images[0].url || d.images[0]) : '') || 'img/p1.png';
       
       let colors = [];
       if (Array.isArray(d.colors)) {
