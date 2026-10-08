@@ -59,8 +59,7 @@ select:focus-visible{
    3 · HEADER — composed entrance, no drama
    -------------------------------------------------------------------------- */
 nav.main-nav a{
-  opacity: 0;
-  animation: navIn var(--m-base) var(--ease-out) backwards;
+  animation: navIn var(--m-base) var(--ease-out) both;
 }
 nav.main-nav a:nth-child(1){ animation-delay: .10s; }
 nav.main-nav a:nth-child(2){ animation-delay: .17s; }
@@ -87,7 +86,7 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 .h-icons button:active svg{ transform: translateY(0) scale(.94); }
 
 /* Cart badge announces itself once, then stays quiet */
-.cart-badge{ animation: badgeIn .55s var(--ease-soft) .55s backwards; }
+.cart-badge{ animation: badgeIn .55s var(--ease-soft) .55s both; }
 @keyframes badgeIn{
   from{ opacity: 0; transform: scale(.4); }
   60% { transform: scale(1.18); }
@@ -145,8 +144,7 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 .hero-sub,
 .hero-desc,
 .hero .btn-gold{
-  opacity: 0;
-  animation: heroRise var(--m-slow) var(--ease-out) backwards;
+  animation: heroRise var(--m-slow) var(--ease-out) both;
 }
 .hero-brand        { animation-delay: .20s; }
 .hero-title        { animation-delay: .38s; animation-duration: 1s; }
@@ -176,8 +174,7 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 .page-head,
 .toolbar,
 .product-wrap{
-  opacity: 0;
-  animation: riseIn var(--m-slow) var(--ease-out) backwards;
+  animation: riseIn var(--m-slow) var(--ease-out) both;
 }
 .breadcrumb  { animation-delay: .05s; }
 .page-head,
@@ -193,8 +190,7 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
    6 · PRODUCT GRID — garments appear as if placed on the rail
    -------------------------------------------------------------------------- */
 .card{
-  opacity: 0;
-  animation: cardIn var(--m-slow) var(--ease-out) backwards;
+  animation: cardIn var(--m-slow) var(--ease-out) both;
   /* Stagger index — set inline via style="--i:n", or falls back to order */
   animation-delay: calc(var(--i, 0) * 75ms);
 }
@@ -433,7 +429,7 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 
 /* Success check: a single confident pop with a halo */
 .sm-card .check, .success .check{
-  animation: checkIn .65s var(--ease-soft) .15s backwards;
+  animation: checkIn .65s var(--ease-soft) .15s both;
 }
 @keyframes checkIn{
   from{ opacity: 0; transform: scale(.5); box-shadow: 0 0 0 0 rgba(39, 174, 96, .30); }
