@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حجاج | لوحة التحكم</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/dashboard/css/admin.css">
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="mark">حجاج</div>
+      <div class="sub">HADJAJ SHIRTS</div>
+    </div>
+    <div class="admin-pill"><span class="dot-live"></span> وضع المدير</div>
+    <div class="header-actions">
+      <button class="btn-ghost" onclick="openExport()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+        تصدير الكود
+      </button>
+      <button class="btn-ghost danger" onclick="askReset()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2m1 0v14a2 2 0 01-2 2H9a2 2 0 01-2-2V6"/></svg>
+        إعادة تعيين
+      </button>
+      <button class="btn-ghost" id="logoutBtn" onclick="handleLogout()" title="تسجيل الخروج">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        تسجيل الخروج
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- Sidebar -->
+  <aside class="side">
+    <div class="side-title">القائمة</div>
+    <button class="side-btn active" data-view="dash" onclick="switchView('dash',this)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      إضافة منتج / تصنيف
+    </button>
+    <button class="side-btn" data-view="products" onclick="switchView('products',this)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>
+      المنتجات <span class="cnt" id="cntProducts">0</span>
+    </button>
+    <button class="side-btn" data-view="cats" onclick="switchView('cats',this)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
+      التصنيفات <span class="cnt" id="cntCats">0</span>
+    </button>
+    <button class="side-btn" data-view="orders" onclick="switchView('orders',this)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      الطلبات <span class="cnt" id="cntOrders">0</span>
+    </button>
+  </aside>
+
+  <main>
+
+    <!-- ===================== VIEW: DASH (add product + category) ===================== -->
+    <section class="view on" id="view-dash">
+
+      <div class="stats">
+        <div class="stat"><div class="ic gold"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/></svg></div><div><div class="v" id="stProducts">0</div><div class="l">منتج في المتجر</div></div></div>
+        <div class="stat"><div class="ic blue"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg></div><div><div class="v" id="stCats">0</div><div class="l">تصنيف نشط</div></div></div>
+        <div class="stat"><div class="ic green"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div><div><div class="v" id="stOrders">0</div><div class="l">طلب وارد</div></div></div>
+        <div class="stat"><div class="ic red"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 5L5 19M6.5 9a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM17.5 20a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/></svg></div><div><div class="v" id="stSale">0</div><div class="l">منتج عليه خصم</div></div></div>
+      </div>
+
+      <!-- ========== ADD PRODUCT ========== -->
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> إضافة منتج جديد</h2>
+            <p>املأ كل الحقول — الحقول المعلّمة بـ <b style="color:var(--red)">*</b> إجبارية</p>
+          </div>
+          <span class="tag gold" id="prodFormMode">نموذج إضافة</span>
+        </div>
+        <div class="panel-body">
+          <form id="productForm" novalidate>
+            <div class="form-grid">
+
+              <div class="field">
+                <label>اسم المنتج <span class="req">*</span></label>
+                <input type="text" id="pName" placeholder="مثال: قميص كلاسيك فاخر" maxlength="60">
+                <span class="err-msg" id="e-pName">أدخل اسماً صحيحاً (3 أحرف على الأقل) وغير مكرر</span>
+              </div>
+
+              <div class="field">
+                <label>التصنيف <span class="req">*</span> <span class="hint">— يُعرض في الفلاتر والبطاقة</span></label>
+                <select id="pCategory">
+                  <option value="">— اختر التصنيف —</option>
+                </select>
+                <span class="err-msg" id="e-pCategory">اختر تصنيفاً للمنتج</span>
+              </div>
+
+              <div class="field full">
+                <label>صورة المنتج <span class="req">*</span> <span class="hint">— ارفع صورة من جهازك أو أدخل رابطاً مباشراً</span></label>
+                <div class="uploader" id="pUploader" onclick="document.getElementById('pImgFile').click()">
+                  <div class="up-txt" id="pUpTxt"><b>اضغط لرفع صورة المنتج</b>PNG أو JPG — يُفضّل 800×900 بكسل</div>
+                </div>
+                <input type="file" id="pImgFile" accept="image/*">
+                <div class="img-actions">
+                  <button type="button" class="mini-btn" onclick="document.getElementById('pImgFile').click()">تغيير الصورة</button>
+                  <button type="button" class="mini-btn" onclick="clearProductImage()">إزالة</button>
+                  <button type="button" class="mini-btn" onclick="toggleImgUrl()">رابط بدلاً من رفع</button>
+                </div>
+                <input type="text" id="pImgUrl" placeholder="https://example.com/shirt.png" style="display:none;margin-top:8px;border:1.5px solid var(--line);border-radius:10px;padding:10px 14px;width:100%;outline:none">
+                <span class="err-msg" id="e-pImg">أضف صورة للمنتج (رفع أو رابط)</span>
+              </div>
+
+              <div class="field">
+                <label>السعر (دج) <span class="req">*</span></label>
+                <input type="number" id="pPrice" placeholder="299" min="1" step="1">
+                <span class="err-msg" id="e-pPrice">أدخل سعراً صحيحاً أكبر من صفر</span>
+              </div>
+
+              <div class="field">
+                <label>السعر قبل الخصم (دج) <span class="hint">— اختياري، اتركه فارغاً إذا لا يوجد خصم</span></label>
+                <div class="price-row">
+                  <input type="number" id="pOldPrice" placeholder="380" min="0" step="1">
+                  <span class="disc-preview" id="discPreview"></span>
+                </div>
+                <span class="err-msg" id="e-pOldPrice">يجب أن يكون السعر قبل الخصم أكبر من السعر الحالي</span>
+              </div>
+
+              <div class="field">
+                <label>شارة مميزة (Badge) <span class="hint">— اختياري، تظهر أعلى صورة المنتج</span></label>
+                <div class="seg" id="badgeSeg">
+                  <button type="button" class="on" data-v="">بدون شارة</button>
+                  <button type="button" data-v="الأكثر مبيعاً">الأكثر مبيعاً</button>
+                  <button type="button" data-v="جديد">جديد</button>
+                  <button type="button" data-v="حصري">حصري</button>
+                  <button type="button" data-v="custom">نص مخصص…</button>
+                </div>
+                <input type="text" id="pBadgeCustom" placeholder="اكتب شارتك الخاصة" maxlength="20" style="display:none;margin-top:8px;border:1.5px solid var(--line);border-radius:10px;padding:10px 14px;outline:none">
+              </div>
+
+              <div class="field">
+                <label>المقاسات المتوفرة <span class="hint">— اختر ما يتوفر منه المنتج</span></label>
+                <div class="sizes-row" id="sizesRow">
+                  <label class="size-chip"><input type="checkbox" value="S" checked><span>S</span></label>
+                  <label class="size-chip"><input type="checkbox" value="M" checked><span>M</span></label>
+                  <label class="size-chip"><input type="checkbox" value="L" checked><span>L</span></label>
+                  <label class="size-chip"><input type="checkbox" value="XL" checked><span>XL</span></label>
+                  <label class="size-chip"><input type="checkbox" value="XXL"><span>XXL</span></label>
+                </div>
+                <span class="err-msg" id="e-sizes">اختر مقاساً واحداً على الأقل</span>
+              </div>
+
+              <div class="field">
+                <label>حالة المنتج</label>
+                <div class="status-row">
+                  <label class="status-chip"><input type="radio" name="pStatus" value="active" checked><span>✓ متاح للبيع</span></label>
+                  <label class="status-chip"><input type="radio" name="pStatus" value="hidden"><span>🚫 مخفي من المتجر</span></label>
+                </div>
+              </div>
+
+              <div class="field full">
+                <label>الألوان المتوفرة <span class="req">*</span> <span class="hint">— لكل لون: الكود + الاسم كما يظهر للزائر (مثال: أبيض عاجي #f5f2ea)</span></label>
+                <div class="colors-list" id="colorsList"></div>
+                <div style="margin-top:10px"><button type="button" class="add-line" onclick="addColorLine()">＋ إضافة لون آخر</button></div>
+                <span class="err-msg" id="e-colors">أضف لوناً واحداً على الأقل مع اسم واضح لكل لون</span>
+              </div>
+
+              <div class="field full">
+                <label>وصف المنتج <span class="hint">— اختياري، يظهر في صفحة المنتج</span></label>
+                <textarea id="pDesc" placeholder="قميص قطني 100% بقصّة عصرية وخياطة متقنة…" maxlength="500"></textarea>
+              </div>
+
+            </div>
+
+            <div class="submit-bar">
+              <button type="submit" class="btn-primary gold" id="pSubmitBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+                إضافة المنتج للمتجر
+              </button>
+              <button type="button" class="btn-ghost" id="pCancelEdit" style="display:none" onclick="cancelProductEdit()">إلغاء التعديل</button>
+              <span class="form-note">يُحفظ المنتج فوراً ويظهر في قائمة المنتجات بالأسفل</span>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="divider-note">أو أضف تصنيفاً جديداً</div>
+
+      <!-- ========== ADD CATEGORY ========== -->
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg> إضافة تصنيف جديد</h2>
+            <p>التصنيف يحتاج: الاسم + بنر العرض + الرسالة التسويقية</p>
+          </div>
+          <span class="tag blue" id="catFormMode">نموذج إضافة</span>
+        </div>
+        <div class="panel-body">
+          <form id="categoryForm" novalidate>
+            <div class="form-grid">
+
+              <div class="field">
+                <label>اسم التصنيف <span class="req">*</span></label>
+                <input type="text" id="cName" placeholder="مثال: قمصان رسمية" maxlength="40">
+                <span class="err-msg" id="e-cName">أدخل اسماً صحيحاً (حرفان على الأقل) وغير مكرر</span>
+              </div>
+
+              <div class="field">
+                <label>الرسالة التسويقية <span class="req">*</span> <span class="hint">— الجملة التي تبيع التصنيف</span></label>
+                <input type="text" id="cMsg" placeholder="مثال: أناقة لا تُضاهى لكل مناسباتك الرسمية" maxlength="90">
+                <span class="err-msg" id="e-cMsg">اكتب رسالة تسويقية (10 أحرف على الأقل)</span>
+              </div>
+
+              <div class="field full">
+                <label>بنر التصنيف <span class="req">*</span> <span class="hint">— صورة عريضة تظهر أعلى صفحة التصنيف، أو لون خلفية أنيق</span></label>
+                <div class="seg" id="bannerSeg" style="max-width:420px">
+                  <button type="button" class="on" data-v="color">لون متدرج</button>
+                  <button type="button" data-v="image">رفع صورة بنر</button>
+                </div>
+
+                <div id="bannerColorBox" style="margin-top:12px">
+                  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+                    <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--muted)">اللون الأساسي <input type="color" id="cColor1" value="#1d1a16" style="width:44px;height:38px;border:none;background:none;cursor:pointer;padding:0"></div>
+                    <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--muted)">لون التدرج <input type="color" id="cColor2" value="#b99a6b" style="width:44px;height:38px;border:none;background:none;cursor:pointer;padding:0"></div>
+                  </div>
+                </div>
+
+                <div id="bannerImgBox" style="display:none;margin-top:12px">
+                  <div class="banner-devices-grid">
+                    <!-- Desktop Banner Card -->
+                    <div class="banner-device-card" id="desktopBannerCard">
+                      <div class="bdc-head">
+                        <div class="bdc-title">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                          <span>بنر الكمبيوتر (Desktop)</span>
+                        </div>
+                        <span class="bdc-ratio-tag">2.62 : 1</span>
+                      </div>
+
+                      <div class="bdc-upload-box" id="desktopUploadBox">
+                        <input type="file" id="desktopImgFileInput" accept="image/*" style="display:none">
+                        <div class="bdc-dropzone" onclick="document.getElementById('desktopImgFileInput').click()">
+                          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                          </svg>
+                          <b>اختر صورة للكمبيوتر</b>
+                          <small>اضغط للرفع وقص الكادر النهائي</small>
+                        </div>
+                      </div>
+
+                      <div class="bdc-final-box" id="desktopFinalBox" style="display:none">
+                        <div class="bdc-preview-wrap desktop-ratio">
+                          <img id="desktopFinalImg" alt="Desktop Final WebP">
+                          <span class="bdc-badge">✓ معتمد (WebP)</span>
+                        </div>
+                        <div class="bdc-actions">
+                          <span class="bdc-size-info" id="desktopSizeInfo">WebP جاهز</span>
+                          <button type="button" class="btn-ghost btn-sm" id="desktopReplaceBtn">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                            استبدال الصورة
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Mobile Banner Card -->
+                    <div class="banner-device-card" id="mobileBannerCard">
+                      <div class="bdc-head">
+                        <div class="bdc-title">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>
+                          <span>بنر الجوال (Mobile)</span>
+                        </div>
+                        <span class="bdc-ratio-tag">0.94 : 1</span>
+                      </div>
+
+                      <div class="bdc-upload-box" id="mobileUploadBox">
+                        <input type="file" id="mobileImgFileInput" accept="image/*" style="display:none">
+                        <div class="bdc-dropzone" onclick="document.getElementById('mobileImgFileInput').click()">
+                          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                          </svg>
+                          <b>اختر صورة للجوال</b>
+                          <small>صورة رأسية أو مربعة خاصة بالهاتف</small>
+                        </div>
+                      </div>
+
+                      <div class="bdc-final-box" id="mobileFinalBox" style="display:none">
+                        <div class="bdc-preview-wrap mobile-ratio">
+                          <img id="mobileFinalImg" alt="Mobile Final WebP">
+                          <span class="bdc-badge">✓ معتمد (WebP)</span>
+                        </div>
+                        <div class="bdc-actions">
+                          <span class="bdc-size-info" id="mobileSizeInfo">WebP جاهز</span>
+                          <button type="button" class="btn-ghost btn-sm" id="mobileReplaceBtn">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                            استبدال الصورة
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="bdc-note">💡 في حال عدم رفع صورة خاصة بالجوال، سيتم استخدام صورة الكمبيوتر تلقائياً كخيار بديل.</div>
+                </div>
+                <span class="err-msg" id="e-cBanner">أضف بنراً للتصنيف (لون أو صورة كمبيوتر معتمدة)</span>
+              </div>
+
+              <div class="field full">
+                <div class="pv-head-row">
+                  <label style="margin:0">معاينة حية — هكذا سيظهر البنر في المتجر</label>
+                  <div class="seg seg-sm" id="previewDeviceSeg">
+                    <button type="button" class="on" data-target="desktop">💻 كمبيوتر (2.62:1)</button>
+                    <button type="button" data-target="mobile">📱 جوال (0.94:1)</button>
+                  </div>
+                </div>
+                <div class="banner-preview-outer">
+                  <div class="banner-preview desktop-view" id="bannerPreview">
+                    <div class="ov" id="bannerPreviewOverlay">
+                      <div class="bt">HADJAJ COLLECTION</div>
+                      <div class="bn" id="pvName">اسم التصنيف</div>
+                      <div class="bm" id="pvMsg">رسالتك التسويقية تظهر هنا…</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field full">
+                <label>وصف مختصر للتصنيف <span class="hint">— اختياري</span></label>
+                <textarea id="cDesc" placeholder="وصف قصير يظهر أسفل البنر…" maxlength="200" style="min-height:60px"></textarea>
+              </div>
+
+            </div>
+
+            <div class="submit-bar">
+              <button type="submit" class="btn-primary gold">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+                إضافة التصنيف
+              </button>
+              <button type="button" class="btn-ghost" id="cCancelEdit" style="display:none" onclick="cancelCatEdit()">إلغاء التعديل</button>
+              <span class="form-note">بعدها تقدر تربط المنتجات بهذا التصنيف من نموذج المنتج</span>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===================== VIEW: PRODUCTS ===================== -->
+    <section class="view" id="view-products">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/></svg> إدارة المنتجات</h2>
+            <p>تعديل، حذف، تفعيل وإخفاء — كل تغيير يُحفظ تلقائياً</p>
+          </div>
+          <button class="btn-primary" style="padding:10px 22px;font-size:13px" onclick="switchView('dash',document.querySelector('[data-view=dash]'));document.getElementById('pName').focus()">＋ منتج جديد</button>
+        </div>
+        <div class="panel-body">
+          <div class="toolbar">
+            <div class="search-box">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              <input type="text" id="prodSearch" placeholder="ابحث باسم المنتج…" oninput="renderProductsTable()">
+            </div>
+            <select class="filter-sel" id="prodFilterCat" onchange="renderProductsTable()"><option value="">كل التصنيفات</option></select>
+            <select class="filter-sel" id="prodFilterStatus" onchange="renderProductsTable()">
+              <option value="">كل الحالات</option>
+              <option value="active">متاح</option>
+              <option value="hidden">مخفي</option>
+              <option value="sale">عليه خصم</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>المنتج</th><th>السعر</th><th>الألوان</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+              <tbody id="productsTbody"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="prodEmpty" style="display:none">لا توجد منتجات مطابقة — أضف منتجك الأول من قسم الإضافة</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== VIEW: CATEGORIES ===================== -->
+    <section class="view" id="view-cats">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg> إدارة التصنيفات</h2>
+            <p>كل تصنيف يعرض بنره ورسالته التسويقية وعدد منتجاته</p>
+          </div>
+          <button class="btn-primary" style="padding:10px 22px;font-size:13px" onclick="switchView('dash',document.querySelector('[data-view=dash]'));document.getElementById('cName').focus()">＋ تصنيف جديد</button>
+        </div>
+        <div class="panel-body">
+          <div class="cats-grid" id="catsGrid"></div>
+          <div class="empty-state" id="catEmpty" style="display:none">لا توجد تصنيفات بعد — أضف أول تصنيف من قسم الإضافة</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== VIEW: ORDERS ===================== -->
+    <section class="view" id="view-orders">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> إدارة طلبات الزبائن (Cloud Orders)</h2>
+            <p>مزامنة حية ومباشرة من Firestore — تحديث فوري لحالات الطلبات وإدارتها</p>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn-ghost" onclick="refreshOrders()" title="تحديث قائمة الطلبات">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              تحديث
+            </button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="toolbar">
+            <div class="search-box">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              <input type="text" id="orderSearch" placeholder="ابحث باسم الزبون، رقم الهاتف، أو الولاية..." oninput="renderOrdersTable()">
+            </div>
+            <select class="filter-sel" id="orderFilterStatus" onchange="renderOrdersTable()">
+              <option value="">كل الحالات</option>
+              <option value="جديد">جديد</option>
+              <option value="قيد المعالجة">قيد المعالجة</option>
+              <option value="مؤكد">مؤكد</option>
+              <option value="تم التوصيل">تم التوصيل</option>
+              <option value="ملغي">ملغي</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>رقم الطلب</th>
+                  <th>الزبون</th>
+                  <th>الهاتف</th>
+                  <th>الولاية والبلدية</th>
+                  <th>تفاصيل المنتجات</th>
+                  <th>الإجمالي</th>
+                  <th>حالة الطلب</th>
+                  <th>التاريخ</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTbody"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="orderEmpty" style="display:none">لا توجد طلبات مسجلة حتى الآن</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Export modal -->
+<div class="modal-bg" id="exportModal">
+  <div class="modal" style="max-width:680px">
+    <h3>تصدير الكود للفرونت إند</h3>
+    <p>انسخ هذا الكود واستبدل به مصفوفة <b>products</b> في ملف <b>index.html</b> و<b>product.html</b>، ومصفوفة <b>categories</b> الجديدة أينما تريد عرض التصنيفات.</p>
+    <div class="export-box" id="exportCode"></div>
+    <div class="copy-row">
+      <button class="btn-primary gold" style="padding:11px 24px;font-size:13px" onclick="copyExport()">نسخ الكود</button>
+      <button class="btn-ghost" onclick="downloadExport()">تنزيل ملف products.js</button>
+      <button class="btn-cancel" style="margin-right:auto" onclick="document.getElementById('exportModal').classList.remove('open')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm modal -->
+<div class="modal-bg" id="confirmModal">
+  <div class="modal">
+    <h3 id="cfTitle">تأكيد الحذف</h3>
+    <p id="cfText"></p>
+    <div class="m-actions">
+      <button class="btn-danger" id="cfYes">نعم، احذف</button>
+      <button class="btn-cancel" onclick="document.getElementById('confirmModal').classList.remove('open')">تراجع</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: BANNER POSITION & CROP EDITOR ===================== -->
+<div class="modal-bg" id="cropModal" style="z-index:220">
+  <div class="modal crop-modal-container">
+    <div class="crop-modal-head">
+      <div class="cm-title-wrap">
+        <h3>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M6 2v14a2 2 0 0 0 2 2h14"/>
+            <path d="M18 22V8a2 2 0 0 0-2-2H2"/>
+          </svg>
+          <span id="cropModalTitle">قص واعتماد بنر الكمبيوتر</span>
+          <span class="tag gold" id="cropTargetBadge" style="margin-right:8px;font-size:11px">2.62 : 1</span>
+        </h3>
+        <p id="cropModalSub">اسحب الصورة وقربها لاختيار الكادر النهائي بدقة — عند الضغط على تأكيد سيتم قصها وتحويلها تلقائياً إلى WebP محسن</p>
+      </div>
+      <button type="button" class="crop-close-btn" id="cropCloseBtn" title="إغلاق">&times;</button>
+    </div>
+
+    <div class="crop-modal-body">
+      <!-- Toolbar Controls -->
+      <div class="crop-toolbar">
+        <div class="crop-tool-group">
+          <span class="tool-label">التقريب (Zoom):</span>
+          <button type="button" class="crop-zoom-btn" id="cropZoomOut" title="تصغير">−</button>
+          <input type="range" id="cropZoomRange" min="1" max="3" step="0.05" value="1" class="crop-zoom-slider">
+          <button type="button" class="crop-zoom-btn" id="cropZoomIn" title="تكبير">+</button>
+          <span class="crop-zoom-badge" id="cropZoomVal">100%</span>
+        </div>
+
+        <div class="crop-tool-group crop-actions-group">
+          <button type="button" class="crop-quick-btn" id="cropCenterBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg>
+            توسيط الصورة
+          </button>
+          <button type="button" class="crop-quick-btn" id="cropResetBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            إعادة ضبط
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Interactive Viewport / Workspace -->
+      <div class="crop-canvas-wrapper" id="cropCanvasWrapper">
+        <div class="crop-canvas" id="cropCanvas">
+          <!-- The moveable / zoomable image layer -->
+          <img id="cropSourceImg" class="crop-source-img" alt="Banner Source" draggable="false">
+
+          <!-- Target Banner Frame (changes class between desktop-frame and mobile-frame) -->
+          <div class="crop-active-frame desktop-frame" id="cropFrame">
+            <div class="frame-tag" id="cropFrameTag">
+              مساحة بنر الكمبيوتر (Desktop 2.62:1)
+            </div>
+            <div class="crop-thirds-grid"></div>
+          </div>
+        </div>
+        <div class="crop-canvas-hint">
+          <span>💡 <b>اسحب الصورة</b> بالماوس أو اللمس لتحديد الجزء الأهم • استخدم شريط التقريب لتكبير الصورة</span>
+        </div>
+      </div>
+
+      <!-- Live WYSIWYG Target Preview -->
+      <div class="crop-preview-box">
+        <div class="preview-title" id="cropPvTitle">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          معاينة حية — هكذا سيظهر البنر المعتمد بالضبط على المتجر
+        </div>
+        <div class="crop-pv-viewport-wrap">
+          <div class="crop-pv-window desktop-ratio" id="cropPvWindow">
+            <div class="preview-inner" id="cropPvInner">
+              <img id="cropPvImg" alt="" draggable="false">
+              <div class="pv-overlay" id="cropPvOverlay">
+                <span class="pv-brand">HADJAJ COLLECTION</span>
+                <strong class="pv-cat-name" id="pvCropName">اسم التصنيف</strong>
+                <span class="pv-cat-msg" id="pvCropMsg">الرسالة التسويقية تظهر هنا</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div class="crop-modal-footer">
+      <div class="footer-coord-badge" id="cropCoordInfo">
+        نسبة العرض: 2.62 : 1 • سيتم التصدير كـ WebP فائق الجودة
+      </div>
+      <div class="crop-footer-btns">
+        <button type="button" class="btn-cancel" id="cropCancelBtn">إلغاء</button>
+        <button type="button" class="btn-primary gold" id="cropConfirmBtn" style="padding:10px 28px;font-size:14px;font-weight:800">
+          تأكيد واعتماد البنر النهائي (Done) ✓
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module" src="/dashboard/js/admin.js"></script>
+</body>
+</html>

@@ -38,7 +38,10 @@
 html{ scroll-behavior: smooth; }
 
 /* Image rendering: silky product photography */
-img{ -webkit-backdrop-filter: none; }
+img{
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
 .card-img img, .p-gallery .main-img img, .hero img{
   will-change: transform;
 }
