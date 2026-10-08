@@ -38,7 +38,7 @@ import { db } from "./firebase-config.js";
 
     /* ---------- state ---------- */
     let favs = new Set(JSON.parse(localStorage.getItem('alnoor_favs') || '[]'));
-    let view = 'all', priceFilter = 'all', sortMode = 'default';
+    let view = 'all', priceFilter = 'all', sortMode = 'default', searchQuery = '';
 
     const grid = document.getElementById('grid');
     const countEl = document.getElementById('count');
@@ -58,9 +58,30 @@ import { db } from "./firebase-config.js";
       if (view === 'fav') render();
     }
 
+    /* ---------- Arabic Text Normalization ---------- */
+    function normalizeArabic(text) {
+      if (!text) return '';
+      return String(text)
+        .toLowerCase()
+        .replace(/[\u064B-\u065F\u0670]/g, '') // remove diacritics
+        .replace(/[أإآٱ]/g, 'ا')
+        .replace(/ة/g, 'ه')
+        .replace(/ى/g, 'ي')
+        .trim();
+    }
+
     /* ---------- filter / sort / render ---------- */
     function getList() {
       let list = products.slice();
+      if (searchQuery) {
+        const qNorm = normalizeArabic(searchQuery);
+        const tokens = qNorm.split(/\s+/).filter(Boolean);
+        list = list.filter(p => {
+          const nNorm = normalizeArabic(p.name);
+          const cNorm = normalizeArabic(p.category || '');
+          return tokens.every(t => nNorm.includes(t) || cNorm.includes(t));
+        });
+      }
       if (view === 'sale') {
         list = list.filter(p => p.oldPrice && p.oldPrice > p.price);
       } else if (view === 'fav') {
@@ -85,45 +106,62 @@ import { db } from "./firebase-config.js";
     }
     function discount(p) { return p.oldPrice && p.oldPrice > p.price ? Math.round((1 - p.price / p.oldPrice) * 100) : 0; }
 
-    function render() {
-      if (!isLoaded && products.length === 0) {
-        grid.innerHTML = '<div class="empty-state">جاري تحميل المنتجات من السحابة...</div>';
-        countEl.textContent = '...';
-        return;
+    /* ---------- Progressive Feed & Grid Virtualization Engine ---------- */
+    const PAGE_SIZE = 12;
+    let displayedCount = PAGE_SIZE;
+    let activeFilteredList = [];
+    let lastKnownCardHeight = 0;
+    let virtualScrollTicking = false;
+    let currentRenderedRange = { start: -1, end: -1 };
+    let isLoadingMore = false;
+    let sentinelObserver = null;
+
+    function getGridMetrics() {
+      if (!grid) return { cols: 4, cardH: 420, gap: 22, rowH: 442 };
+      const gridStyle = window.getComputedStyle(grid);
+      const gap = parseFloat(gridStyle.rowGap || gridStyle.gap) || 22;
+      const cols = gridStyle.gridTemplateColumns.split(' ').filter(Boolean).length || 4;
+
+      let cardH = lastKnownCardHeight;
+      const sampleCard = grid.querySelector('.card');
+      if (sampleCard && sampleCard.offsetHeight > 100) {
+        cardH = sampleCard.offsetHeight;
+        lastKnownCardHeight = cardH;
       }
-
-      const list = getList();
-      countEl.textContent = list.length + ' منتج';
-      if (!list.length) {
-        grid.innerHTML = '<div class="empty-state">لا توجد منتجات هنا حالياً<br><small style="font-weight:400">' +
-          (view === 'fav' ? 'اضغط على القلب ♥ في أي منتج لإضافته إلى مفضلتك' : 'جرّب تغيير خيارات التصفية') +
-          '</small></div>';
-        return;
+      if (!cardH) {
+        const w = window.innerWidth;
+        if (w <= 480) cardH = 430;
+        else if (w <= 768) cardH = 395;
+        else if (w <= 1024) cardH = 415;
+        else cardH = 445;
       }
-      grid.innerHTML = list.map((p, idx) => {
-        const mainImg = p.img || p.mainImage || '';
-        const optImg = getOptimizedImageUrl(mainImg, 420);
-        const disc = discount(p);
-        const badgeHTML = disc ? `<span class="badge">خصم ${disc}%</span>` : (p.badge ? `<span class="badge">${esc(p.badge)}</span>` : '');
-        const isLiked = favs.has(p.id);
+      return { cols, cardH, gap, rowH: cardH + gap };
+    }
 
-        const colorsHTML = (p.colors || []).map((c, j) => {
-          const val = typeof c === 'object' ? (c.value || c.hex) : c;
-          const nm = typeof c === 'object' ? c.name : (p.colorNames && p.colorNames[j] ? p.colorNames[j] : '');
-          const hex = resolveColorHex(val || nm);
-          const isLight = hex.toLowerCase() === '#ffffff' || hex.toLowerCase() === '#fff' || hex === '#fdfcfa';
-          return `<span class="dot ${j === 0 ? 'active' : ''}" style="background:${hex};${isLight ? 'border:1.5px solid #d1cbbf' : ''}" title="${esc(nm || hex)}"></span>`;
-        }).join('');
+    function renderCardHTML(p, idx, isAboveFold = false) {
+      const mainImg = p.img || p.mainImage || '';
+      const optImg = getOptimizedImageUrl(mainImg, 420);
+      const disc = discount(p);
+      const badgeHTML = disc ? `<span class="badge">خصم ${disc}%</span>` : (p.badge ? `<span class="badge">${esc(p.badge)}</span>` : '');
+      const isLiked = favs.has(p.id);
 
-        return `
-    <div class="card">
+      const colorsHTML = (p.colors || []).map((c, j) => {
+        const val = typeof c === 'object' ? (c.value || c.hex) : c;
+        const nm = typeof c === 'object' ? c.name : (p.colorNames && p.colorNames[j] ? p.colorNames[j] : '');
+        const hex = resolveColorHex(val || nm);
+        const isLight = hex.toLowerCase() === '#ffffff' || hex.toLowerCase() === '#fff' || hex === '#fdfcfa';
+        return `<span class="dot ${j === 0 ? 'active' : ''}" style="background:${hex};${isLight ? 'border:1.5px solid #d1cbbf' : ''}" title="${esc(nm || hex)}"></span>`;
+      }).join('');
+
+      return `
+    <div class="card" data-id="${esc(p.id)}">
       <a class="card-link" href="/product?id=${encodeURIComponent(p.id)}" aria-label="${esc(p.name)}">
         <div class="card-img">
           ${badgeHTML}
           <button type="button" class="fav ${isLiked ? 'liked' : ''}" aria-label="مفضلة" onclick="event.preventDefault();event.stopPropagation();toggleFav('${p.id}',this)">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7.5-4.7-9.5-9.2C.9 8.4 3 4.5 6.8 4.5c2 0 3.6 1.1 4.6 2.7h1.2c1-1.6 2.6-2.7 4.6-2.7 3.8 0 5.9 3.9 4.3 7.3C19.5 16.3 12 21 12 21z"/></svg>
           </button>
-          <img src="${esc(optImg)}" alt="${esc(p.name)}" loading="${idx < 2 ? 'eager' : 'lazy'}" ${idx < 2 ? 'fetchpriority="high"' : 'decoding="async"'} onerror="this.src=''">
+          <img src="${esc(optImg)}" alt="${esc(p.name)}" loading="${isAboveFold ? 'eager' : 'lazy'}" ${isAboveFold ? 'fetchpriority="high"' : 'decoding="async"'} onerror="this.src=''">
         </div>
         <div class="card-info-top">
           <h3>${esc(p.name)}</h3>
@@ -138,8 +176,174 @@ import { db } from "./firebase-config.js";
         </button>
       </div>
     </div>`;
-      }).join('');
     }
+
+    function checkInfiniteScroll(relBottom, currentFeedHeight) {
+      const total = activeFilteredList.length;
+      if (displayedCount >= total || isLoadingMore) return;
+
+      // Preload next page when user scrolls within 650px of feed end
+      if (relBottom + 650 >= currentFeedHeight) {
+        isLoadingMore = true;
+        displayedCount = Math.min(displayedCount + PAGE_SIZE, total);
+        requestAnimationFrame(() => {
+          updateVirtualGrid(true);
+          isLoadingMore = false;
+        });
+      }
+    }
+
+    function setupSentinelObserver() {
+      if (sentinelObserver) {
+        sentinelObserver.disconnect();
+        sentinelObserver = null;
+      }
+      const sentinel = document.getElementById('feedSentinel');
+      if (!sentinel || displayedCount >= activeFilteredList.length) return;
+
+      if ('IntersectionObserver' in window) {
+        sentinelObserver = new IntersectionObserver((entries) => {
+          if (entries[0] && entries[0].isIntersecting && !isLoadingMore) {
+            if (displayedCount < activeFilteredList.length) {
+              isLoadingMore = true;
+              displayedCount = Math.min(displayedCount + PAGE_SIZE, activeFilteredList.length);
+              requestAnimationFrame(() => {
+                updateVirtualGrid(true);
+                isLoadingMore = false;
+              });
+            }
+          }
+        }, { rootMargin: '600px 0px 600px 0px' });
+        sentinelObserver.observe(sentinel);
+      }
+    }
+
+    function updateVirtualGrid(force = false) {
+      if (!grid) return;
+      const total = activeFilteredList.length;
+
+      if (!isLoaded && products.length === 0) {
+        grid.innerHTML = '<div class="empty-state">جاري تحميل المنتجات من السحابة...</div>';
+        countEl.textContent = '...';
+        return;
+      }
+
+      if (total === 0) {
+        currentRenderedRange = { start: -1, end: -1 };
+        grid.innerHTML = '<div class="empty-state">لا توجد منتجات هنا حالياً<br><small style="font-weight:400">' +
+          (view === 'fav' ? 'اضغط على القلب ♥ في أي منتج لإضافته إلى مفضلتك' : 'جرّب تغيير خيارات التصفية') +
+          '</small></div>';
+        return;
+      }
+
+      const { cols, cardH, gap, rowH } = getGridMetrics();
+      const currentCount = Math.min(displayedCount, total);
+      const totalRows = Math.ceil(currentCount / cols);
+
+      const gridRect = grid.getBoundingClientRect();
+      const gridTop = window.scrollY + gridRect.top;
+      const viewportH = window.innerHeight || 800;
+      const scrollY = window.scrollY;
+
+      const relScrollY = Math.max(0, scrollY - gridTop);
+      const relBottom = Math.max(0, scrollY + viewportH - gridTop);
+
+      const rFirst = Math.floor(relScrollY / rowH);
+      const rLast = Math.floor(relBottom / rowH);
+
+      const BUFFER_ROWS = 2;
+      const rStart = Math.max(0, rFirst - BUFFER_ROWS);
+      const rEnd = Math.min(totalRows - 1, rLast + BUFFER_ROWS);
+
+      const idxStart = rStart * cols;
+      const idxEnd = Math.min(currentCount, (rEnd + 1) * cols);
+
+      if (!force && currentRenderedRange.start === idxStart && currentRenderedRange.end === idxEnd) {
+        checkInfiniteScroll(relBottom, totalRows * rowH);
+        return;
+      }
+
+      currentRenderedRange = { start: idxStart, end: idxEnd };
+
+      const topSpacerH = rStart > 0 ? (rStart * rowH - gap) : 0;
+      const remRows = (totalRows - 1) - rEnd;
+      const bottomSpacerH = remRows > 0 ? (remRows * rowH - gap) : 0;
+
+      let html = '';
+
+      if (topSpacerH > 0) {
+        html += `<div class="grid-spacer" style="grid-column: 1 / -1; height: ${topSpacerH}px;"></div>`;
+      }
+
+      for (let i = idxStart; i < idxEnd; i++) {
+        const p = activeFilteredList[i];
+        if (p) {
+          html += renderCardHTML(p, i, i < cols);
+        }
+      }
+
+      if (bottomSpacerH > 0) {
+        html += `<div class="grid-spacer" style="grid-column: 1 / -1; height: ${bottomSpacerH}px;"></div>`;
+      }
+
+      if (currentCount < total) {
+        html += `
+          <div class="feed-sentinel" id="feedSentinel" style="grid-column: 1 / -1;">
+            <span class="feed-spinner"></span>
+            <span>جاري عرض المزيد من المنتجات... (${currentCount} من ${total})</span>
+          </div>`;
+      }
+
+      grid.innerHTML = html;
+
+      // Sample actual rendered card height to refine metrics
+      const sampleCard = grid.querySelector('.card');
+      if (sampleCard && sampleCard.offsetHeight > 100) {
+        lastKnownCardHeight = sampleCard.offsetHeight;
+      }
+
+      setupSentinelObserver();
+      checkInfiniteScroll(relBottom, totalRows * rowH);
+    }
+
+    function render(resetPagination = true) {
+      activeFilteredList = getList();
+      countEl.textContent = activeFilteredList.length + ' منتج';
+
+      if (resetPagination) {
+        displayedCount = Math.min(PAGE_SIZE, activeFilteredList.length);
+        currentRenderedRange = { start: -1, end: -1 };
+      } else {
+        displayedCount = Math.min(Math.max(displayedCount, PAGE_SIZE), activeFilteredList.length);
+      }
+
+      updateVirtualGrid(true);
+    }
+
+    // Attach scroll and resize throttlers for 60fps virtualization
+    window.addEventListener('scroll', () => {
+      if (!virtualScrollTicking) {
+        virtualScrollTicking = true;
+        requestAnimationFrame(() => {
+          updateVirtualGrid(false);
+          virtualScrollTicking = false;
+        });
+      }
+    }, { passive: true });
+
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        lastKnownCardHeight = 0;
+        updateVirtualGrid(true);
+      }, 120);
+    }, { passive: true });
+
+    // Enable smooth scrolling without entrance jitter once initial mount finishes
+    setTimeout(() => {
+      if (grid) grid.classList.add('feed-ready');
+    }, 1200);
 
     /* ---------- Dynamic Categories & Nav Logic ---------- */
     let currentBannerRequestId = 0;
@@ -244,6 +448,16 @@ import { db } from "./firebase-config.js";
       const crumbTitle = document.getElementById('crumbTitle');
       const pageHeading = document.getElementById('pageHeading');
       const pageDesc = document.getElementById('pageDesc');
+
+      if (searchQuery) {
+        if (heroTitle) heroTitle.textContent = 'نتائج البحث';
+        if (heroSub) heroSub.textContent = `بحث عن: ${searchQuery}`;
+        if (heroDesc) heroDesc.textContent = `استعراض المنتجات المطابقة في كافة أقسام المتجر`;
+        if (crumbTitle) crumbTitle.textContent = 'البحث';
+        if (pageHeading) pageHeading.textContent = `نتائج البحث: "${searchQuery}"`;
+        if (pageDesc) pageDesc.textContent = `عرض كافة المنتجات المطابقة لكلمة "${searchQuery}" في كافة أقسام المتجر.`;
+        return;
+      }
 
       if (view === 'sale') {
         if (heroTitle) heroTitle.textContent = 'الخصومات والعروض';
@@ -410,6 +624,8 @@ import { db } from "./firebase-config.js";
         const v = target.dataset.view;
         const catId = target.dataset.catId || null;
 
+        searchQuery = '';
+
         if (v === 'all') {
           view = 'all';
           selectedCatId = null;
@@ -418,6 +634,8 @@ import { db } from "./firebase-config.js";
             url.searchParams.delete('cat');
             url.searchParams.delete('category');
             url.searchParams.delete('view');
+            url.searchParams.delete('q');
+            url.searchParams.delete('search');
             window.history.pushState({}, '', '/');
           } catch (_) {}
         } else if (v === 'cat') {
@@ -427,6 +645,8 @@ import { db } from "./firebase-config.js";
             const url = new URL(window.location.href);
             url.searchParams.set('cat', catId);
             url.searchParams.delete('view');
+            url.searchParams.delete('q');
+            url.searchParams.delete('search');
             window.history.pushState({}, '', '/?cat=' + encodeURIComponent(catId));
           } catch (_) {}
         } else if (v === 'sale') {
@@ -437,6 +657,8 @@ import { db } from "./firebase-config.js";
             url.searchParams.set('view', 'sale');
             url.searchParams.delete('cat');
             url.searchParams.delete('category');
+            url.searchParams.delete('q');
+            url.searchParams.delete('search');
             window.history.pushState({}, '', '/?view=sale');
           } catch (_) {}
         } else if (v === 'fav') {
@@ -447,6 +669,8 @@ import { db } from "./firebase-config.js";
             url.searchParams.set('view', 'fav');
             url.searchParams.delete('cat');
             url.searchParams.delete('category');
+            url.searchParams.delete('q');
+            url.searchParams.delete('search');
             window.history.pushState({}, '', '/?view=fav');
           } catch (_) {}
         }
@@ -474,6 +698,11 @@ import { db } from "./firebase-config.js";
         const params = new URLSearchParams(window.location.search);
         const catParam = params.get('cat') || params.get('category');
         const viewParam = params.get('view');
+        const searchParam = params.get('q') || params.get('search');
+
+        if (searchParam) {
+          searchQuery = searchParam;
+        }
 
         if (viewParam === 'sale') {
           view = 'sale';
@@ -513,28 +742,148 @@ import { db } from "./firebase-config.js";
     setupDrop('filterBtn', 'filterMenu', f => { priceFilter = f; });
     setupDrop('sortBtn', 'sortMenu', s => { sortMode = s; });
 
-    /* ---------- search ---------- */
-    const sOverlay = document.getElementById('searchOverlay'),
-      sInput = document.getElementById('searchInput'),
-      sResults = document.getElementById('searchResults');
-    document.getElementById('searchBtn').addEventListener('click', () => { sOverlay.classList.add('show'); setTimeout(() => sInput.focus(), 80); });
-    document.getElementById('searchClose').addEventListener('click', closeSearch);
-    sOverlay.addEventListener('click', e => { if (e.target === sOverlay) closeSearch(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSearch(); closeCart(); } });
-    function closeSearch() { sOverlay.classList.remove('show'); sInput.value = ''; sResults.innerHTML = ''; }
-    sInput.addEventListener('input', () => {
-      const q = sInput.value.trim().toLowerCase();
-      if (!q) { sResults.innerHTML = ''; return; }
-      const hits = products.filter(p => p.name.toLowerCase().includes(q));
-      sResults.innerHTML = hits.length ? hits.map(p => `
-    <a class="sr-item" href="/product?id=${encodeURIComponent(p.id)}">
-      <img src="${esc(p.img || p.mainImage)}" alt="${esc(p.name)}">
-      <div><div class="sr-name">${esc(p.name)}</div><div class="sr-price">${p.price} دج</div></div>
-    </a>`) : '<div class="search-empty">لا توجد نتائج مطابقة لبحثك</div>';
+    /* ---------- Global Catalog Search ---------- */
+    const sOverlay = document.getElementById('searchOverlay');
+    const sInput = document.getElementById('searchInput');
+    const sResults = document.getElementById('searchResults');
+    const SEARCH_PAGE_SIZE = 10;
+    let currentSearchHits = [];
+    let searchRenderedCount = SEARCH_PAGE_SIZE;
+    let searchDebounceTimer = null;
+
+    function openSearch() {
+      sOverlay?.classList.add('show');
+      setTimeout(() => sInput?.focus(), 80);
+    }
+
+    function closeSearch() {
+      sOverlay?.classList.remove('show');
+      if (sInput) sInput.value = '';
+      if (sResults) sResults.innerHTML = '';
+      currentSearchHits = [];
+      searchRenderedCount = SEARCH_PAGE_SIZE;
+    }
+
+    document.getElementById('searchBtn')?.addEventListener('click', openSearch);
+    document.getElementById('searchClose')?.addEventListener('click', closeSearch);
+    sOverlay?.addEventListener('click', e => { if (e.target === sOverlay) closeSearch(); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeSearch();
+        closeCart();
+      }
     });
 
-    // Expose favorites function
+    function renderSearchResults() {
+      if (!sResults) return;
+      if (!currentSearchHits.length) {
+        sResults.innerHTML = '<div class="search-empty">لا توجد نتائج مطابقة لبحثك</div>';
+        return;
+      }
+
+      const visibleHits = currentSearchHits.slice(0, searchRenderedCount);
+      const remaining = currentSearchHits.length - searchRenderedCount;
+
+      let html = visibleHits.map(p => {
+        const mainImg = p.img || p.mainImage || '';
+        const optImg = getOptimizedImageUrl(mainImg, 120);
+        return `
+    <a class="sr-item" href="/product?id=${encodeURIComponent(p.id)}" aria-label="${esc(p.name)}">
+      <img src="${esc(optImg)}" alt="${esc(p.name)}" loading="lazy" decoding="async" onerror="this.src=''">
+      <div>
+        <div class="sr-name">${esc(p.name)}</div>
+        <div class="sr-price">${p.price} دج</div>
+      </div>
+    </a>`;
+      }).join('');
+
+      if (remaining > 0) {
+        html += `
+    <div style="padding: 12px; text-align: center;">
+      <button type="button" class="tool-btn" id="searchLoadMoreBtn" style="margin: 0 auto; font-size: 13px; padding: 6px 16px;">
+        عرض المزيد من النتائج (${remaining} متبقي)
+      </button>
+    </div>`;
+      }
+
+      sResults.innerHTML = html;
+
+      document.getElementById('searchLoadMoreBtn')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        searchRenderedCount = Math.min(searchRenderedCount + SEARCH_PAGE_SIZE, currentSearchHits.length);
+        renderSearchResults();
+      });
+    }
+
+    function executeGlobalSearch() {
+      const rawQuery = sInput?.value?.trim() || '';
+      if (!rawQuery) {
+        if (sResults) sResults.innerHTML = '';
+        currentSearchHits = [];
+        return;
+      }
+
+      const queryNorm = normalizeArabic(rawQuery);
+      const queryTokens = queryNorm.split(/\s+/).filter(Boolean);
+
+      // Search covers the COMPLETE active catalog index (independent of feed scroll/render state)
+      currentSearchHits = products.filter(p => {
+        if (p.status === 'hidden') return false;
+        const nameNorm = normalizeArabic(p.name);
+        const catNorm = normalizeArabic(p.category || '');
+        return queryTokens.every(token => nameNorm.includes(token) || catNorm.includes(token));
+      });
+
+      searchRenderedCount = SEARCH_PAGE_SIZE;
+      renderSearchResults();
+    }
+
+    sInput?.addEventListener('input', () => {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(executeGlobalSearch, 180);
+    });
+
+    // Enter key: filter the main storefront feed across entire catalog
+    sInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const q = sInput.value.trim();
+        if (q) {
+          searchQuery = q;
+          view = 'all';
+          selectedCatId = null;
+          closeSearch();
+          updateActiveCategoryNav();
+          updateHeroAndHeaders();
+          render(true);
+          document.querySelector('.toolbar')?.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    });
+
+    // Progressive / virtualized scroll inside search results panel
+    sResults?.addEventListener('scroll', () => {
+      if (searchRenderedCount >= currentSearchHits.length) return;
+      const atBottom = sResults.scrollTop + sResults.clientHeight >= sResults.scrollHeight - 50;
+      if (atBottom) {
+        searchRenderedCount = Math.min(searchRenderedCount + SEARCH_PAGE_SIZE, currentSearchHits.length);
+        renderSearchResults();
+      }
+    }, { passive: true });
+
+    // Expose favorites & test inspection helpers
     window.toggleFav = toggleFav;
+    window.__setTestProducts = (list) => {
+      products = list;
+      isLoaded = true;
+      render(true);
+    };
+    window.__getStoreState = () => ({
+      productsCount: products.length,
+      displayedCount,
+      activeFilteredCount: activeFilteredList.length,
+      currentRenderedRange,
+      cardsInDom: document.querySelectorAll('.card').length
+    });
 
     // --- Card Button Feedback Helpers ---
     function setCardButtonFeedback(button, duration = 1500) {
