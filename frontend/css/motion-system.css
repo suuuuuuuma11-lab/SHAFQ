@@ -526,6 +526,29 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 .reveal.in-view{ opacity: 1; transform: none; filter: blur(0); }
 
 /* --------------------------------------------------------------------------
+   11.5 · MOBILE GPU PERFORMANCE PASS
+   --------------------------------------------------------------------------
+   On mobile screens, bypass expensive CSS blur filters during animations.
+   Retain elegant opacity and transform easing for 60fps silky smooth scrolling.
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: none; }
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .card-img img, .p-gallery .main-img img, .hero img {
+    will-change: auto;
+  }
+  .reveal {
+    filter: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
    12 · REDUCED MOTION — the house stays still for those who ask
    -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce){

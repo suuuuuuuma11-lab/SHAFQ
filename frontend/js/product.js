@@ -11,7 +11,16 @@ import { initCartUI, addToCart, toast as cartToast, sendTelegramOrderNotificatio
 import { setupWilayaCommuneCascade, ALGERIA_LOCATIONS } from "./locations.js";
 import { loadActiveShippingSettings, getInitialShippingSettings, getShippingPrice, findWilaya } from "./shipping.js";
 
-// Telegram Bot token is strictly stored on server-side (/api/telegram) and never exposed to the browser.
+// Cloudinary Auto Optimization Helper (Modern format, perceptual quality, mobile-responsive width)
+function getOptimizedImageUrl(url, width = 800) {
+  if (!url || typeof url !== 'string') return '';
+  if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
+    if (!url.includes('/f_auto,q_auto')) {
+      return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width}/`);
+    }
+  }
+  return url;
+}
 
 const defaultSizes = ["S","M","L","XL","XXL"];
 
@@ -155,7 +164,8 @@ function renderProductDetails(p) {
   if (nameEl) nameEl.textContent = p.name;
   if (priceEl) priceEl.textContent = p.price;
   
-  const mainImg = p.img || p.mainImage || 'img/p1.png';
+  const rawImg = p.img || p.mainImage || '';
+  const mainImg = getOptimizedImageUrl(rawImg, 800);
   const imgSkel = document.getElementById("pImgSkeleton");
 
   if (imgEl) {
@@ -729,9 +739,54 @@ function showProductErrorState(msg = "المنتج غير متوفر حاليا�
     </div>`;
 }
 
-// --- Fetch Data from Cloud Firestore ---
+// --- Fetch Data from Cloud Firestore (Direct document lookup with collection fallback) ---
 async function loadProductFromFirestore() {
   try {
+    // 1. Direct single document fetch for optimal mobile latency
+    if (idParam) {
+      try {
+        const directDocRef = doc(db, "products", idParam);
+        const directDocSnap = await getDoc(directDocRef);
+        if (directDocSnap.exists()) {
+          const d = directDocSnap.data();
+          const pImg = d.mainImage || d.img || (Array.isArray(d.images) && d.images[0] ? (d.images[0].url || d.images[0]) : '') || '';
+          let colors = [];
+          if (Array.isArray(d.colors)) {
+            colors = d.colors.map((c, idx) => {
+              if (typeof c === 'object' && c !== null) {
+                return { name: c.name || '', value: c.value || '#111111' };
+              }
+              const nm = (d.colorNames && d.colorNames[idx]) || String(c);
+              return { name: nm, value: String(c) };
+            });
+          }
+          const target = {
+            id: directDocSnap.id,
+            name: d.name || '',
+            price: typeof d.price === 'number' ? d.price : Number(d.price) || 0,
+            oldPrice: d.oldPrice ? Number(d.oldPrice) : null,
+            img: pImg,
+            mainImage: pImg,
+            badge: d.badge || '',
+            colors: colors,
+            colorNames: colors.map(c => c.name),
+            sizes: Array.isArray(d.sizes) && d.sizes.length ? d.sizes : defaultSizes,
+            status: d.status || 'active',
+            desc: d.description || d.desc || '',
+            category: d.category || '',
+            categoryId: d.categoryId || d.category || ''
+          };
+          currentTargetProduct = target;
+          renderProductDetails(target);
+          renderProductHeaderCategories();
+          return;
+        }
+      } catch (directErr) {
+        console.warn("Direct product lookup fallback to collection:", directErr.message);
+      }
+    }
+
+    // 2. Collection fallback if direct lookup is not available
     const colRef = collection(db, "products");
     const snap = await getDocs(colRef);
     const list = [];
@@ -809,12 +864,15 @@ const qtyMinus = document.getElementById("qtyMinusBtn");
 if (qtyPlus) qtyPlus.addEventListener("click", () => changeQty(1));
 if (qtyMinus) qtyMinus.addEventListener("click", () => changeQty(-1));
 
-// Motion System: Header scroll compression
+// Motion System: Efficient Header scroll compression
+const headerEl = document.querySelector('header');
+let headerScrolled = false;
 window.addEventListener('scroll', () => {
-  const header = document.querySelector('header');
-  if (header) {
-    if (window.scrollY > 25) header.classList.add('scrolled');
-    else header.classList.remove('scrolled');
+  if (!headerEl) return;
+  const shouldBeScrolled = window.scrollY > 25;
+  if (shouldBeScrolled !== headerScrolled) {
+    headerScrolled = shouldBeScrolled;
+    headerEl.classList.toggle('scrolled', headerScrolled);
   }
 }, { passive: true });
 

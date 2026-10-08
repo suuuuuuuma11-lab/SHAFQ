@@ -12,11 +12,27 @@ import { db } from "./firebase-config.js";
     let isCatsLoaded = false;
     let selectedCatId = null;
 
+    // Cloudinary Auto Optimization Helper (Modern WebP/AVIF format, perceptual quality, responsive mobile width)
+    function getOptimizedImageUrl(url, width = 450) {
+      if (!url || typeof url !== 'string') return '';
+      if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
+        if (!url.includes('/f_auto,q_auto')) {
+          return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width}/`);
+        }
+      }
+      return url;
+    }
+
     try {
       const cachedCats = JSON.parse(localStorage.getItem('clothstore_categories_cache') || 'null');
       if (Array.isArray(cachedCats) && cachedCats.length > 0) {
         categories = cachedCats;
         isCatsLoaded = true;
+      }
+      const cachedProds = JSON.parse(localStorage.getItem('clothstore_products_cache') || 'null');
+      if (Array.isArray(cachedProds) && cachedProds.length > 0) {
+        products = cachedProds;
+        isLoaded = true;
       }
     } catch (_) {}
 
@@ -84,8 +100,9 @@ import { db } from "./firebase-config.js";
           '</small></div>';
         return;
       }
-      grid.innerHTML = list.map(p => {
+      grid.innerHTML = list.map((p, idx) => {
         const mainImg = p.img || p.mainImage || '';
+        const optImg = getOptimizedImageUrl(mainImg, 420);
         const disc = discount(p);
         const badgeHTML = disc ? `<span class="badge">خصم ${disc}%</span>` : (p.badge ? `<span class="badge">${esc(p.badge)}</span>` : '');
         const isLiked = favs.has(p.id);
@@ -106,7 +123,7 @@ import { db } from "./firebase-config.js";
           <button type="button" class="fav ${isLiked ? 'liked' : ''}" aria-label="مفضلة" onclick="event.preventDefault();event.stopPropagation();toggleFav('${p.id}',this)">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7.5-4.7-9.5-9.2C.9 8.4 3 4.5 6.8 4.5c2 0 3.6 1.1 4.6 2.7h1.2c1-1.6 2.6-2.7 4.6-2.7 3.8 0 5.9 3.9 4.3 7.3C19.5 16.3 12 21 12 21z"/></svg>
           </button>
-          <img src="${esc(mainImg)}" alt="${esc(p.name)}" loading="lazy" onerror="this.src=''">
+          <img src="${esc(optImg)}" alt="${esc(p.name)}" loading="${idx < 2 ? 'eager' : 'lazy'}" ${idx < 2 ? 'fetchpriority="high"' : 'decoding="async"'} onerror="this.src=''">
         </div>
         <div class="card-info-top">
           <h3>${esc(p.name)}</h3>
@@ -211,9 +228,9 @@ import { db } from "./firebase-config.js";
       preloader.onerror = finishLoading;
       preloader.src = targetSrc;
 
-      // Also warm cache for alternate viewport
+      // Only warm cache for alternate viewport on desktop devices (never waste mobile data bandwidth)
       const altSrc = (targetSrc === mobileSrc) ? desktopSrc : mobileSrc;
-      if (altSrc && altSrc !== targetSrc) {
+      if (!isMobile && altSrc && altSrc !== targetSrc) {
         const altPreloader = new Image();
         altPreloader.src = altSrc;
       }
@@ -617,7 +634,7 @@ import { db } from "./firebase-config.js";
       if (sizeErr) sizeErr.style.display = 'none';
       if (colorErr) colorErr.style.display = 'none';
 
-      if (imgEl) imgEl.src = p.img || p.mainImage || '';
+      if (imgEl) imgEl.src = getOptimizedImageUrl(p.img || p.mainImage || '', 400);
       if (titleEl) titleEl.textContent = p.name;
       if (priceEl) priceEl.textContent = p.price.toLocaleString('ar-DZ');
       if (qtyVal) qtyVal.textContent = 1;
@@ -856,6 +873,9 @@ import { db } from "./firebase-config.js";
 
         products = list;
         isLoaded = true;
+        try {
+          localStorage.setItem('clothstore_products_cache', JSON.stringify(list));
+        } catch (_) {}
         render();
       }, (err) => {
         console.error("Firestore onSnapshot error:", err);
@@ -952,12 +972,15 @@ if (heroShopBtn) {
   });
 }
 
-// Motion System: Header scroll compression
+// Motion System: Efficient Header scroll compression
+const headerEl = document.querySelector('header');
+let headerScrolled = false;
 window.addEventListener('scroll', () => {
-  const header = document.querySelector('header');
-  if (header) {
-    if (window.scrollY > 25) header.classList.add('scrolled');
-    else header.classList.remove('scrolled');
+  if (!headerEl) return;
+  const shouldBeScrolled = window.scrollY > 25;
+  if (shouldBeScrolled !== headerScrolled) {
+    headerScrolled = shouldBeScrolled;
+    headerEl.classList.toggle('scrolled', headerScrolled);
   }
 }, { passive: true });
 

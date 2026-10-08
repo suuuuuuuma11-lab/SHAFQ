@@ -8,7 +8,7 @@
   img{display:block;max-width:100%}
 
   /* Header */
-  header{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--line)}
+  header{position:sticky;top:0;z-index:80;background:var(--bg);border-bottom:1px solid var(--line)}
   .header-inner{max-width:1280px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
   .h-icons{display:flex;align-items:center;gap:20px}
   .h-icons button{background:none;border:none;cursor:pointer;color:var(--ink);display:flex;align-items:center;transition:color .2s}
