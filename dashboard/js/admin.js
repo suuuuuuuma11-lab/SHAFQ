@@ -368,8 +368,6 @@ function initRealtimeFirestore() {
         if (d.stock !== undefined) {
           updateDoc(doc(db, "products", docSnap.id), {
             stock: deleteField()
-          }).then(() => {
-            console.log("Permanently deleted stock field from Firestore database document:", docSnap.id);
           }).catch(() => {});
         }
         

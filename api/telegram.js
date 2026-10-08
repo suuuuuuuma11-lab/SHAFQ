@@ -51,7 +51,7 @@ export default async function handler(req, res) {
   }
 
   // Rate limiting check
-  const clientIp = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+  const clientIp = req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
   if (isRateLimited(clientIp)) {
     return res.status(429).json({ error: 'Too many requests. Please wait a minute.' });
   }
@@ -96,6 +96,13 @@ export default async function handler(req, res) {
       const safePrice = Number(orderData.price) || 0;
       itemsBlock = `• ${safeProductName}\n   - المقاس: ${safeSize} | اللون: ${safeColor} | الكمية: ${safeQty} | السعر: ${safePrice.toLocaleString('ar-DZ')} دج`;
     }
+
+    const safeTotal = sanitizeText(orderData.total || '0');
+    const safeName = sanitizeText(orderData.name || orderData.customer || 'زبون');
+    const safePhone = sanitizeText(orderData.phone || '');
+    const safeWilaya = sanitizeText(orderData.wilaya || '');
+    const safeCommune = sanitizeText(orderData.commune || '');
+    const safeAddress = sanitizeText(orderData.address || 'غير محدد');
 
     const messageText = [
       '🛍️ طلب جديد من متجر حجاج ',
