@@ -2381,9 +2381,9 @@
               const dx = typeof crop.desktop?.x === 'number' ? crop.desktop.x : 50;
               const dy = typeof crop.desktop?.y === 'number' ? crop.desktop.y : 50;
               const dz = typeof crop.desktop?.zoom === 'number' ? crop.desktop.zoom : 1;
-              const mx = typeof crop.mobile?.x === 'number' ? crop.mobile.x : 50;
-              const my = typeof crop.mobile?.y === 'number' ? crop.mobile.y : 50;
-              const mz = typeof crop.mobile?.zoom === 'number' ? crop.mobile.zoom : 1;
+              const mx = typeof crop.mobile?.x === 'number' ? crop.mobile.x : (typeof crop.mobile?.focusX === 'number' ? crop.mobile.focusX : dx);
+              const my = typeof crop.mobile?.y === 'number' ? crop.mobile.y : dy;
+              const mz = typeof crop.mobile?.zoom === 'number' ? crop.mobile.zoom : dz;
 
               heroImg.style.setProperty('--crop-dx', `${dx}%`);
               heroImg.style.setProperty('--crop-dy', `${dy}%`);

@@ -222,15 +222,20 @@ const state = {
     isOpen: false,
     imgUrl: "",
     desktop: { x: 50, y: 50, zoom: 1.0 },
-    mobile: { x: 50, y: 50, zoom: 1.0 },
+    mobile: { focusX: 50, x: 50, y: 50, zoom: 1.0 },
+    imgNaturalW: 0,
+    imgNaturalH: 0,
     isDraggingImage: false,
     isDraggingMobile: false,
     dragStartX: 0,
     dragStartY: 0,
-    startDesktopX: 50,
-    startDesktopY: 50,
-    startMobileX: 50,
-    startMobileY: 50
+    startImgX: 0,
+    startImgY: 0,
+    startFocusX_px: 0,
+    imgW: 0,
+    imgH: 0,
+    imgX: 0,
+    imgY: 0
   }
 };
 
@@ -925,7 +930,7 @@ function openCropModal(imgUrl, existingCrop) {
 
   const defaultCrop = {
     desktop: { x: 50, y: 50, zoom: 1.0 },
-    mobile: { x: 50, y: 50, zoom: 1.0 }
+    mobile: { focusX: 50, x: 50, y: 50, zoom: 1.0 }
   };
 
   const crop = existingCrop || defaultCrop;
@@ -935,10 +940,14 @@ function openCropModal(imgUrl, existingCrop) {
     zoom: typeof crop.desktop?.zoom === "number" ? crop.desktop.zoom : 1.0
   };
   state.cropEditor.mobile = {
+    focusX: typeof crop.mobile?.focusX === "number" ? crop.mobile.focusX : (typeof crop.mobile?.x === "number" ? crop.mobile.x : 50),
     x: typeof crop.mobile?.x === "number" ? crop.mobile.x : 50,
     y: typeof crop.mobile?.y === "number" ? crop.mobile.y : 50,
     zoom: typeof crop.mobile?.zoom === "number" ? crop.mobile.zoom : 1.0
   };
+
+  state.cropEditor.isDraggingImage = false;
+  state.cropEditor.isDraggingMobile = false;
 
   const srcImg = $("cropSourceImg");
   const pvDImg = $("pvDesktopImg");
@@ -955,7 +964,23 @@ function openCropModal(imgUrl, existingCrop) {
   if ($("pvCropNameMobile")) $("pvCropNameMobile").textContent = catName || "اسم التصنيف";
 
   $("cropModal")?.classList.add("open");
-  updateCropEditorUI();
+
+  // Load natural dimensions to ensure exact aspect ratio coverage
+  const testImg = new Image();
+  testImg.src = imgUrl;
+  testImg.onload = () => {
+    state.cropEditor.imgNaturalW = testImg.naturalWidth;
+    state.cropEditor.imgNaturalH = testImg.naturalHeight;
+    updateCropEditorUI();
+  };
+  if (testImg.naturalWidth && testImg.naturalHeight) {
+    state.cropEditor.imgNaturalW = testImg.naturalWidth;
+    state.cropEditor.imgNaturalH = testImg.naturalHeight;
+  }
+
+  requestAnimationFrame(() => {
+    updateCropEditorUI();
+  });
 }
 
 function closeCropModal() {
@@ -969,46 +994,122 @@ function updateCropEditorUI() {
   const d = state.cropEditor.desktop;
   const m = state.cropEditor.mobile;
 
-  const zoomSlider = $("cropZoomRange");
-  if (zoomSlider) zoomSlider.value = d.zoom;
-  const zoomBadge = $("cropZoomVal");
-  if (zoomBadge) zoomBadge.textContent = Math.round(d.zoom * 100) + "%";
-
-  const srcImg = $("cropSourceImg");
-  if (srcImg) {
-    srcImg.style.objectPosition = `${d.x}% ${d.y}%`;
-    srcImg.style.transform = `scale(${d.zoom})`;
-    srcImg.style.transformOrigin = `${d.x}% ${d.y}%`;
-  }
-
-  const mobBox = $("mobileFocusBox");
+  const canvas = $("cropCanvas");
   const frame = $("desktopBannerFrame");
-  if (mobBox && frame) {
-    const frameW = frame.clientWidth || 650;
-    const boxW = mobBox.clientWidth || 150;
-    const maxLeft = Math.max(0, frameW - boxW);
-    const leftPx = (m.x / 100) * maxLeft;
-    mobBox.style.left = `${leftPx}px`;
-    mobBox.style.right = "auto";
+  const mobBox = $("mobileFocusBox");
+  const srcImg = $("cropSourceImg");
+  if (!canvas || !frame || !srcImg) return;
+
+  const frameW = frame.clientWidth || 650;
+  const frameH = frame.clientHeight || 200;
+  const canvasRect = canvas.getBoundingClientRect();
+  const frameRect = frame.getBoundingClientRect();
+  const frameX = frameRect.left - canvasRect.left;
+  const frameY = frameRect.top - canvasRect.top;
+
+  // Aspect ratio calculations
+  const natW = state.cropEditor.imgNaturalW || srcImg.naturalWidth || 1600;
+  const natH = state.cropEditor.imgNaturalH || srcImg.naturalHeight || 900;
+  const r_img = natW / Math.max(1, natH);
+  const r_frame = frameW / Math.max(1, frameH);
+
+  let baseW, baseH;
+  if (r_img >= r_frame) {
+    baseH = frameH;
+    baseW = frameH * r_img;
+  } else {
+    baseW = frameW;
+    baseH = frameW / r_img;
   }
 
+  const zoom = Math.max(1.0, Math.min(3.0, d.zoom || 1.0));
+  const imgW = baseW * zoom;
+  const imgH = baseH * zoom;
+  state.cropEditor.imgW = imgW;
+  state.cropEditor.imgH = imgH;
+
+  const rangeX = Math.max(0, imgW - frameW);
+  const rangeY = Math.max(0, imgH - frameH);
+
+  // Position image if not currently actively dragging
+  if (!state.cropEditor.isDraggingImage) {
+    state.cropEditor.imgX = rangeX > 0 ? -(d.x / 100) * rangeX : 0;
+    state.cropEditor.imgY = rangeY > 0 ? -(d.y / 100) * rangeY : 0;
+  }
+
+  // Render cropSourceImg in canvas relative to desktop frame
+  srcImg.style.width = Math.round(imgW) + "px";
+  srcImg.style.height = Math.round(imgH) + "px";
+  srcImg.style.left = Math.round(frameX + state.cropEditor.imgX) + "px";
+  srcImg.style.top = Math.round(frameY + state.cropEditor.imgY) + "px";
+
+  // Mobile Focus Box: STRICTLY HORIZONTAL INSIDE DESKTOP FRAME
+  const boxW = (mobBox && mobBox.clientWidth) || 184;
+  const maxXM = Math.max(0, frameW - boxW);
+
+  if (!state.cropEditor.isDraggingMobile) {
+    const fx = typeof m.focusX === "number" ? m.focusX : 50;
+    state.cropEditor.mobile.focusX_px = (fx / 100) * maxXM;
+  }
+
+  const focusX_px = Math.max(0, Math.min(maxXM, state.cropEditor.mobile.focusX_px || 0));
+  state.cropEditor.mobile.focusX_px = focusX_px;
+  if (maxXM > 0) {
+    state.cropEditor.mobile.focusX = (focusX_px / maxXM) * 100;
+  }
+
+  if (mobBox) {
+    mobBox.style.left = Math.round(focusX_px) + "px";
+    mobBox.style.top = "0px";
+    mobBox.style.bottom = "0px";
+    mobBox.style.height = "100%";
+  }
+
+  // Live Desktop Preview
+  const pvDInner = $("pvDesktopInner");
   const pvDImg = $("pvDesktopImg");
-  if (pvDImg) {
-    pvDImg.style.objectPosition = `${d.x}% ${d.y}%`;
-    pvDImg.style.transform = `scale(${d.zoom})`;
-    pvDImg.style.transformOrigin = `${d.x}% ${d.y}%`;
+  if (pvDInner && pvDImg) {
+    const pvDH = pvDInner.clientHeight || 100;
+    const scaleD = pvDH / frameH;
+    pvDImg.style.width = Math.round(imgW * scaleD) + "px";
+    pvDImg.style.height = Math.round(imgH * scaleD) + "px";
+    pvDImg.style.left = Math.round(state.cropEditor.imgX * scaleD) + "px";
+    pvDImg.style.top = Math.round(state.cropEditor.imgY * scaleD) + "px";
   }
 
+  // Live Mobile Preview: EXACT SUB-WINDOW OF MOBILE FOCUS BOX
+  const pvMInner = $("pvMobileInner");
   const pvMImg = $("pvMobileImg");
-  if (pvMImg) {
-    pvMImg.style.objectPosition = `${m.x}% ${m.y}%`;
-    pvMImg.style.transform = `scale(${d.zoom})`;
-    pvMImg.style.transformOrigin = `${m.x}% ${m.y}%`;
+  if (pvMInner && pvMImg) {
+    const pvMH = pvMInner.clientHeight || 120;
+    const scaleM = pvMH / frameH;
+    pvMImg.style.width = Math.round(imgW * scaleM) + "px";
+    pvMImg.style.height = Math.round(imgH * scaleM) + "px";
+    pvMImg.style.left = Math.round((state.cropEditor.imgX - focusX_px) * scaleM) + "px";
+    pvMImg.style.top = Math.round(state.cropEditor.imgY * scaleM) + "px";
   }
+
+  // Zoom display in toolbar
+  const zoomSlider = $("cropZoomRange");
+  if (zoomSlider) zoomSlider.value = zoom;
+  const zoomBadge = $("cropZoomVal");
+  if (zoomBadge) zoomBadge.textContent = Math.round(zoom * 100) + "%";
+
+  // Calculate focal coordinates on the image for mobile storefront
+  const mobileCenterX = focusX_px + (boxW / 2) - state.cropEditor.imgX;
+  const mobileCenterY = (frameH / 2) - state.cropEditor.imgY;
+  const focalImageXPct = Math.max(0, Math.min(100, (mobileCenterX / imgW) * 100));
+  const focalImageYPct = Math.max(0, Math.min(100, (mobileCenterY / imgH) * 100));
+
+  state.cropEditor.mobile.x = Math.round(focalImageXPct * 10) / 10;
+  state.cropEditor.mobile.y = Math.round(focalImageYPct * 10) / 10;
 
   const coordInfo = $("cropCoordInfo");
   if (coordInfo) {
-    coordInfo.textContent = `💻 Desktop: (${Math.round(d.x)}%, ${Math.round(d.y)}%) • Zoom: ${d.zoom.toFixed(1)}x | 📱 Mobile Focus: (${Math.round(m.x)}%, ${Math.round(m.y)}%)`;
+    const dX = Math.round(state.cropEditor.desktop.x);
+    const dY = Math.round(state.cropEditor.desktop.y);
+    const mFocus = Math.round(state.cropEditor.mobile.focusX);
+    coordInfo.textContent = `💻 بنر الكمبيوتر: (${dX}%, ${dY}%) • تقريب: ${zoom.toFixed(1)}x | 📱 تركيز الجوال: ${mFocus}% (أفقي)`;
   }
 }
 
@@ -1085,7 +1186,7 @@ function editCat(id) {
     state.catImgData = c.banner.img || "";
     state.catCropSettings = (c.banner && c.banner.crop) || {
       desktop: { x: 50, y: 50, zoom: 1.0 },
-      mobile: { x: 50, y: 50, zoom: 1.0 }
+      mobile: { focusX: 50, x: 50, y: 50, zoom: 1.0 }
     };
     const uploader = $("cUploader");
     if (uploader) {
@@ -1096,7 +1197,8 @@ function editCat(id) {
     const cropBadge = $("cropStatusBadge");
     if (cropBadge) {
       cropBadge.style.display = "inline-block";
-      cropBadge.textContent = `موضع مخصص (D: ${state.catCropSettings.desktop.x}% M: ${state.catCropSettings.mobile.x}%) ✓`;
+      const fx = typeof state.catCropSettings.mobile?.focusX === "number" ? state.catCropSettings.mobile.focusX : (state.catCropSettings.mobile?.x ?? 50);
+      cropBadge.textContent = `موضع مخصص (تركيز الجوال: ${fx}%) ✓`;
     }
   }
 
@@ -1731,22 +1833,26 @@ function initCropEditorEvents() {
   if (!canvas) return;
 
   canvas.addEventListener("pointerdown", (e) => {
-    if (e.button !== 0) return;
+    if (e.button !== 0 || !state.cropEditor.isOpen) return;
     const target = e.target;
+    const frame = $("desktopBannerFrame");
+    if (!frame) return;
+
     if (mobBox && (target === mobBox || mobBox.contains(target))) {
       state.cropEditor.isDraggingMobile = true;
+      state.cropEditor.isDraggingImage = false;
       mobBox.classList.add("dragging");
+      state.cropEditor.dragStartX = e.clientX;
+      state.cropEditor.startFocusX_px = state.cropEditor.mobile.focusX_px || 0;
     } else {
       state.cropEditor.isDraggingImage = true;
+      state.cropEditor.isDraggingMobile = false;
       canvas.classList.add("grabbing");
+      state.cropEditor.dragStartX = e.clientX;
+      state.cropEditor.dragStartY = e.clientY;
+      state.cropEditor.startImgX = state.cropEditor.imgX || 0;
+      state.cropEditor.startImgY = state.cropEditor.imgY || 0;
     }
-
-    state.cropEditor.dragStartX = e.clientX;
-    state.cropEditor.dragStartY = e.clientY;
-    state.cropEditor.startDesktopX = state.cropEditor.desktop.x;
-    state.cropEditor.startDesktopY = state.cropEditor.desktop.y;
-    state.cropEditor.startMobileX = state.cropEditor.mobile.x;
-    state.cropEditor.startMobileY = state.cropEditor.mobile.y;
 
     if (canvas.setPointerCapture) {
       try {
@@ -1757,27 +1863,39 @@ function initCropEditorEvents() {
 
   canvas.addEventListener("pointermove", (e) => {
     if (!state.cropEditor.isDraggingImage && !state.cropEditor.isDraggingMobile) return;
-    const deltaX = e.clientX - state.cropEditor.dragStartX;
-    const deltaY = e.clientY - state.cropEditor.dragStartY;
     const frame = $("desktopBannerFrame");
-    const frameW = (frame && frame.clientWidth) || 600;
-    const frameH = (frame && frame.clientHeight) || 200;
+    if (!frame) return;
 
-    if (state.cropEditor.isDraggingImage) {
-      const pctX = (deltaX / frameW) * 80;
-      const pctY = (deltaY / frameH) * 80;
-      const newX = Math.max(0, Math.min(100, state.cropEditor.startDesktopX - pctX));
-      const newY = Math.max(0, Math.min(100, state.cropEditor.startDesktopY - pctY));
-      state.cropEditor.desktop.x = Math.round(newX * 10) / 10;
-      state.cropEditor.desktop.y = Math.round(newY * 10) / 10;
+    if (state.cropEditor.isDraggingMobile) {
+      // STRICTLY HORIZONTAL: vertical delta is completely ignored!
+      const deltaX = e.clientX - state.cropEditor.dragStartX;
+      const frameW = frame.clientWidth || 650;
+      const boxW = (mobBox && mobBox.clientWidth) || 184;
+      const maxXM = Math.max(0, frameW - boxW);
+      let newXM = (state.cropEditor.startFocusX_px || 0) + deltaX;
+      newXM = Math.max(0, Math.min(maxXM, newXM));
+      state.cropEditor.mobile.focusX_px = newXM;
+      state.cropEditor.mobile.focusX = (maxXM > 0) ? (newXM / maxXM) * 100 : 50;
       updateCropEditorUI();
-    } else if (state.cropEditor.isDraggingMobile) {
-      const pctX = (deltaX / frameW) * 100;
-      const pctY = (deltaY / frameH) * 100;
-      const newX = Math.max(0, Math.min(100, state.cropEditor.startMobileX + pctX));
-      const newY = Math.max(0, Math.min(100, state.cropEditor.startMobileY + pctY));
-      state.cropEditor.mobile.x = Math.round(newX * 10) / 10;
-      state.cropEditor.mobile.y = Math.round(newY * 10) / 10;
+    } else if (state.cropEditor.isDraggingImage) {
+      const deltaX = e.clientX - state.cropEditor.dragStartX;
+      const deltaY = e.clientY - state.cropEditor.dragStartY;
+      const frameW = frame.clientWidth || 650;
+      const frameH = frame.clientHeight || 200;
+      const rangeX = Math.max(0, (state.cropEditor.imgW || frameW) - frameW);
+      const rangeY = Math.max(0, (state.cropEditor.imgH || frameH) - frameH);
+
+      let newImgX = (state.cropEditor.startImgX || 0) + deltaX;
+      let newImgY = (state.cropEditor.startImgY || 0) + deltaY;
+
+      newImgX = Math.max(-rangeX, Math.min(0, newImgX));
+      newImgY = Math.max(-rangeY, Math.min(0, newImgY));
+
+      state.cropEditor.imgX = newImgX;
+      state.cropEditor.imgY = newImgY;
+
+      state.cropEditor.desktop.x = (rangeX > 0) ? (-newImgX / rangeX) * 100 : 50;
+      state.cropEditor.desktop.y = (rangeY > 0) ? (-newImgY / rangeY) * 100 : 50;
       updateCropEditorUI();
     }
   });
@@ -1804,13 +1922,13 @@ function initCropEditorEvents() {
   });
 
   $("cropZoomIn")?.addEventListener("click", () => {
-    const cur = state.cropEditor.desktop.zoom;
+    const cur = state.cropEditor.desktop.zoom || 1.0;
     state.cropEditor.desktop.zoom = Math.min(3.0, Math.round((cur + 0.1) * 100) / 100);
     updateCropEditorUI();
   });
 
   $("cropZoomOut")?.addEventListener("click", () => {
-    const cur = state.cropEditor.desktop.zoom;
+    const cur = state.cropEditor.desktop.zoom || 1.0;
     state.cropEditor.desktop.zoom = Math.max(1.0, Math.round((cur - 0.1) * 100) / 100);
     updateCropEditorUI();
   });
@@ -1819,18 +1937,33 @@ function initCropEditorEvents() {
   $("cropCenterDesktop")?.addEventListener("click", () => {
     state.cropEditor.desktop.x = 50;
     state.cropEditor.desktop.y = 50;
+    state.cropEditor.isDraggingImage = false;
     updateCropEditorUI();
   });
 
   $("cropCenterMobile")?.addEventListener("click", () => {
-    state.cropEditor.mobile.x = 50;
-    state.cropEditor.mobile.y = 50;
+    state.cropEditor.mobile.focusX = 50;
+    const frame = $("desktopBannerFrame");
+    if (frame) {
+      const boxW = (mobBox && mobBox.clientWidth) || 184;
+      const maxXM = Math.max(0, frame.clientWidth - boxW);
+      state.cropEditor.mobile.focusX_px = maxXM / 2;
+    }
+    state.cropEditor.isDraggingMobile = false;
     updateCropEditorUI();
   });
 
   const resetAll = () => {
     state.cropEditor.desktop = { x: 50, y: 50, zoom: 1.0 };
-    state.cropEditor.mobile = { x: 50, y: 50, zoom: 1.0 };
+    state.cropEditor.mobile = { focusX: 50, x: 50, y: 50, zoom: 1.0 };
+    const frame = $("desktopBannerFrame");
+    if (frame) {
+      const boxW = (mobBox && mobBox.clientWidth) || 184;
+      const maxXM = Math.max(0, frame.clientWidth - boxW);
+      state.cropEditor.mobile.focusX_px = maxXM / 2;
+    }
+    state.cropEditor.isDraggingImage = false;
+    state.cropEditor.isDraggingMobile = false;
     updateCropEditorUI();
     toast("تمت إعادة ضبط الموضع والتقريب");
   };
@@ -1849,21 +1982,22 @@ function initCropEditorEvents() {
   $("cropSaveBtn")?.addEventListener("click", () => {
     state.catCropSettings = {
       desktop: {
-        x: Math.round(state.cropEditor.desktop.x),
-        y: Math.round(state.cropEditor.desktop.y),
+        x: Math.round(state.cropEditor.desktop.x * 10) / 10,
+        y: Math.round(state.cropEditor.desktop.y * 10) / 10,
         zoom: Number(state.cropEditor.desktop.zoom.toFixed(2))
       },
       mobile: {
-        x: Math.round(state.cropEditor.mobile.x),
-        y: Math.round(state.cropEditor.mobile.y),
-        zoom: Number(state.cropEditor.mobile.zoom.toFixed(2))
+        focusX: Math.round(state.cropEditor.mobile.focusX * 10) / 10,
+        x: Math.round(state.cropEditor.mobile.x * 10) / 10,
+        y: Math.round(state.cropEditor.mobile.y * 10) / 10,
+        zoom: Number(state.cropEditor.desktop.zoom.toFixed(2))
       }
     };
 
     const badge = $("cropStatusBadge");
     if (badge) {
       badge.style.display = "inline-block";
-      badge.textContent = `موضع مخصص (D: ${state.catCropSettings.desktop.x}% M: ${state.catCropSettings.mobile.x}%) ✓`;
+      badge.textContent = `موضع مخصص (تركيز الجوال: ${state.catCropSettings.mobile.focusX}%) ✓`;
     }
 
     updateBannerPreview();
@@ -1878,6 +2012,13 @@ function initCropEditorEvents() {
       return;
     }
     openCropModal(state.catImgData, state.catCropSettings || null);
+  });
+
+  // Window resize sync
+  window.addEventListener("resize", () => {
+    if (state.cropEditor.isOpen) {
+      updateCropEditorUI();
+    }
   });
 }
 
