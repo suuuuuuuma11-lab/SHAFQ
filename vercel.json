@@ -1,7 +1,14 @@
 {
+  "cleanUrls": false,
+  "trailingSlash": true,
   "redirects": [
     {
       "source": "/",
+      "destination": "/frontend/",
+      "permanent": false
+    },
+    {
+      "source": "/frontend",
       "destination": "/frontend/",
       "permanent": false
     },
@@ -19,6 +26,36 @@
       "source": "/login",
       "destination": "/dashboard/login.html",
       "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/dashboard/img/:path*",
+      "destination": "/frontend/img/:path*"
+    },
+    {
+      "source": "/css/admin.css",
+      "destination": "/dashboard/css/admin.css"
+    },
+    {
+      "source": "/js/admin.js",
+      "destination": "/dashboard/js/admin.js"
+    },
+    {
+      "source": "/js/login.js",
+      "destination": "/dashboard/js/login.js"
+    },
+    {
+      "source": "/css/:path*",
+      "destination": "/frontend/css/:path*"
+    },
+    {
+      "source": "/js/:path*",
+      "destination": "/frontend/js/:path*"
+    },
+    {
+      "source": "/img/:path*",
+      "destination": "/frontend/img/:path*"
     }
   ]
 }
