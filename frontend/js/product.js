@@ -346,7 +346,11 @@ if (orderForm) {
           الولاية: ${esc(wilaya)} — البلدية: ${esc(commune)}${address ? "<br>العنوان: " + esc(address) : ""}`;
       }
 
-      document.getElementById("formWrap")?.classList.add("hidden");
+      const formWrapEl = document.getElementById("formWrap");
+      if (formWrapEl) {
+        formWrapEl.classList.add("hidden");
+        formWrapEl.style.display = "none";
+      }
       document.getElementById("successBox")?.classList.add("show");
       window.scrollTo({top:0, behavior:"smooth"});
     } catch (err) {
