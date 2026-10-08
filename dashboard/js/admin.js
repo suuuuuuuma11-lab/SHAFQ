@@ -214,6 +214,9 @@ const state = {
   editingProductId: null,
   editingCatId: null,
   productImgData: "",
+  productRawFile: null,
+  productRawUrl: "",
+  productIsFinal: false,
   catDesktopImg: "",
   catMobileImg: "",
   catDesktopIsFinal: false,
@@ -526,23 +529,74 @@ function updateDiscPreview() {
   clearErr("pPrice");
 }
 
+function renderProductImageState({ url = null, sizeKB = null, dims = "900×1020", isFinal = false } = {}) {
+  const currentUrl = url !== null ? url : state.productImgData;
+  const uploadBox = $("pUploadBox");
+  const finalBox = $("pFinalBox");
+  const finalImg = $("pFinalImg");
+  const sizeInfo = $("pSizeInfo");
+  const finalBadge = $("pFinalBadge");
+  const recropBtn = $("pRecropBtn");
+
+  if (!currentUrl) {
+    if (uploadBox) uploadBox.style.display = "block";
+    if (finalBox) finalBox.style.display = "none";
+    if (finalImg) finalImg.src = "";
+    if (recropBtn) recropBtn.style.display = "none";
+    return;
+  }
+
+  if (uploadBox) uploadBox.style.display = "none";
+  if (finalBox) finalBox.style.display = "block";
+  if (finalImg) finalImg.src = currentUrl;
+
+  const isActuallyFinal = isFinal || state.productIsFinal;
+  if (isActuallyFinal) {
+    if (finalBadge) {
+      finalBadge.textContent = "✓ معتمد (WebP)";
+      finalBadge.style.background = "#27ae60";
+    }
+    if (sizeInfo) {
+      sizeInfo.textContent = sizeKB ? `${sizeKB} KB • WebP (${dims})` : `WebP (${dims})`;
+    }
+  } else {
+    const isWebp = typeof currentUrl === "string" && currentUrl.toLowerCase().includes(".webp");
+    if (finalBadge) {
+      finalBadge.textContent = isWebp ? "✓ صورة WebP" : "صورة حالية";
+      finalBadge.style.background = isWebp ? "#27ae60" : "var(--gold-dark)";
+    }
+    if (sizeInfo) {
+      sizeInfo.textContent = isWebp ? "WebP جاهز" : "صورة غير معالجة (يمكن استبدالها)";
+    }
+  }
+
+  if (recropBtn) {
+    recropBtn.style.display = state.productRawUrl ? "inline-flex" : "none";
+  }
+}
+
 function showProductImg() {
-  const uploader = $("pUploader");
-  if (!uploader) return;
-  uploader.classList.add("has-img");
-  uploader.innerHTML = `<img src="${state.productImgData}" alt="صورة المنتج">`;
+  renderProductImageState({
+    url: state.productImgData,
+    isFinal: state.productIsFinal
+  });
 }
 
 function clearProductImage() {
   state.productImgData = "";
+  state.productRawFile = null;
+  state.productRawUrl = "";
+  state.productIsFinal = false;
+
   const fileInput = $("pImgFile");
   if (fileInput) fileInput.value = "";
-  const uploader = $("pUploader");
-  if (uploader) {
-    uploader.classList.remove("has-img");
-    uploader.innerHTML =
-      '<div class="up-txt" id="pUpTxt"><b>اضغط لرفع صورة المنتج</b>PNG أو JPG — يُفضّل 800×900 بكسل</div>';
+  const imgUrl = $("pImgUrl");
+  if (imgUrl) {
+    imgUrl.value = "";
+    imgUrl.style.display = "none";
   }
+
+  renderProductImageState({ url: "" });
 }
 
 function toggleImgUrl() {
@@ -555,34 +609,33 @@ function toggleImgUrl() {
 async function handleProductImageFile(file) {
   if (!file) return;
   if (!file.type.startsWith("image/")) {
-    toast("الملف ليس صورة", false);
+    toast("الملف المختار ليس صورة صالحة", false);
     return;
   }
-  if (file.size > 5 * 1024 * 1024) {
-    toast("حجم الصورة كبير (الحد الأقصى 5MB)", false);
+  if (file.size > 15 * 1024 * 1024) {
+    toast("حجم الصورة كبير جداً (الحد الأقصى 15MB)", false);
     return;
   }
 
-  // Instant local preview
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    state.productImgData = ev.target.result;
-    showProductImg();
-    clearErr("pImg");
-  };
-  reader.readAsDataURL(file);
-
-  // Background Cloudinary Upload
+  // Create local preview and open crop modal with product framing
   try {
-    toast("جاري رفع الصورة إلى السحابة...", true);
-    const secureUrl = await uploadImageToCloudinary(file);
-    if (secureUrl) {
-      state.productImgData = secureUrl;
-      showProductImg();
-      toast("تم حفظ الصورة على السحابة بنجاح ✓", true);
-    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target.result;
+      state.productRawFile = file;
+      state.productRawUrl = dataUrl;
+      openCropModal(dataUrl, "product", file);
+    };
+    reader.onerror = () => {
+      const objUrl = URL.createObjectURL(file);
+      state.productRawFile = file;
+      state.productRawUrl = objUrl;
+      openCropModal(objUrl, "product", file);
+    };
+    reader.readAsDataURL(file);
   } catch (err) {
-    console.info("Cloudinary upload fallback to data URL:", err.message);
+    console.error("Error reading image file:", err);
+    toast("تعذر قراءة ملف الصورة", false);
   }
 }
 
@@ -714,8 +767,15 @@ function editProduct(id) {
   $("pOldPrice").value = p.oldPrice || "";
   updateDiscPreview();
 
-  state.productImgData = p.img || p.mainImage || "";
-  showProductImg();
+  const existingImg = p.img || p.mainImage || "";
+  state.productImgData = existingImg;
+  state.productRawFile = null;
+  state.productRawUrl = existingImg;
+  state.productIsFinal = typeof existingImg === "string" && existingImg.toLowerCase().includes(".webp");
+  renderProductImageState({
+    url: existingImg,
+    isFinal: state.productIsFinal
+  });
 
   // Badge
   const isCustom = p.badge && !["الأكثر مبيعاً", "جديد", "حصري"].includes(p.badge);
@@ -931,9 +991,10 @@ function updateBannerPreview() {
   }
 }
 
-// --- Category Banner Crop & Optimization Settings ---
+// --- Category Banner & Product Image Crop & Optimization Settings ---
 const DESKTOP_BANNER_RATIO = 2.62; // 2.62 : 1 (1965 x 750)
 const MOBILE_BANNER_RATIO = 0.94;  // 0.94 : 1 (846 x 900)
+const PRODUCT_IMAGE_RATIO = 3 / 3.4; // 3 : 3.4 (900 x 1020)
 
 const BANNER_SPECS = {
   desktop: {
@@ -946,7 +1007,8 @@ const BANNER_SPECS = {
     tag: "مساحة بنر الكمبيوتر (2.62:1)",
     tagClass: "desktop-tag",
     frameClass: "desktop-frame",
-    ratioClass: "desktop-ratio"
+    ratioClass: "desktop-ratio",
+    confirmText: "تأكيد واعتماد البنر النهائي (Done) ✓"
   },
   mobile: {
     ratio: MOBILE_BANNER_RATIO,
@@ -958,7 +1020,21 @@ const BANNER_SPECS = {
     tag: "مساحة بنر الجوال (0.94:1)",
     tagClass: "mobile-tag",
     frameClass: "mobile-frame",
-    ratioClass: "mobile-ratio"
+    ratioClass: "mobile-ratio",
+    confirmText: "تأكيد واعتماد البنر النهائي (Done) ✓"
+  },
+  product: {
+    ratio: PRODUCT_IMAGE_RATIO,
+    width: 900,
+    height: 1020,
+    quality: 0.86,
+    title: "قص وتأطير صورة المنتج (Product Image)",
+    badge: "3 : 3.4",
+    tag: "كادر المنتج المعتمد (3:3.4)",
+    tagClass: "product-tag",
+    frameClass: "product-frame",
+    ratioClass: "product-ratio",
+    confirmText: "تأكيد واعتماد صورة المنتج (Done) ✓"
   }
 };
 
@@ -977,7 +1053,7 @@ function openCropModal(imgUrl, target = "desktop", rawFile = null) {
   const targetBadge = $("cropTargetBadge");
   if (targetBadge) {
     targetBadge.textContent = spec.badge;
-    targetBadge.className = target === "desktop" ? "tag gold" : "tag";
+    targetBadge.className = target === "desktop" ? "tag gold" : target === "product" ? "tag gold" : "tag";
     if (target === "mobile") {
       targetBadge.style.background = "#27ae60";
       targetBadge.style.color = "#fff";
@@ -1000,6 +1076,31 @@ function openCropModal(imgUrl, target = "desktop", rawFile = null) {
   const pvWindow = $("cropPvWindow");
   if (pvWindow) {
     pvWindow.className = `crop-pv-window ${spec.ratioClass}`;
+  }
+
+  const pvOverlay = $("cropPvOverlay");
+  const pvTitle = $("cropPvTitle");
+  const confirmBtn = $("cropConfirmBtn");
+  if (confirmBtn) {
+    confirmBtn.innerHTML = spec.confirmText || "تأكيد واعتماد الصورة (Done) ✓";
+  }
+
+  if (target === "product") {
+    if (pvOverlay) pvOverlay.style.display = "none";
+    if (pvTitle) {
+      pvTitle.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> معاينة حية — هكذا ستظهر صورة المنتج في المتجر بدقة`;
+    }
+    if ($("cropModalSub")) {
+      $("cropModalSub").textContent = "اسحب الصورة وقربها لاختيار كادر المنتج بدقة (3:3.4) — عند التأكيد سيتم قصها وتحويلها تلقائياً إلى WebP محسن (900×1020)";
+    }
+  } else {
+    if (pvOverlay) pvOverlay.style.display = "flex";
+    if (pvTitle) {
+      pvTitle.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> معاينة حية — هكذا سيظهر البنر المعتمد بالضبط على المتجر`;
+    }
+    if ($("cropModalSub")) {
+      $("cropModalSub").textContent = "اسحب الصورة وقربها لاختيار الكادر النهائي بدقة — عند الضغط على تأكيد سيتم قصها وتحويلها تلقائياً إلى WebP محسن";
+    }
   }
 
   if ($("cropZoomRange")) $("cropZoomRange").value = "1";
@@ -1054,7 +1155,8 @@ function centerCropImage() {
   const srcImg = $("cropSourceImg");
   if (!frame) return;
 
-  const frameH = frame.clientHeight || (target === "desktop" ? 200 : 250);
+  const defaultH = target === "desktop" ? 200 : target === "mobile" ? 250 : 260;
+  const frameH = frame.clientHeight || defaultH;
   const frameW = frame.clientWidth || Math.round(frameH * (BANNER_SPECS[target]?.ratio || 2.62));
 
   const natW = state.cropEditor.imgNaturalW || srcImg?.naturalWidth || 2000;
@@ -1093,7 +1195,8 @@ function updateCropEditorUI() {
   const pvImg = $("cropPvImg");
   if (!canvas || !frame || !srcImg) return;
 
-  const frameH = frame.clientHeight || (target === "desktop" ? 200 : 250);
+  const defaultH = target === "desktop" ? 200 : target === "mobile" ? 250 : 260;
+  const frameH = frame.clientHeight || defaultH;
   const frameW = frame.clientWidth || Math.round(frameH * (BANNER_SPECS[target]?.ratio || 2.62));
   state.cropEditor.frameW = frameW;
   state.cropEditor.frameH = frameH;
@@ -1135,7 +1238,8 @@ function updateCropEditorUI() {
   srcImg.style.top = Math.round(frameY + state.cropEditor.imgY) + "px";
 
   if (pvWindow && pvImg) {
-    const pvH = pvWindow.clientHeight || (target === "desktop" ? 160 : 180);
+    const defaultPvH = target === "desktop" ? 160 : target === "mobile" ? 180 : 210;
+    const pvH = pvWindow.clientHeight || defaultPvH;
     const pvScale = pvH / frameH;
     pvImg.style.width = Math.round(imgW * pvScale) + "px";
     pvImg.style.height = Math.round(imgH * pvScale) + "px";
@@ -1225,7 +1329,7 @@ async function processAndExportFinalWebP() {
       );
     });
 
-    const fileName = `${target}_banner_${Date.now()}.webp`;
+    const fileName = `${target}_${Date.now()}.webp`;
     const webpFile = new File([blob], fileName, { type: "image/webp" });
     const sizeKB = Math.round(blob.size / 1024);
 
@@ -1238,9 +1342,37 @@ async function processAndExportFinalWebP() {
       `;
     }
 
-    const secureUrl = await uploadImageToCloudinary(webpFile);
+    let secureUrl = null;
+    try {
+      secureUrl = await uploadImageToCloudinary(webpFile);
+    } catch (uploadErr) {
+      console.warn("Cloudinary upload failed, using local WebP Data URL fallback:", uploadErr);
+      secureUrl = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(blob);
+      });
+    }
+
     if (!secureUrl) {
-      throw new Error("فشل رفع صورة البنر المحسنة إلى Cloudinary");
+      throw new Error("فشل رفع أو إنشاء ملف WebP للصورة");
+    }
+
+    if (target === "product") {
+      state.productImgData = secureUrl;
+      state.productRawFile = state.cropEditor.rawFile;
+      state.productRawUrl = state.cropEditor.imgUrl;
+      state.productIsFinal = true;
+      renderProductImageState({
+        url: secureUrl,
+        sizeKB,
+        dims: `${spec.width}×${spec.height}`,
+        isFinal: true
+      });
+      clearErr("pImg");
+      closeCropModal();
+      toast(`تم اعتماد صورة المنتج النهائية (WebP: ${sizeKB} KB) بنجاح ✓`);
+      return;
     }
 
     if (target === "desktop") {
@@ -1706,12 +1838,37 @@ function initEvents() {
     }
   });
 
+  // Product Image Action Buttons
+  $("pReplaceBtn")?.addEventListener("click", () => {
+    $("pImgFile")?.click();
+  });
+
+  $("pRecropBtn")?.addEventListener("click", () => {
+    if (state.productRawUrl) {
+      openCropModal(state.productRawUrl, "product", state.productRawFile);
+    }
+  });
+
+  $("pRemoveBtn")?.addEventListener("click", () => {
+    clearProductImage();
+  });
+
+  $("pToggleUrlBtn")?.addEventListener("click", () => {
+    toggleImgUrl();
+  });
+
   // Product Image Direct URL
   $("pImgUrl")?.addEventListener("input", () => {
     const v = $("pImgUrl").value.trim();
-    if (/^https?:\/\/.+\.(png|jpe?g|webp|gif|svg)(\?.*)?$/i.test(v)) {
+    if (v) {
       state.productImgData = v;
-      showProductImg();
+      state.productRawFile = null;
+      state.productRawUrl = v;
+      state.productIsFinal = typeof v === "string" && v.toLowerCase().includes(".webp");
+      renderProductImageState({
+        url: v,
+        isFinal: state.productIsFinal
+      });
       clearErr("pImg");
     }
   });

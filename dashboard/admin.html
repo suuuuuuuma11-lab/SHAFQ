@@ -97,18 +97,61 @@
               </div>
 
               <div class="field full">
-                <label>صورة المنتج <span class="req">*</span> <span class="hint">— ارفع صورة من جهازك أو أدخل رابطاً مباشراً</span></label>
-                <div class="uploader" id="pUploader" onclick="document.getElementById('pImgFile').click()">
-                  <div class="up-txt" id="pUpTxt"><b>اضغط لرفع صورة المنتج</b>PNG أو JPG — يُفضّل 800×900 بكسل</div>
+                <label>صورة المنتج المعتمدة <span class="req">*</span> <span class="hint">— صورة واحدة نهائية بصيغة WebP معتمدة لجميع واجهات المتجر</span></label>
+                <div class="product-image-card" id="productImageCard">
+                  <div class="pic-head">
+                    <div class="pic-title">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                      </svg>
+                      <span>كادر صورة المنتج (Product Image)</span>
+                    </div>
+                    <span class="pic-ratio-tag">3 : 3.4</span>
+                  </div>
+
+                  <!-- Upload Dropzone (When no image is chosen) -->
+                  <div class="pic-upload-box" id="pUploadBox">
+                    <input type="file" id="pImgFile" accept="image/*" style="display:none">
+                    <div class="pic-dropzone" onclick="document.getElementById('pImgFile').click()">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                      </svg>
+                      <b>اضغط لاختيار صورة المنتج</b>
+                      <small>اختر صورة عالية الدقة — سيتم فتح أداة التأطير التلقائي وقص الكادر وتحويلها إلى WebP</small>
+                    </div>
+                  </div>
+
+                  <!-- Final WebP Card (When image is finalized or editing) -->
+                  <div class="pic-final-box" id="pFinalBox" style="display:none">
+                    <div class="pic-preview-wrap">
+                      <img id="pFinalImg" alt="صورة المنتج المعتمدة">
+                      <span class="pic-badge" id="pFinalBadge">✓ معتمد (WebP)</span>
+                    </div>
+                    <div class="pic-actions">
+                      <span class="pic-size-info" id="pSizeInfo">WebP جاهز</span>
+                      <div class="pic-btn-group">
+                        <button type="button" class="btn-ghost btn-sm" id="pRecropBtn" style="display:none">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>
+                          تعديل الكادر
+                        </button>
+                        <button type="button" class="btn-ghost btn-sm" id="pReplaceBtn">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                          استبدال الصورة
+                        </button>
+                        <button type="button" class="btn-ghost btn-sm danger" id="pRemoveBtn">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2m1 0v14a2 2 0 01-2 2H9a2 2 0 01-2-2V6"/></svg>
+                          إزالة
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="pic-fallback-row">
+                    <button type="button" class="mini-btn-link" id="pToggleUrlBtn">أو أدخل رابطاً مباشراً للصورة</button>
+                    <input type="text" id="pImgUrl" placeholder="https://example.com/shirt.webp" style="display:none;margin-top:6px;border:1.5px solid var(--line);border-radius:8px;padding:8px 12px;width:100%;outline:none;font-size:13px">
+                  </div>
+                  <span class="err-msg" id="e-pImg">أضف صورة للمنتج (رفع أو رابط)</span>
                 </div>
-                <input type="file" id="pImgFile" accept="image/*">
-                <div class="img-actions">
-                  <button type="button" class="mini-btn" onclick="document.getElementById('pImgFile').click()">تغيير الصورة</button>
-                  <button type="button" class="mini-btn" onclick="clearProductImage()">إزالة</button>
-                  <button type="button" class="mini-btn" onclick="toggleImgUrl()">رابط بدلاً من رفع</button>
-                </div>
-                <input type="text" id="pImgUrl" placeholder="https://example.com/shirt.png" style="display:none;margin-top:8px;border:1.5px solid var(--line);border-radius:10px;padding:10px 14px;width:100%;outline:none">
-                <span class="err-msg" id="e-pImg">أضف صورة للمنتج (رفع أو رابط)</span>
               </div>
 
               <div class="field">
