@@ -132,15 +132,19 @@
       font-weight: 500
     }
 
-    /* ---------- Hero ---------- */
+    /* ---------- Hero (Fixed 2.62 : 1 on Desktop) ---------- */
     .hero {
       position: relative;
-      overflow: hidden
+      overflow: hidden;
+      width: 100%;
+      aspect-ratio: 2.62 / 1;
+      max-height: 580px;
     }
 
     .hero img {
       width: 100%;
-      height: 520px;
+      height: 100%;
+      aspect-ratio: 2.62 / 1;
       object-fit: cover;
       object-position: var(--crop-dx, 50%) var(--crop-dy, 50%);
       transform: scale(var(--crop-dz, 1));
@@ -466,8 +470,15 @@
         display: none
       }
 
+      .hero {
+        aspect-ratio: 0.94 / 1;
+        max-height: none;
+      }
+
       .hero img {
-        height: 420px;
+        width: 100%;
+        height: 100%;
+        aspect-ratio: 0.94 / 1;
         object-position: var(--crop-mx, var(--crop-dx, 50%)) var(--crop-my, var(--crop-dy, 50%));
         transform: scale(var(--crop-mz, var(--crop-dz, 1)));
         transform-origin: var(--crop-mx, 50%) var(--crop-my, 50%);

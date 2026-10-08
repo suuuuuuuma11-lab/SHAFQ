@@ -777,7 +777,9 @@ header {
    ========================================================================== */
 .banner-preview {
   position: relative;
-  height: 150px;
+  aspect-ratio: 2.62 / 1;
+  max-height: 160px;
+  width: 100%;
   border-radius: 14px;
   overflow: hidden;
   background: linear-gradient(135deg, #1d1a16, #3d3428);
@@ -1728,9 +1730,10 @@ tbody tr:hover {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 86%;
-  max-width: 740px;
   height: 200px;
+  width: 524px;
+  aspect-ratio: 2.62 / 1;
+  max-width: 92%;
   border: 2px dashed rgba(185, 154, 107, 0.95);
   box-shadow: 0 0 0 9999px rgba(10, 8, 6, 0.74);
   border-radius: 6px;
@@ -1762,7 +1765,8 @@ tbody tr:hover {
   top: 0;
   bottom: 0;
   height: 100%;
-  width: 184px;
+  width: 188px;
+  aspect-ratio: 0.94 / 1;
   border: 2.5px solid #27ae60;
   background: rgba(39, 174, 96, 0.14);
   box-shadow: 0 0 18px rgba(39, 174, 96, 0.5);
@@ -1872,7 +1876,9 @@ tbody tr:hover {
 .desktop-preview-window {
   position: relative;
   height: 100px;
-  width: 100%;
+  width: 262px;
+  aspect-ratio: 2.62 / 1;
+  margin: 0 auto;
   border-radius: 7px;
   overflow: hidden;
   background: #1d1a16;
@@ -1882,7 +1888,8 @@ tbody tr:hover {
 .mobile-preview-window {
   position: relative;
   height: 120px;
-  width: 110px;
+  width: 112.8px;
+  aspect-ratio: 0.94 / 1;
   margin: 0 auto;
   border-radius: 8px;
   overflow: hidden;

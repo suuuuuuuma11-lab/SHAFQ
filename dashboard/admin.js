@@ -923,6 +923,9 @@ function updateBannerPreview() {
 }
 
 // --- Category Banner Crop & Position Editor ---
+const DESKTOP_BANNER_RATIO = 2.62; // 2.62 : 1 (e.g. 2620 x 1000)
+const MOBILE_FOCUS_RATIO = 0.94;   // 0.94 : 1 (e.g. 940 x 1000)
+
 function openCropModal(imgUrl, existingCrop) {
   if (!imgUrl) return;
   state.cropEditor.isOpen = true;
@@ -1000,18 +1003,18 @@ function updateCropEditorUI() {
   const srcImg = $("cropSourceImg");
   if (!canvas || !frame || !srcImg) return;
 
-  const frameW = frame.clientWidth || 650;
   const frameH = frame.clientHeight || 200;
+  const frameW = frame.clientWidth || Math.round(frameH * DESKTOP_BANNER_RATIO);
   const canvasRect = canvas.getBoundingClientRect();
   const frameRect = frame.getBoundingClientRect();
   const frameX = frameRect.left - canvasRect.left;
   const frameY = frameRect.top - canvasRect.top;
 
-  // Aspect ratio calculations
-  const natW = state.cropEditor.imgNaturalW || srcImg.naturalWidth || 1600;
-  const natH = state.cropEditor.imgNaturalH || srcImg.naturalHeight || 900;
+  // Aspect ratio calculations: Desktop Banner fixed at 2.62 : 1
+  const natW = state.cropEditor.imgNaturalW || srcImg.naturalWidth || 2620;
+  const natH = state.cropEditor.imgNaturalH || srcImg.naturalHeight || 1000;
   const r_img = natW / Math.max(1, natH);
-  const r_frame = frameW / Math.max(1, frameH);
+  const r_frame = DESKTOP_BANNER_RATIO; // 2.62 : 1
 
   let baseW, baseH;
   if (r_img >= r_frame) {
@@ -1043,8 +1046,8 @@ function updateCropEditorUI() {
   srcImg.style.left = Math.round(frameX + state.cropEditor.imgX) + "px";
   srcImg.style.top = Math.round(frameY + state.cropEditor.imgY) + "px";
 
-  // Mobile Focus Box: STRICTLY HORIZONTAL INSIDE DESKTOP FRAME
-  const boxW = (mobBox && mobBox.clientWidth) || 184;
+  // Mobile Focus Box: STRICTLY FIXED 0.94 : 1 RATIO INSIDE DESKTOP FRAME
+  const boxW = Math.round(frameH * MOBILE_FOCUS_RATIO); // e.g. 200 * 0.94 = 188px
   const maxXM = Math.max(0, frameW - boxW);
 
   if (!state.cropEditor.isDraggingMobile) {
@@ -1059,13 +1062,14 @@ function updateCropEditorUI() {
   }
 
   if (mobBox) {
+    mobBox.style.width = boxW + "px";
     mobBox.style.left = Math.round(focusX_px) + "px";
     mobBox.style.top = "0px";
     mobBox.style.bottom = "0px";
     mobBox.style.height = "100%";
   }
 
-  // Live Desktop Preview
+  // Live Desktop Preview: Fixed 2.62 : 1
   const pvDInner = $("pvDesktopInner");
   const pvDImg = $("pvDesktopImg");
   if (pvDInner && pvDImg) {
@@ -1077,7 +1081,7 @@ function updateCropEditorUI() {
     pvDImg.style.top = Math.round(state.cropEditor.imgY * scaleD) + "px";
   }
 
-  // Live Mobile Preview: EXACT SUB-WINDOW OF MOBILE FOCUS BOX
+  // Live Mobile Preview: EXACT 0.94 : 1 SUB-WINDOW OF MOBILE FOCUS BOX
   const pvMInner = $("pvMobileInner");
   const pvMImg = $("pvMobileImg");
   if (pvMInner && pvMImg) {
@@ -1109,7 +1113,7 @@ function updateCropEditorUI() {
     const dX = Math.round(state.cropEditor.desktop.x);
     const dY = Math.round(state.cropEditor.desktop.y);
     const mFocus = Math.round(state.cropEditor.mobile.focusX);
-    coordInfo.textContent = `💻 بنر الكمبيوتر: (${dX}%, ${dY}%) • تقريب: ${zoom.toFixed(1)}x | 📱 تركيز الجوال: ${mFocus}% (أفقي)`;
+    coordInfo.textContent = `💻 بنر الكمبيوتر (2.62:1): (${dX}%, ${dY}%) • تقريب: ${zoom.toFixed(1)}x | 📱 تركيز الجوال (0.94:1): ${mFocus}% (أفقي)`;
   }
 }
 
@@ -1869,8 +1873,9 @@ function initCropEditorEvents() {
     if (state.cropEditor.isDraggingMobile) {
       // STRICTLY HORIZONTAL: vertical delta is completely ignored!
       const deltaX = e.clientX - state.cropEditor.dragStartX;
-      const frameW = frame.clientWidth || 650;
-      const boxW = (mobBox && mobBox.clientWidth) || 184;
+      const frameH = frame.clientHeight || 200;
+      const frameW = frame.clientWidth || Math.round(frameH * DESKTOP_BANNER_RATIO);
+      const boxW = Math.round(frameH * MOBILE_FOCUS_RATIO);
       const maxXM = Math.max(0, frameW - boxW);
       let newXM = (state.cropEditor.startFocusX_px || 0) + deltaX;
       newXM = Math.max(0, Math.min(maxXM, newXM));
@@ -1880,8 +1885,8 @@ function initCropEditorEvents() {
     } else if (state.cropEditor.isDraggingImage) {
       const deltaX = e.clientX - state.cropEditor.dragStartX;
       const deltaY = e.clientY - state.cropEditor.dragStartY;
-      const frameW = frame.clientWidth || 650;
       const frameH = frame.clientHeight || 200;
+      const frameW = frame.clientWidth || Math.round(frameH * DESKTOP_BANNER_RATIO);
       const rangeX = Math.max(0, (state.cropEditor.imgW || frameW) - frameW);
       const rangeY = Math.max(0, (state.cropEditor.imgH || frameH) - frameH);
 
@@ -1945,8 +1950,10 @@ function initCropEditorEvents() {
     state.cropEditor.mobile.focusX = 50;
     const frame = $("desktopBannerFrame");
     if (frame) {
-      const boxW = (mobBox && mobBox.clientWidth) || 184;
-      const maxXM = Math.max(0, frame.clientWidth - boxW);
+      const frameH = frame.clientHeight || 200;
+      const frameW = frame.clientWidth || Math.round(frameH * DESKTOP_BANNER_RATIO);
+      const boxW = Math.round(frameH * MOBILE_FOCUS_RATIO);
+      const maxXM = Math.max(0, frameW - boxW);
       state.cropEditor.mobile.focusX_px = maxXM / 2;
     }
     state.cropEditor.isDraggingMobile = false;
@@ -1958,8 +1965,10 @@ function initCropEditorEvents() {
     state.cropEditor.mobile = { focusX: 50, x: 50, y: 50, zoom: 1.0 };
     const frame = $("desktopBannerFrame");
     if (frame) {
-      const boxW = (mobBox && mobBox.clientWidth) || 184;
-      const maxXM = Math.max(0, frame.clientWidth - boxW);
+      const frameH = frame.clientHeight || 200;
+      const frameW = frame.clientWidth || Math.round(frameH * DESKTOP_BANNER_RATIO);
+      const boxW = Math.round(frameH * MOBILE_FOCUS_RATIO);
+      const maxXM = Math.max(0, frameW - boxW);
       state.cropEditor.mobile.focusX_px = maxXM / 2;
     }
     state.cropEditor.isDraggingImage = false;
