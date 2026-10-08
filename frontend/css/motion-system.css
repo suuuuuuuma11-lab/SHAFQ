@@ -2,6 +2,7 @@
    MOTION SYSTEM — Premium Saudi Menswear
    --------------------------------------------------------------------------
    Layer: Motion & Micro-interactions (load AFTER store.css / product.css)
+   v1.2 — quiet-luxury pass: editorial blur-rise entrances, overshoot-free micro-settles, slower grid pacing
    --------------------------------------------------------------------------
    Philosophy: "Quiet luxury in motion."
    - Movement is slow, weighted and confident — never bouncy or loud.
@@ -20,14 +21,14 @@
   --m-micro:   .16s;   /* presses, icons, dots          */
   --m-fast:    .24s;   /* hovers, menus, buttons        */
   --m-base:    .42s;   /* cards, fields, list items     */
-  --m-slow:    .68s;   /* entrances, hero               */
+  --m-slow:    .80s;   /* entrances, hero               */
   --m-drift:   26s;    /* ambient hero drift            */
 
   /* Signature easing curves */
   --ease-out:    cubic-bezier(.22, 1, .36, 1);   /* default — decelerating, elegant   */
   --ease-inout:  cubic-bezier(.65, 0, .35, 1);   /* structural, symmetrical           */
   --ease-drawer: cubic-bezier(.32, .72, 0, 1);   /* panels, drawers, bottom sheets    */
-  --ease-soft:   cubic-bezier(.34, 1.3, .5, 1);  /* micro pop — hearts, badges, checks*/
+  --ease-soft:   cubic-bezier(.25, .9, .3, 1);    /* micro settle — hearts, badges, checks */
 
   /* Elevation */
   --shadow-hover: 0 18px 44px rgba(29, 26, 22, .12);
@@ -59,7 +60,7 @@ select:focus-visible{
    3 · HEADER — composed entrance, no drama
    -------------------------------------------------------------------------- */
 nav.main-nav a{
-  animation: navIn var(--m-base) var(--ease-out) both;
+  animation: navIn var(--m-base) var(--ease-out) backwards;
 }
 nav.main-nav a:nth-child(1){ animation-delay: .10s; }
 nav.main-nav a:nth-child(2){ animation-delay: .17s; }
@@ -86,10 +87,10 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 .h-icons button:active svg{ transform: translateY(0) scale(.94); }
 
 /* Cart badge announces itself once, then stays quiet */
-.cart-badge{ animation: badgeIn .55s var(--ease-soft) .55s both; }
+.cart-badge{ animation: badgeIn .55s var(--ease-soft) .55s backwards; }
 @keyframes badgeIn{
-  from{ opacity: 0; transform: scale(.4); }
-  60% { transform: scale(1.18); }
+  from{ opacity: 0; transform: scale(.5); }
+  60% { transform: scale(1.08); }
   to  { opacity: 1; transform: scale(1); }
 }
 
@@ -144,7 +145,7 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 .hero-sub,
 .hero-desc,
 .hero .btn-gold{
-  animation: heroRise var(--m-slow) var(--ease-out) both;
+  animation: heroRise var(--m-slow) var(--ease-out) backwards;
 }
 .hero-brand        { animation-delay: .20s; }
 .hero-title        { animation-delay: .38s; animation-duration: 1s; }
@@ -153,8 +154,8 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 .hero .btn-gold    { animation-delay: .86s; }
 
 @keyframes heroRise{
-  from{ opacity: 0; transform: translateY(24px); }
-  to  { opacity: 1; transform: none; }
+  from{ opacity: 0; transform: translateY(22px); filter: blur(7px); }
+  to  { opacity: 1; transform: none; filter: blur(0); }
 }
 
 /* Headline reveals through a mask — couture, not confetti */
@@ -163,8 +164,8 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
   animation-name: heroMask;
 }
 @keyframes heroMask{
-  from{ opacity: 0; clip-path: inset(0 0 100% 0); transform: translateY(14px); }
-  to  { opacity: 1; clip-path: inset(0 0 -12% 0); transform: none; }
+  from{ opacity: 0; clip-path: inset(0 0 100% 0); transform: translateY(12px); filter: blur(5px); }
+  to  { opacity: 1; clip-path: inset(0 0 -12% 0); transform: none; filter: blur(0); }
 }
 
 /* --------------------------------------------------------------------------
@@ -174,7 +175,7 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 .page-head,
 .toolbar,
 .product-wrap{
-  animation: riseIn var(--m-slow) var(--ease-out) both;
+  animation: riseIn var(--m-slow) var(--ease-out) backwards;
 }
 .breadcrumb  { animation-delay: .05s; }
 .page-head,
@@ -182,17 +183,17 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 .toolbar     { animation-delay: .26s; }
 
 @keyframes riseIn{
-  from{ opacity: 0; transform: translateY(18px); }
-  to  { opacity: 1; transform: none; }
+  from{ opacity: 0; transform: translateY(16px); filter: blur(5px); }
+  to  { opacity: 1; transform: none; filter: blur(0); }
 }
 
 /* --------------------------------------------------------------------------
    6 · PRODUCT GRID — garments appear as if placed on the rail
    -------------------------------------------------------------------------- */
 .card{
-  animation: cardIn var(--m-slow) var(--ease-out) both;
+  animation: cardIn var(--m-slow) var(--ease-out) backwards;
   /* Stagger index — set inline via style="--i:n", or falls back to order */
-  animation-delay: calc(var(--i, 0) * 75ms);
+  animation-delay: calc(var(--i, 0) * 90ms);
 }
 /* Fallback stagger for server-rendered grids (no JS needed) */
 .grid .card:nth-child(1){ --i: 0; } .grid .card:nth-child(2){ --i: 1; }
@@ -201,8 +202,8 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 .grid .card:nth-child(7){ --i: 6; } .grid .card:nth-child(8){ --i: 7; }
 
 @keyframes cardIn{
-  from{ opacity: 0; transform: translateY(30px); }
-  to  { opacity: 1; transform: none; }
+  from{ opacity: 0; transform: translateY(26px); filter: blur(6px); }
+  to  { opacity: 1; transform: none; filter: blur(0); }
 }
 
 /* Card hover: lift + a hairline of gold — the boutique shelf lighting up */
@@ -242,8 +243,7 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 .fav.liked{ animation: favBeat .5s var(--ease-soft); }
 @keyframes favBeat{
   0%  { transform: scale(1); }
-  38% { transform: scale(1.32); }
-  70% { transform: scale(.93); }
+  45% { transform: scale(1.18); }
   100%{ transform: scale(1); }
 }
 
@@ -429,11 +429,11 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 
 /* Success check: a single confident pop with a halo */
 .sm-card .check, .success .check{
-  animation: checkIn .65s var(--ease-soft) .15s both;
+  animation: checkIn .65s var(--ease-soft) .15s backwards;
 }
 @keyframes checkIn{
-  from{ opacity: 0; transform: scale(.5); box-shadow: 0 0 0 0 rgba(39, 174, 96, .30); }
-  55% { transform: scale(1.08); box-shadow: 0 0 0 16px rgba(39, 174, 96, 0); }
+  from{ opacity: 0; transform: scale(.6); box-shadow: 0 0 0 0 rgba(39, 174, 96, .28); }
+  55% { transform: scale(1.04); box-shadow: 0 0 0 14px rgba(39, 174, 96, 0); }
   to  { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(39, 174, 96, 0); }
 }
 
@@ -492,13 +492,15 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
    -------------------------------------------------------------------------- */
 .reveal{
   opacity: 0;
-  transform: translateY(26px);
+  transform: translateY(24px);
+  filter: blur(6px);
   transition:
-    opacity  var(--m-slow) var(--ease-out),
-    transform var(--m-slow) var(--ease-out);
+    opacity   var(--m-slow) var(--ease-out),
+    transform var(--m-slow) var(--ease-out),
+    filter    var(--m-slow) var(--ease-out);
   transition-delay: var(--rd, 0ms);
 }
-.reveal.in-view{ opacity: 1; transform: none; }
+.reveal.in-view{ opacity: 1; transform: none; filter: blur(0); }
 
 /* --------------------------------------------------------------------------
    12 · REDUCED MOTION — the house stays still for those who ask
