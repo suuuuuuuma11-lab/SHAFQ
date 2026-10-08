@@ -1,15 +1,15 @@
 /**
- * ClothStore — Wilaya Shipping Management & Pricing Engine
- * Handles Wilaya-based shipping rates (Home & Stop Desk) across all 69 Algerian Wilayas.
+ * Simple Manual Shipping Price Engine (69 Algerian Wilayas)
  * 
  * Rules:
- * - Pricing depends ONLY on Wilaya + Delivery Method (Home or Stop Desk).
- * - Pricing does NOT depend on Commune (Commune is address info only).
- * - Full synchronization between Firestore, Admin Dashboard, and Storefront Checkout.
+ * - Shipping is configured manually by the admin for all 69 Wilayas.
+ * - Price depends ONLY on Wilaya + Delivery Method (Home or Stop Desk).
+ * - Commune does NOT affect shipping price (it is customer address info only).
+ * - Shipping is charged ONCE per order/shipment.
  */
 
-import { DEFAULT_SHIPPING_PRESETS } from "../data/default-shipping-presets.js";
 import { ALGERIA_LOCATIONS } from "../data/algeria-locations.js";
+import { DEFAULT_SHIPPING_RATES } from "../data/default-shipping-rates.js";
 import { db } from "./firebase-config.js";
 import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
@@ -41,28 +41,7 @@ export function findWilaya(identifier) {
 }
 
 /**
- * Ensures a valid 69-Wilaya rates map
- */
-export function buildDefaultRates(presetKey = "custom") {
-  const preset = DEFAULT_SHIPPING_PRESETS[presetKey] || DEFAULT_SHIPPING_PRESETS.custom;
-  const rates = {};
-
-  ALGERIA_LOCATIONS.forEach(w => {
-    const pRate = (preset && preset.rates && preset.rates[w.code]) || {};
-    rates[w.code] = {
-      wilayaCode: w.code,
-      wilayaName: w.name,
-      wilayaNameLatin: w.name_latin || "",
-      home: typeof pRate.home === "number" ? pRate.home : 600,
-      stopDesk: typeof pRate.stopDesk === "number" ? pRate.stopDesk : 400
-    };
-  });
-
-  return rates;
-}
-
-/**
- * Returns immediate synchronous fallback rates from localStorage or default preset.
+ * Returns immediate synchronous fallback rates from localStorage or default baseline.
  */
 export function getInitialShippingSettings() {
   try {
@@ -73,14 +52,13 @@ export function getInitialShippingSettings() {
     }
   } catch (_) {}
   return {
-    activePreset: "custom",
-    rates: buildDefaultRates("custom"),
+    rates: DEFAULT_SHIPPING_RATES,
     updatedAt: new Date().toISOString()
   };
 }
 
 /**
- * Loads active shipping settings from Firestore with localStorage and Preset fallbacks.
+ * Loads active manual shipping rates from Firestore with localStorage fallback.
  */
 export async function loadActiveShippingSettings() {
   // 1. Try reading from Cloud Firestore
@@ -90,19 +68,15 @@ export async function loadActiveShippingSettings() {
     if (snap.exists()) {
       const data = snap.data();
       if (data && data.rates && typeof data.rates === "object") {
-        // Complete any missing wilayas if needed
-        const completeRates = buildDefaultRates(data.activePreset || "custom");
+        const mergedRates = { ...DEFAULT_SHIPPING_RATES };
         Object.keys(data.rates).forEach(code => {
-          if (completeRates[code]) {
-            completeRates[code] = {
-              ...completeRates[code],
-              ...data.rates[code]
-            };
-          }
+          mergedRates[code] = {
+            ...mergedRates[code],
+            ...data.rates[code]
+          };
         });
         const resolved = {
-          activePreset: data.activePreset || "custom",
-          rates: completeRates,
+          rates: mergedRates,
           updatedAt: data.updatedAt || new Date().toISOString()
         };
         try {
@@ -126,10 +100,9 @@ export async function loadActiveShippingSettings() {
     }
   } catch (_) {}
 
-  // 3. Ultimate fallback: default preset
+  // 3. Ultimate baseline fallback
   return {
-    activePreset: "custom",
-    rates: buildDefaultRates("custom"),
+    rates: DEFAULT_SHIPPING_RATES,
     updatedAt: new Date().toISOString()
   };
 }
@@ -139,17 +112,14 @@ export async function loadActiveShippingSettings() {
  */
 export async function saveActiveShippingSettings(settings) {
   const payload = {
-    activePreset: settings.activePreset || "custom",
-    rates: settings.rates || buildDefaultRates("custom"),
+    rates: settings.rates || DEFAULT_SHIPPING_RATES,
     updatedAt: new Date().toISOString()
   };
 
-  // Cache locally first for instant offline/responsive feedback
   try {
     localStorage.setItem(LOCAL_STORAGE_SHIPPING_KEY, JSON.stringify(payload));
   } catch (_) {}
 
-  // Save to Cloud Firestore
   try {
     const docRef = doc(db, "shippingSettings", "current");
     await setDoc(docRef, payload, { merge: true });
@@ -178,5 +148,5 @@ export function getShippingPrice(rates, wilayaIdentifier, deliveryMethod = "home
   const method = deliveryMethod === "stopDesk" ? "stopDesk" : "home";
   const price = rate[method];
 
-  return typeof price === "number" ? price : 0;
+  return typeof price === "number" ? price : (Number(price) || 0);
 }

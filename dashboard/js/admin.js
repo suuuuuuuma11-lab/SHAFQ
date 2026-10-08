@@ -25,7 +25,7 @@ import {
   serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
-import { DEFAULT_SHIPPING_PRESETS } from "/frontend/data/default-shipping-presets.js";
+import { DEFAULT_SHIPPING_RATES } from "/frontend/data/default-shipping-rates.js";
 import { ALGERIA_LOCATIONS } from "/frontend/data/algeria-locations.js";
 
 // --- Utilities ---
@@ -1910,23 +1910,34 @@ function refreshOrders() {
 }
 
 // ==========================================================================
-// Shipping Price Management (Wilayas 69 Rates & Presets System)
+// Simple Manual Shipping Price Management (69 Wilayas)
 // ==========================================================================
 
-function syncShippingRatesWithLocations(rawRates = {}, presetKey = "custom") {
-  const preset = DEFAULT_SHIPPING_PRESETS[presetKey] || DEFAULT_SHIPPING_PRESETS.custom;
+const DEFAULT_HOME_PRICE = 600;
+const DEFAULT_STOP_PRICE = 400;
+
+function updateShippingCounts() {
+  const n = Array.isArray(ALGERIA_LOCATIONS) ? ALGERIA_LOCATIONS.length : 69;
+  const cnt = document.getElementById("cntShipping");
+  if (cnt) cnt.textContent = n;
+  const label = document.getElementById("shippingCountLabel");
+  const q = document.getElementById("shippingSearch")?.value.trim();
+  if (label && !q) label.textContent = n;
+}
+
+function syncShippingRatesWithLocations(rawRates = {}) {
   const rates = {};
 
   ALGERIA_LOCATIONS.forEach((w) => {
     const existing = rawRates[w.code] || {};
-    const fallback = (preset.rates && preset.rates[w.code]) || {};
+    const fallback = DEFAULT_SHIPPING_RATES[w.code] || {};
 
     rates[w.code] = {
       wilayaCode: w.code,
       wilayaName: w.name,
       wilayaNameLatin: w.name_latin || "",
-      home: typeof existing.home === "number" ? existing.home : (typeof fallback.home === "number" ? fallback.home : 600),
-      stopDesk: typeof existing.stopDesk === "number" ? existing.stopDesk : (typeof fallback.stopDesk === "number" ? fallback.stopDesk : 400)
+      home: typeof existing.home === "number" ? existing.home : (typeof fallback.home === "number" ? fallback.home : DEFAULT_HOME_PRICE),
+      stopDesk: typeof existing.stopDesk === "number" ? existing.stopDesk : (typeof fallback.stopDesk === "number" ? fallback.stopDesk : DEFAULT_STOP_PRICE)
     };
   });
 
@@ -1934,6 +1945,7 @@ function syncShippingRatesWithLocations(rawRates = {}, presetKey = "custom") {
 }
 
 function initShippingSettings() {
+  updateShippingCounts();
   const shippingDocRef = doc(db, "shippingSettings", "current");
 
   // 1. Try local cache first for instant UI response
@@ -1942,22 +1954,20 @@ function initShippingSettings() {
     if (cached) {
       const parsed = JSON.parse(cached);
       if (parsed && parsed.rates) {
-        state.shippingSettings.activePreset = parsed.activePreset || "custom";
-        state.shippingSettings.rates = syncShippingRatesWithLocations(parsed.rates, state.shippingSettings.activePreset);
+        state.shippingSettings.rates = syncShippingRatesWithLocations(parsed.rates);
         state.shippingSettings.isLoaded = true;
-        updateActivePresetUI();
         renderShippingTable();
+        updateShippingCounts();
       }
     }
   } catch (_) {}
 
-  // 2. Default preset if not loaded yet
+  // 2. Default manual rates if not loaded yet
   if (!state.shippingSettings.isLoaded) {
-    state.shippingSettings.activePreset = "custom";
-    state.shippingSettings.rates = syncShippingRatesWithLocations({}, "custom");
+    state.shippingSettings.rates = syncShippingRatesWithLocations({});
     state.shippingSettings.isLoaded = true;
-    updateActivePresetUI();
     renderShippingTable();
+    updateShippingCounts();
   }
 
   // 3. Real-Time Cloud Firestore Sync
@@ -1967,13 +1977,11 @@ function initShippingSettings() {
       if (snap.exists()) {
         const d = snap.data();
         if (d && d.rates) {
-          state.shippingSettings.activePreset = d.activePreset || "custom";
-          state.shippingSettings.rates = syncShippingRatesWithLocations(d.rates, state.shippingSettings.activePreset);
-          updateActivePresetUI();
+          state.shippingSettings.rates = syncShippingRatesWithLocations(d.rates);
           renderShippingTable();
+          updateShippingCounts();
           try {
             localStorage.setItem("hadjaj_shipping_settings", JSON.stringify({
-              activePreset: state.shippingSettings.activePreset,
               rates: state.shippingSettings.rates,
               updatedAt: d.updatedAt || new Date().toISOString()
             }));
@@ -1987,40 +1995,17 @@ function initShippingSettings() {
   );
 }
 
-function updateActivePresetUI() {
-  const activeKey = state.shippingSettings.activePreset || "custom";
-  const presetObj = DEFAULT_SHIPPING_PRESETS[activeKey] || DEFAULT_SHIPPING_PRESETS.custom;
-
-  const badge = $("activePresetBadge");
-  if (badge) {
-    badge.textContent = `النموذج: ${presetObj.name || activeKey}`;
-  }
-
-  ["custom", "yalidine", "yassir", "zrExpress", "noest"].forEach((key) => {
-    const el = $(`presetBox-${key}`);
-    if (el) {
-      el.classList.toggle("active", key === activeKey);
-    }
-  });
-}
-
 function renderShippingTable() {
   const tbody = $("shippingTbody");
-  const countLabel = $("shippingCountLabel");
-  const searchInput = $("shippingSearch");
   if (!tbody) return;
 
-  const q = searchInput ? searchInput.value.trim().toLowerCase() : "";
+  const q = ($("shippingSearch")?.value || "").trim().toLowerCase();
 
   let list = ALGERIA_LOCATIONS.map((w) => {
-    const rate = (state.shippingSettings.rates && state.shippingSettings.rates[w.code]) || {
-      wilayaCode: w.code,
-      wilayaName: w.name,
-      wilayaNameLatin: w.name_latin || "",
-      home: 600,
-      stopDesk: 400
-    };
-    return { ...w, rate };
+    const r = (state.shippingSettings.rates && state.shippingSettings.rates[w.code]) || {};
+    const home = typeof r.home === "number" ? r.home : DEFAULT_HOME_PRICE;
+    const stop = typeof r.stopDesk === "number" ? r.stopDesk : DEFAULT_STOP_PRICE;
+    return { ...w, home, stop };
   });
 
   if (q) {
@@ -2032,65 +2017,51 @@ function renderShippingTable() {
     });
   }
 
-  if (countLabel) countLabel.textContent = list.length;
+  const label = $("shippingCountLabel");
+  if (label) label.textContent = q ? list.length : ALGERIA_LOCATIONS.length;
 
   if (list.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">لا توجد ولايات مطابقة لبحثك "${esc(q)}"</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--muted)">لا توجد ولايات مطابقة لبحثك "${esc(q)}"</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = list
-    .map((item) => {
-      const r = item.rate;
-      const homeVal = typeof r.home === "number" ? r.home : 600;
-      const stopVal = typeof r.stopDesk === "number" ? r.stopDesk : 400;
-
-      return `<tr>
-        <td><span class="wilaya-code-cell">${item.code}</span></td>
-        <td>
-          <div class="wilaya-name-cell">
-            <span class="ar">${esc(item.name)}</span>
-            <span class="lat">${esc(item.name_latin || "")}</span>
-          </div>
-        </td>
-        <td>
-          <div class="rate-input-wrap">
-            <input type="number" 
-                   class="rate-input" 
-                   value="${homeVal}" 
-                   min="0" 
-                   max="10000" 
-                   step="50"
-                   data-code="${item.code}"
-                   data-type="home"
-                   onchange="updateShippingRate('${item.code}', 'home', this.value)"
-                   oninput="updateShippingRate('${item.code}', 'home', this.value)">
-            <span class="rate-currency">دج</span>
-          </div>
-        </td>
-        <td>
-          <div class="rate-input-wrap">
-            <input type="number" 
-                   class="rate-input" 
-                   value="${stopVal}" 
-                   min="0" 
-                   max="10000" 
-                   step="50"
-                   data-code="${item.code}"
-                   data-type="stopDesk"
-                   onchange="updateShippingRate('${item.code}', 'stopDesk', this.value)"
-                   oninput="updateShippingRate('${item.code}', 'stopDesk', this.value)">
-            <span class="rate-currency">دج</span>
-          </div>
-        </td>
-        <td>
-          <span class="shipping-preview-badge" id="prevBadge-${item.code}">
-            🏠 ${homeVal} / 🏢 ${stopVal} دج
-          </span>
-        </td>
-      </tr>`;
-    })
-    .join("");
+  tbody.innerHTML = list.map((item) => `
+    <tr>
+      <td><span class="wilaya-code-cell">${item.code}</span></td>
+      <td>
+        <div class="wilaya-name-cell">
+          <span class="ar">${esc(item.name)}</span>
+          <span class="lat">${esc(item.name_latin || "")}</span>
+        </div>
+      </td>
+      <td>
+        <div class="rate-input-wrap">
+          <input type="number" 
+                 class="rate-input" 
+                 value="${item.home}" 
+                 min="0" 
+                 max="20000" 
+                 step="50"
+                 data-code="${item.code}"
+                 onchange="updateShippingRate('${item.code}', 'home', this.value)">
+          <span class="rate-currency">دج</span>
+        </div>
+      </td>
+      <td>
+        <div class="rate-input-wrap">
+          <input type="number" 
+                 class="rate-input" 
+                 value="${item.stop}" 
+                 min="0" 
+                 max="20000" 
+                 step="50"
+                 data-code="${item.code}"
+                 onchange="updateShippingRate('${item.code}', 'stopDesk', this.value)">
+          <span class="rate-currency">دج</span>
+        </div>
+      </td>
+    </tr>
+  `).join("");
 }
 
 function updateShippingRate(code, type, val) {
@@ -2101,21 +2072,17 @@ function updateShippingRate(code, type, val) {
       wilayaCode: code,
       wilayaName: w ? w.name : "",
       wilayaNameLatin: w ? w.name_latin : "",
-      home: 600,
-      stopDesk: 400
+      home: DEFAULT_HOME_PRICE,
+      stopDesk: DEFAULT_STOP_PRICE
     };
   }
   state.shippingSettings.rates[code][type] = num;
-
-  const badge = $(`prevBadge-${code}`);
-  if (badge) {
-    const r = state.shippingSettings.rates[code];
-    badge.textContent = `🏠 ${r.home || 0} / 🏢 ${r.stopDesk || 0} دج`;
-  }
 }
 
-function filterShippingTable() {
-  renderShippingTable();
+let searchTimer = null;
+function onShippingSearch() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(renderShippingTable, 120);
 }
 
 function resetShippingSearch() {
@@ -2124,54 +2091,21 @@ function resetShippingSearch() {
   renderShippingTable();
 }
 
-function applyShippingPreset(presetKey) {
-  const preset = DEFAULT_SHIPPING_PRESETS[presetKey];
-  if (!preset || !preset.rates) {
-    toast("نموذج الأسعار غير موجود", false);
-    return;
-  }
-
-  state.shippingSettings.activePreset = presetKey;
-  const newRates = {};
-  ALGERIA_LOCATIONS.forEach((w) => {
-    const r = preset.rates[w.code] || {};
-    newRates[w.code] = {
-      wilayaCode: w.code,
-      wilayaName: w.name,
-      wilayaNameLatin: w.name_latin || "",
-      home: typeof r.home === "number" ? r.home : 600,
-      stopDesk: typeof r.stopDesk === "number" ? r.stopDesk : 400
-    };
-  });
-  state.shippingSettings.rates = newRates;
-
-  updateActivePresetUI();
-  renderShippingTable();
-  toast(`تم تطبيق أسعار ${preset.name || presetKey}. يمكنك تعديل أي سعر بالجدول ثم الضغط على "حفظ أسعار التوصيل" ✓`);
-}
-
-function promptApplyPreset(presetKey, presetName) {
-  confirmBox(
-    `تطبيق أسعار ${presetName}`,
-    `هل أنت متأكد من استبدال أسعار الجدول بنموذج <b>${presetName}</b>؟<br><small style="color:var(--muted)">سيتم ملء أسعار جميع الولايات الـ 69، ويمكنك تعديل أي سعر يدوياً قبل الحفظ في السحابة.</small>`,
-    () => {
-      applyShippingPreset(presetKey);
-    }
-  );
-  if ($("cfYes")) $("cfYes").textContent = "نعم، طبق النموذج";
-}
-
 async function saveShippingSettings() {
   const saveBtn = $("saveShippingBtn");
-  const originalHtml = saveBtn ? saveBtn.innerHTML : "حفظ أسعار التوصيل";
+  const originalHtml = saveBtn ? saveBtn.innerHTML : "حفظ الأسعار";
   if (saveBtn) {
     saveBtn.disabled = true;
-    saveBtn.innerHTML = "جاري حفظ أسعار التوصيل في السحابة...";
+    saveBtn.innerHTML = `
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin">
+        <circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-linecap="round"></circle>
+      </svg>
+      جاري الحفظ...
+    `;
   }
 
   const payload = {
-    activePreset: state.shippingSettings.activePreset || "custom",
-    rates: state.shippingSettings.rates,
+    rates: state.shippingSettings.rates || {},
     updatedAt: new Date().toISOString()
   };
 
@@ -2196,13 +2130,14 @@ async function saveShippingSettings() {
 }
 
 // --- Generic Confirmation Modal ---
-function confirmBox(title, text, cb) {
+function confirmBox(title, text, cb, yesLabel = "نعم، احذف") {
   const cfTitle = $("cfTitle");
   const cfText = $("cfText");
   const modal = $("confirmModal");
 
   if (cfTitle) cfTitle.textContent = title;
   if (cfText) cfText.innerHTML = text;
+  if ($("cfYes")) $("cfYes").textContent = yesLabel;
   state.confirmCb = cb;
   if (modal) modal.classList.add("open");
 }
@@ -2802,11 +2737,10 @@ window.handleLogout = handleLogout;
 
 // Shipping Settings Global Handlers
 window.renderShippingTable = renderShippingTable;
-window.filterShippingTable = filterShippingTable;
+window.onShippingSearch = onShippingSearch;
 window.resetShippingSearch = resetShippingSearch;
 window.updateShippingRate = updateShippingRate;
-window.promptApplyPreset = promptApplyPreset;
-window.applyShippingPreset = applyShippingPreset;
+window.confirmBox = confirmBox;
 window.saveShippingSettings = saveShippingSettings;
 
 // --- Admin Authorization Guard ---

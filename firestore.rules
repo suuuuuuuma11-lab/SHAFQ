@@ -55,11 +55,6 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    match /shippingPresets/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
     // --- Orders Collection ---
     // Customers / Guests: CAN ONLY CREATE with strict field, status, and price validation
     // Customers / Normal users: CANNOT READ arbitrary orders, CANNOT UPDATE, CANNOT DELETE

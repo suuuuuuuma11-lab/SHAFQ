@@ -11,7 +11,7 @@
  * 6. Saves the verified order document to Firestore and triggers notifications.
  */
 
-import { DEFAULT_SHIPPING_PRESETS } from "../frontend/data/default-shipping-presets.js";
+import { DEFAULT_SHIPPING_RATES } from "../frontend/data/default-shipping-rates.js";
 import { ALGERIA_LOCATIONS } from "../frontend/data/algeria-locations.js";
 
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || "clothstore-a9b2c";
@@ -88,8 +88,8 @@ async function fetchActiveRates() {
     console.warn("[BACKEND SHIPPING] Could not fetch Firestore shipping rates directly:", err.message);
   }
 
-  // Fallback to official custom/default preset
-  return DEFAULT_SHIPPING_PRESETS.custom.rates;
+  // Fallback to official default rates
+  return DEFAULT_SHIPPING_RATES;
 }
 
 /**
@@ -168,7 +168,7 @@ export default async function handler(req, res) {
 
     // 3. Authority: Read Official Rates and Calculate Shipping Price
     const activeRates = await fetchActiveRates();
-    const rateForWilaya = activeRates[wilayaInfo.code] || (DEFAULT_SHIPPING_PRESETS.custom.rates[wilayaInfo.code]);
+    const rateForWilaya = activeRates[wilayaInfo.code] || (DEFAULT_SHIPPING_RATES[wilayaInfo.code]);
 
     const method = deliveryMethod === "stopDesk" ? "stopDesk" : "home";
     const verifiedShippingPrice = Number(
@@ -252,7 +252,7 @@ export default async function handler(req, res) {
       const token = process.env.TELEGRAM_BOT_TOKEN;
       const chatId = process.env.TELEGRAM_CHAT_ID;
       if (token && chatId) {
-        const methodDesc = method === "home" ? "توصيل للمنزل (Home Delivery)" : "استلام من المكتب (Stop Desk)";
+        const methodDesc = method === "home" ? "توصيل للمنزل" : "استلام من المكتب";
         const itemsText = sanitizedItems.map(it => 
           `• ${it.name}\n   - المقاس: ${it.size} | اللون: ${it.color} | الكمية: ${it.quantity} | السعر: ${it.price.toLocaleString("ar-DZ")} دج`
         ).join("\n");
