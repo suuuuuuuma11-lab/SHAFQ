@@ -2,7 +2,15 @@
     --bg:#f6f3ee; --card:#ffffff; --ink:#1d1a16; --muted:#8a8277;
     --line:#e7e1d7; --gold:#b99a6b; --gold-dark:#a5875a; --radius:14px;
   }
-  *{margin:0;padding:0;box-sizing:border-box}
+  *,
+  *::before,
+  *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+  :focus:not(:focus-visible) { outline: none; }
   html, body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden}
   a{text-decoration:none;color:inherit}
   img{display:block;max-width:100%}

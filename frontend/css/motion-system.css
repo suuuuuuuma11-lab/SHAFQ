@@ -47,8 +47,33 @@ img{
 }
 
 /* --------------------------------------------------------------------------
-   2 · FOCUS — quiet, on-brand accessibility ring
+   2 · FOCUS & TOUCH INTERACTION — on-brand gold ring, zero mobile blue flash
    -------------------------------------------------------------------------- */
+html,
+body,
+a,
+button,
+input,
+select,
+textarea,
+label,
+.card,
+.card-link,
+.tool-btn,
+.mobile-cat-pill,
+.fav,
+.card-cart-btn,
+.btn-gold,
+.btn-order,
+.btn-cart,
+.sr-item {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 a:focus-visible,
 button:focus-visible,
 select:focus-visible{
