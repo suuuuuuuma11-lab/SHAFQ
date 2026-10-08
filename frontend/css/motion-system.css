@@ -60,7 +60,7 @@ select:focus-visible{
    3 · HEADER — composed entrance, no drama
    -------------------------------------------------------------------------- */
 nav.main-nav a{
-  animation: navIn var(--m-base) var(--ease-out) backwards;
+  animation: navIn var(--m-base) var(--ease-out) both;
 }
 nav.main-nav a:nth-child(1){ animation-delay: .10s; }
 nav.main-nav a:nth-child(2){ animation-delay: .17s; }
@@ -87,7 +87,7 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 .h-icons button:active svg{ transform: translateY(0) scale(.94); }
 
 /* Cart badge announces itself once, then stays quiet */
-.cart-badge{ animation: badgeIn .55s var(--ease-soft) .55s backwards; }
+.cart-badge{ animation: badgeIn .55s var(--ease-soft) .55s both; }
 @keyframes badgeIn{
   from{ opacity: 0; transform: scale(.5); }
   60% { transform: scale(1.08); }
@@ -145,7 +145,7 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 .hero-sub,
 .hero-desc,
 .hero .btn-gold{
-  animation: heroRise var(--m-slow) var(--ease-out) backwards;
+  animation: heroRise var(--m-slow) var(--ease-out) both;
 }
 .hero-brand        { animation-delay: .20s; }
 .hero-title        { animation-delay: .38s; animation-duration: 1s; }
@@ -160,12 +160,11 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 
 /* Headline reveals through a mask — couture, not confetti */
 .hero-title{
-  clip-path: inset(0 0 100% 0);
   animation-name: heroMask;
 }
 @keyframes heroMask{
   from{ opacity: 0; clip-path: inset(0 0 100% 0); transform: translateY(12px); filter: blur(5px); }
-  to  { opacity: 1; clip-path: inset(0 0 -12% 0); transform: none; filter: blur(0); }
+  to  { opacity: 1; clip-path: none; transform: none; filter: blur(0); }
 }
 
 /* --------------------------------------------------------------------------
@@ -175,7 +174,7 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 .page-head,
 .toolbar,
 .product-wrap{
-  animation: riseIn var(--m-slow) var(--ease-out) backwards;
+  animation: riseIn var(--m-slow) var(--ease-out) both;
 }
 .breadcrumb  { animation-delay: .05s; }
 .page-head,
@@ -381,8 +380,7 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 
 /* Cart items cascade in when the drawer opens */
 .drawer.open .ci{
-  opacity: 0;
-  animation: ciIn var(--m-base) var(--ease-out) forwards;
+  animation: ciIn var(--m-base) var(--ease-out) both;
 }
 .drawer.open .ci:nth-child(1){ animation-delay: .10s; }
 .drawer.open .ci:nth-child(2){ animation-delay: .17s; }
@@ -397,8 +395,7 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 
 /* Order review items cascade in when checkout opens */
 .checkout-modal.show .cm-review-item{
-  opacity: 0;
-  animation: ciIn var(--m-base) var(--ease-out) forwards;
+  animation: ciIn var(--m-base) var(--ease-out) both;
 }
 .checkout-modal.show .cm-review-item:nth-child(1){ animation-delay: .12s; }
 .checkout-modal.show .cm-review-item:nth-child(2){ animation-delay: .19s; }
@@ -429,7 +426,7 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
 
 /* Success check: a single confident pop with a halo */
 .sm-card .check, .success .check{
-  animation: checkIn .65s var(--ease-soft) .15s backwards;
+  animation: checkIn .65s var(--ease-soft) .15s both;
 }
 @keyframes checkIn{
   from{ opacity: 0; transform: scale(.6); box-shadow: 0 0 0 0 rgba(39, 174, 96, .28); }
@@ -517,4 +514,5 @@ header.scrolled{ box-shadow: 0 6px 24px rgba(29, 26, 22, .06); }
   .card, .breadcrumb, .page-head, .toolbar, .product-wrap,
   .hero-brand, .hero-title, .hero-sub, .hero-desc, .hero .btn-gold,
   nav.main-nav a{ opacity: 1; }
+  .hero-title{ clip-path: none; }
 }
