@@ -276,6 +276,16 @@ function switchView(viewName, btn) {
     const defaultBtn = document.querySelector(`[data-view="${viewName}"]`);
     if (defaultBtn) defaultBtn.classList.add("active");
   }
+
+  // Refresh dynamic contents on view switch
+  if (viewName === "cats") {
+    renderCatsGrid();
+  } else if (viewName === "prods") {
+    renderProductsTable();
+  } else if (viewName === "dash") {
+    renderProductsTable();
+    refreshStats();
+  }
 }
 
 // --- Stats & Numbers Refresh ---
@@ -433,6 +443,7 @@ function initRealtimeFirestore() {
       state.products = list;
       state.isProductsLoaded = true;
       renderProductsTable();
+      renderCatsGrid();
       refreshStats();
     },
     (err) => {
@@ -1609,11 +1620,31 @@ function cancelCatEdit() {
   toast("تم إلغاء التعديل");
 }
 
+function countProductsInCategory(cat) {
+  if (!cat || !Array.isArray(state.products)) return 0;
+  const catId = String(cat.id || "").trim();
+  const catName = String(cat.name || "").trim().toLowerCase();
+
+  return state.products.filter((p) => {
+    const pCatId = String(p.categoryId || "").trim();
+    const pCat = String(p.category || "").trim().toLowerCase();
+
+    // Match by category ID
+    if (catId && pCatId === catId) return true;
+    // Match by category name
+    if (catName && (pCat === catName || pCatId.toLowerCase() === catName)) return true;
+    // Match if p.category holds the category ID
+    if (catId && pCat === catId.toLowerCase()) return true;
+
+    return false;
+  }).length;
+}
+
 function askDeleteCat(id) {
   const c = state.categories.find((x) => x.id === id);
   if (!c) return;
 
-  const count = state.products.filter((p) => p.categoryId === id || p.category === c.name).length;
+  const count = countProductsInCategory(c);
   const extra = count
     ? `<br><b style="color:var(--red)">تحذير: يوجد ${count} منتج مرتبط بهذا التصنيف في المتجر.</b>`
     : "";
@@ -1642,7 +1673,7 @@ function renderCatsGrid() {
 
   grid.innerHTML = state.categories
     .map((c) => {
-      const n = state.products.filter((p) => p.categoryId === c.id || p.category === c.name).length;
+      const n = countProductsInCategory(c);
       const isImg = c.banner && c.banner.type === "image" && c.banner.img;
       const isFinal = c.banner && c.banner.isFinal;
       const legacyCrop = !isFinal && c.banner && c.banner.crop;
@@ -1653,6 +1684,10 @@ function renderCatsGrid() {
       const style = isImg
         ? ""
         : `style="background:linear-gradient(135deg,${(c.banner && c.banner.c1) || "#1d1a16"},${(c.banner && c.banner.c2) || "#b99a6b"})"`;
+
+      const tagHtml = !state.isProductsLoaded
+        ? `<span class="tag gray">جاري الحساب...</span>`
+        : `<span class="tag ${n ? "blue" : "gray"}">${n} منتج</span>`;
 
       return `<div class="cat-card">
         <div class="cat-banner" ${style}>
@@ -1665,7 +1700,7 @@ function renderCatsGrid() {
         <div class="cat-body">
           <div class="m">“${esc(c.msg)}”</div>
           <div class="cat-meta">
-            <span class="tag ${n ? "blue" : "gray"}">${n} منتج</span>
+            ${tagHtml}
             <div class="row-actions">
               <button class="icon-btn edit" title="تعديل" onclick="editCat('${c.id}')">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
