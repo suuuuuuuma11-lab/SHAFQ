@@ -1,7 +1,0 @@
-2026/10/08-15:20:50.136 27f0 Reusing MANIFEST C:\Users\Salem\Desktop\outputs\edge_temp_p2\Default\IndexedDB\http_127.0.0.1_8097.indexeddb.leveldb/MANIFEST-000001
-2026/10/08-15:20:50.137 27f0 Recovering log #4
-2026/10/08-15:20:50.137 27f0 Reusing old log C:\Users\Salem\Desktop\outputs\edge_temp_p2\Default\IndexedDB\http_127.0.0.1_8097.indexeddb.leveldb/000004.log 
-2026/10/08-15:20:50.143 27f0 Level-0 table #8: started
-2026/10/08-15:20:50.146 27f0 Level-0 table #8: 1965 bytes OK
-2026/10/08-15:20:50.148 27f0 Delete type=0 #4
-2026/10/08-15:20:50.148 5f8c Manual compaction at level-0 from '\x00\x04\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x05\x00\x00\x00' @ 0 : 0; will stop at (end)
