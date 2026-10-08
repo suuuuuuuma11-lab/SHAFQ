@@ -159,6 +159,52 @@
             <input type="text" id="address" placeholder="الحي، الشارع، رقم المنزل...">
           </div>
 
+          <!-- Delivery Method Selection -->
+          <div class="delivery-group" id="fDeliveryMethod">
+            <label class="delivery-group-label">طريقة التوصيل <em>*</em></label>
+            <div class="delivery-options-grid">
+              <label class="delivery-option-card active" id="cardHome">
+                <input type="radio" name="deliveryMethod" value="home" checked>
+                <div class="doc-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </div>
+                <div class="doc-info">
+                  <div class="doc-name">توصيل للمنزل</div>
+                  <div class="doc-sub">Home Delivery</div>
+                </div>
+                <div class="doc-price" id="homePriceDisplay">—</div>
+              </label>
+
+              <label class="delivery-option-card" id="cardStopDesk">
+                <input type="radio" name="deliveryMethod" value="stopDesk">
+                <div class="doc-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                </div>
+                <div class="doc-info">
+                  <div class="doc-name">استلام من المكتب</div>
+                  <div class="doc-sub">Stop Desk</div>
+                </div>
+                <div class="doc-price" id="stopDeskPriceDisplay">—</div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Live Price Breakdown -->
+          <div class="order-price-summary" id="orderPriceSummary">
+            <div class="ops-row">
+              <span>المنتجات:</span>
+              <span id="opsSubtotal">0 دج</span>
+            </div>
+            <div class="ops-row">
+              <span>التوصيل (<span id="opsMethodLabel">توصيل للمنزل</span>):</span>
+              <span id="opsShipping">0 دج</span>
+            </div>
+            <div class="ops-row total">
+              <span>المجموع الكلي:</span>
+              <strong id="opsTotal">0 دج</strong>
+            </div>
+          </div>
+
           <button type="submit" class="btn-order">تأكيد الطلب — الدفع عند الاستلام</button>
           <div class="secure">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
@@ -275,6 +321,52 @@
       <div class="field">
         <label>العنوان (اختياري)</label>
         <input type="text" id="cmAddress" placeholder="الحي، الشارع، رقم المنزل...">
+      </div>
+
+      <!-- Delivery Method Selection -->
+      <div class="delivery-group" id="cmFDeliveryMethod">
+        <label class="delivery-group-label">طريقة التوصيل <em>*</em></label>
+        <div class="delivery-options-grid">
+          <label class="delivery-option-card active" id="cmCardHome">
+            <input type="radio" name="cmDeliveryMethod" value="home" checked>
+            <div class="doc-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+            <div class="doc-info">
+              <div class="doc-name">توصيل للمنزل</div>
+              <div class="doc-sub">Home Delivery</div>
+            </div>
+            <div class="doc-price" id="cmHomePriceDisplay">—</div>
+          </label>
+
+          <label class="delivery-option-card" id="cmCardStopDesk">
+            <input type="radio" name="cmDeliveryMethod" value="stopDesk">
+            <div class="doc-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            </div>
+            <div class="doc-info">
+              <div class="doc-name">استلام من المكتب</div>
+              <div class="doc-sub">Stop Desk</div>
+            </div>
+            <div class="doc-price" id="cmStopDeskPriceDisplay">—</div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Live Price Breakdown for Cart Checkout Modal -->
+      <div class="order-price-summary" id="cmPriceSummary">
+        <div class="ops-row">
+          <span>المنتجات:</span>
+          <span id="cmOpsSubtotal">0 دج</span>
+        </div>
+        <div class="ops-row">
+          <span>التوصيل (<span id="cmOpsMethodLabel">توصيل للمنزل</span>):</span>
+          <span id="cmOpsShipping">0 دج</span>
+        </div>
+        <div class="ops-row total">
+          <span>المجموع الكلي:</span>
+          <strong id="cmOpsTotal">0 دج</strong>
+        </div>
       </div>
 
       <button type="submit" class="btn-order" id="cmSubmitBtn">تأكيد الطلب — الدفع عند الاستلام</button>

@@ -389,3 +389,120 @@
   .form-wrap.is-visible {
     opacity: 1;
   }
+
+  /* Delivery Method Selector & Price Summary */
+  .delivery-group {
+    margin: 14px 0;
+  }
+  .delivery-group-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .delivery-group-label em {
+    color: var(--gold-dark);
+    font-style: normal;
+  }
+  .delivery-options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  @media (max-width: 480px) {
+    .delivery-options-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .delivery-option-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    cursor: pointer;
+    background: #fff;
+    transition: all .2s ease;
+    user-select: none;
+  }
+  .delivery-option-card:hover {
+    border-color: var(--gold);
+  }
+  .delivery-option-card.active {
+    border-color: var(--gold);
+    background: #fffdf9;
+    box-shadow: 0 0 0 2px var(--gold-soft);
+  }
+  .delivery-option-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .doc-icon {
+    width: 34px;
+    height: 34px;
+    background: var(--gold-soft);
+    color: var(--gold-dark);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .doc-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .doc-name {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .doc-sub {
+    font-size: 10.5px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .doc-price {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--gold-dark);
+    white-space: nowrap;
+    direction: ltr;
+  }
+  .order-price-summary {
+    background: #faf7f2;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin: 14px 0 16px;
+  }
+  .ops-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .ops-row span:last-child {
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .ops-row.total {
+    border-top: 1px dashed var(--line);
+    padding-top: 8px;
+    margin-top: 8px;
+    margin-bottom: 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--ink);
+  }
+  .ops-row.total strong {
+    color: var(--gold-dark);
+    font-size: 17px;
+  }

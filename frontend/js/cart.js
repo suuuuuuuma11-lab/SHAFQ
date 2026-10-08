@@ -21,6 +21,7 @@ const PRIMARY_CART_KEY = "hadjaj_cart";
 const LEGACY_CART_KEY = "alnoor_cart";
 
 import { setupWilayaCommuneCascade, ALGERIA_LOCATIONS } from "./locations.js";
+import { loadActiveShippingSettings, getInitialShippingSettings, getShippingPrice, findWilaya } from "./shipping.js";
 
 // Algeria 69 Wilayas (التقسيم الإداري الرسمي 69 ولاية)
 export const ALGERIA_WILAYAS = ALGERIA_LOCATIONS.map(w => w.name);
@@ -436,6 +437,7 @@ export function openCheckoutModal() {
 
   renderCheckoutModalReview();
   populateWilayasDropdown();
+  updateCartCheckoutPricing();
 
   modal?.classList.add("show");
   backdrop?.classList.add("show");
@@ -481,6 +483,84 @@ function renderCheckoutModalReview() {
 }
 
 let cmCascadeInitialized = false;
+
+let activeCartShippingSettings = getInitialShippingSettings();
+
+export function getCartSelectedDeliveryMethod() {
+  const checked = document.querySelector('input[name="cmDeliveryMethod"]:checked');
+  return checked ? checked.value : "home";
+}
+
+export function updateCartCheckoutPricing() {
+  const wilayaEl = document.getElementById("cmWilaya");
+  const wilayaVal = wilayaEl ? wilayaEl.value : "";
+  const method = getCartSelectedDeliveryMethod();
+
+  const homePriceEl = document.getElementById("cmHomePriceDisplay");
+  const stopDeskPriceEl = document.getElementById("cmStopDeskPriceDisplay");
+  const opsSubtotalEl = document.getElementById("cmOpsSubtotal");
+  const opsShippingEl = document.getElementById("cmOpsShipping");
+  const opsMethodLabelEl = document.getElementById("cmOpsMethodLabel");
+  const opsTotalEl = document.getElementById("cmOpsTotal");
+  const cmTotalAmountEl = document.getElementById("cmTotalAmount");
+  const cardHome = document.getElementById("cmCardHome");
+  const cardStopDesk = document.getElementById("cmCardStopDesk");
+
+  if (cardHome) cardHome.classList.toggle("active", method === "home");
+  if (cardStopDesk) cardStopDesk.classList.toggle("active", method === "stopDesk");
+
+  const rates = (activeCartShippingSettings && activeCartShippingSettings.rates) ? activeCartShippingSettings.rates : null;
+  let homePrice = 0;
+  let stopDeskPrice = 0;
+  let hasWilaya = false;
+
+  if (wilayaVal && rates) {
+    hasWilaya = true;
+    homePrice = getShippingPrice(rates, wilayaVal, "home");
+    stopDeskPrice = getShippingPrice(rates, wilayaVal, "stopDesk");
+  }
+
+  if (homePriceEl) homePriceEl.textContent = hasWilaya ? `${homePrice.toLocaleString("ar-DZ")} دج` : "—";
+  if (stopDeskPriceEl) stopDeskPriceEl.textContent = hasWilaya ? `${stopDeskPrice.toLocaleString("ar-DZ")} دج` : "—";
+
+  const subtotal = getCartTotal();
+  const activeShipping = hasWilaya ? (method === "stopDesk" ? stopDeskPrice : homePrice) : 0;
+  const finalTotal = subtotal + activeShipping;
+
+  if (opsSubtotalEl) opsSubtotalEl.textContent = `${subtotal.toLocaleString("ar-DZ")} دج`;
+  if (opsShippingEl) {
+    opsShippingEl.textContent = hasWilaya ? `${activeShipping.toLocaleString("ar-DZ")} دج` : "اختر الولاية";
+  }
+  if (opsMethodLabelEl) {
+    opsMethodLabelEl.textContent = method === "stopDesk" ? "استلام من المكتب" : "توصيل للمنزل";
+  }
+  if (opsTotalEl) opsTotalEl.textContent = `${finalTotal.toLocaleString("ar-DZ")} دج`;
+  if (cmTotalAmountEl) cmTotalAmountEl.textContent = `${finalTotal.toLocaleString("ar-DZ")} دج`;
+}
+
+// Load shipping settings on initialization
+loadActiveShippingSettings().then(s => {
+  activeCartShippingSettings = s;
+  updateCartCheckoutPricing();
+});
+
+function setupCartDeliveryListeners() {
+  document.querySelectorAll('input[name="cmDeliveryMethod"]').forEach(r => {
+    r.addEventListener('change', () => updateCartCheckoutPricing());
+  });
+  document.getElementById("cmCardHome")?.addEventListener("click", () => {
+    const r = document.querySelector('input[name="cmDeliveryMethod"][value="home"]');
+    if (r) { r.checked = true; updateCartCheckoutPricing(); }
+  });
+  document.getElementById("cmCardStopDesk")?.addEventListener("click", () => {
+    const r = document.querySelector('input[name="cmDeliveryMethod"][value="stopDesk"]');
+    if (r) { r.checked = true; updateCartCheckoutPricing(); }
+  });
+  document.getElementById("cmWilaya")?.addEventListener("change", () => {
+    updateCartCheckoutPricing();
+  });
+}
+
 function populateWilayasDropdown() {
   if (!cmCascadeInitialized) {
     setupWilayaCommuneCascade({
@@ -596,7 +676,17 @@ export async function handleCheckoutSubmit(e) {
     submitBtn.textContent = "جاري تأكيد الطلب وحفظه في السحابة...";
   }
 
-  const finalTotal = getCartTotal();
+  const deliveryMethod = getCartSelectedDeliveryMethod();
+  const wilayaInfo = findWilaya(wilaya);
+  const wilayaCode = wilayaInfo ? wilayaInfo.code : "";
+  const communeInfo = wilayaInfo?.communes?.find(c => c.name === commune);
+  const communeCode = communeInfo ? communeInfo.code : "";
+
+  const subtotal = getCartTotal();
+  const rates = (activeCartShippingSettings && activeCartShippingSettings.rates) ? activeCartShippingSettings.rates : null;
+  const shippingPrice = getShippingPrice(rates, wilaya, deliveryMethod);
+  const calculatedTotal = subtotal + shippingPrice;
+
   const orderItems = cart.map(i => ({
     productId: i.productId,
     name: i.name,
@@ -608,34 +698,82 @@ export async function handleCheckoutSubmit(e) {
     image: i.image || "img/p1.png"
   }));
 
-  const orderPayload = {
-    customer: name,
-    phone: phone,
-    wilaya: wilaya,
-    commune: commune,
-    address: address || "",
-    items: orderItems,
-    total: finalTotal,
-    paymentMethod: "الدفع عند الاستلام",
-    status: "جديد",
-    createdAt: new Date().toISOString()
-  };
+  let createdOrderId = null;
+  let savedOrderData = null;
 
   try {
-    // 1. Write order document to Cloud Firestore
-    const docRef = await addDoc(collection(db, "orders"), orderPayload);
-    const createdOrderId = docRef.id;
+    // 1. Authoritative Backend Calculation & Verification
+    const backendRes = await fetch("/api/order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customer: name,
+        phone,
+        wilaya,
+        wilayaCode,
+        commune,
+        communeCode,
+        address,
+        deliveryMethod,
+        items: orderItems,
+        paymentMethod: "الدفع عند الاستلام"
+      })
+    });
 
-    // 2. Dispatch Telegram notification
-    await sendTelegramOrderNotification({
-      name,
-      phone,
-      wilaya,
-      commune,
-      address,
-      items: orderItems,
-      total: finalTotal.toLocaleString("ar-DZ")
-    }, createdOrderId);
+    if (backendRes.ok) {
+      const backendData = await backendRes.json();
+      if (backendData.success && backendData.orderId) {
+        createdOrderId = backendData.orderId;
+        savedOrderData = backendData.order;
+      }
+    }
+  } catch (apiErr) {
+    console.warn("Backend /api/order call failed, falling back to direct Firestore:", apiErr);
+  }
+
+  try {
+    // 2. Direct Firestore Fallback if backend was unavailable
+    if (!createdOrderId) {
+      const orderPayload = {
+        customer: name,
+        phone,
+        wilaya,
+        commune,
+        address,
+        deliveryMethod: deliveryMethod,
+        shippingPrice: shippingPrice,
+        subtotal: subtotal,
+        total: calculatedTotal,
+        shipping: {
+          method: deliveryMethod,
+          wilayaCode: wilayaCode,
+          communeCode: communeCode,
+          price: shippingPrice
+        },
+        items: orderItems,
+        paymentMethod: "الدفع عند الاستلام",
+        status: "جديد",
+        createdAt: new Date().toISOString()
+      };
+
+      const docRef = await addDoc(collection(db, "orders"), orderPayload);
+      createdOrderId = docRef.id;
+      savedOrderData = orderPayload;
+
+      // Dispatch Telegram notification directly on fallback
+      await sendTelegramOrderNotification({
+        name,
+        phone,
+        wilaya,
+        commune,
+        address,
+        items: orderItems,
+        deliveryMethod,
+        shippingPrice,
+        subtotal,
+        total: calculatedTotal.toLocaleString("ar-DZ")
+      }, createdOrderId);
+    }
 
     // 3. Clear Cart
     clearCart();
@@ -644,7 +782,17 @@ export async function handleCheckoutSubmit(e) {
     closeCheckoutModal();
 
     // 5. Show Success Screen
-    showOrderSuccessReceipt(createdOrderId, orderPayload);
+    showOrderSuccessReceipt(createdOrderId, savedOrderData || {
+      customer: name,
+      phone,
+      wilaya,
+      commune,
+      deliveryMethod,
+      shippingPrice,
+      subtotal,
+      total: calculatedTotal,
+      items: orderItems
+    });
 
   } catch (err) {
     console.error("Order submission exception:", err);
@@ -674,7 +822,15 @@ function showOrderSuccessReceipt(orderId, orderData) {
       <div style="font-size:14px;line-height:1.8">
         <div style="margin-bottom:8px">رقم الطلب: <b style="color:var(--gold-dark)">#${esc(orderId.slice(-6).toUpperCase())}</b></div>
         <div style="margin-bottom:8px">${itemsListHTML}</div>
-        <div style="display:flex;justify-content:space-between;font-size:16px;margin:8px 0;padding-top:4px">
+        <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px;color:var(--muted)">
+          <span>طريقة التوصيل:</span>
+          <b>${orderData.deliveryMethod === "stopDesk" ? "استلام من المكتب (Stop Desk)" : "توصيل للمنزل (Home)"}</b>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px;color:var(--muted)">
+          <span>تكلفة التوصيل:</span>
+          <b>${(orderData.shippingPrice || 0).toLocaleString("ar-DZ")} دج</b>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:16px;margin:8px 0;padding-top:6px;border-top:1px solid #e7e1d7">
           <b>الإجمالي الكلي:</b>
           <b style="color:var(--gold-dark)">${orderData.total.toLocaleString("ar-DZ")} دج</b>
         </div>
@@ -704,6 +860,7 @@ export function initCartUI() {
   updateBadge();
   renderCartDrawer();
   populateWilayasDropdown();
+  setupCartDeliveryListeners();
 
   // Drawer event bindings
   document.getElementById("cartBtn")?.addEventListener("click", openCartDrawer);

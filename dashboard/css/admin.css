@@ -2518,4 +2518,240 @@ tbody tr:hover {
   gap: 8px;
 }
 
+/* ==========================================================================
+   Shipping Price Settings & Presets System
+   ========================================================================== */
+.shipping-presets-card {
+  background: #fcfaf7;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  margin-bottom: 20px;
+}
+
+.presets-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.presets-title {
+  font-size: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+}
+
+.presets-subtitle {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.presets-hint {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold-dark);
+  background: var(--gold-soft);
+  padding: 5px 12px;
+  border-radius: 8px;
+}
+
+.presets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.preset-box {
+  background: #ffffff;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.preset-box:hover {
+  border-color: var(--gold);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(29, 26, 22, 0.05);
+}
+
+.preset-box.active {
+  border-color: var(--gold);
+  background: #fffdf9;
+  box-shadow: 0 0 0 2px var(--gold-soft);
+}
+
+.preset-info .p-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.preset-info .p-sub {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.btn-preset {
+  background: #f6f3ee;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: center;
+}
+
+.btn-preset:hover {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #fff;
+}
+
+.preset-box.active .btn-preset {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #fff;
+}
+
+.shipping-table-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.meta-count {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.meta-count b {
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.shipping-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.shipping-table th {
+  white-space: nowrap;
+}
+
+.wilaya-code-cell {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--gold-dark);
+  background: #faf7f2;
+  border-radius: 6px;
+  padding: 4px 8px;
+  display: inline-block;
+}
+
+.wilaya-name-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.wilaya-name-cell .ar {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.wilaya-name-cell .lat {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.rate-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 190px;
+}
+
+.rate-input {
+  width: 100%;
+  padding: 8px 36px 8px 10px;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  background: #ffffff;
+  transition: all 0.2s ease;
+  direction: ltr;
+  text-align: right;
+}
+
+.rate-input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(185, 154, 107, 0.15);
+}
+
+.rate-currency {
+  position: absolute;
+  right: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.shipping-preview-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #fbf9f5;
+  border: 1px solid var(--line);
+}
+
+.shipping-save-footer {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+/* Order row delivery & shipping chips */
+.order-shipping-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--gold-soft);
+  color: #735527;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 5px;
+  margin-top: 5px;
+  white-space: nowrap;
+}
+
+
 

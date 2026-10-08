@@ -14,6 +14,7 @@ import {
   doc, 
   getDoc,
   getDocs, 
+  setDoc,
   addDoc, 
   updateDoc, 
   deleteDoc, 
@@ -23,6 +24,9 @@ import {
   orderBy, 
   serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+import { DEFAULT_SHIPPING_PRESETS } from "/frontend/data/default-shipping-presets.js";
+import { ALGERIA_LOCATIONS } from "/frontend/data/algeria-locations.js";
 
 // --- Utilities ---
 const esc = (s) =>
@@ -243,6 +247,11 @@ const state = {
     imgY: 0,
     frameW: 0,
     frameH: 0
+  },
+  shippingSettings: {
+    activePreset: "custom",
+    rates: {},
+    isLoaded: false
   }
 };
 
@@ -470,6 +479,9 @@ function initRealtimeFirestore() {
       console.error("Orders Firestore onSnapshot error:", err);
     }
   );
+
+  // 4. Shipping Settings Real-Time Listener
+  initShippingSettings();
 }
 
 // --- Automatic Safe Migration / Seeding Helpers ---
@@ -1839,6 +1851,16 @@ function renderOrdersTable() {
 
       const dateStr = formatAlgerianDateTime(o.createdAt);
 
+      const shippingBadge = (o.shipping && o.shipping.method)
+        ? `<div class="order-shipping-chip">${o.shipping.method === 'stopDesk' ? '🏢 استلام من المكتب' : '🏠 توصيل للمنزل'}: <b>${o.shipping.price || 0} دج</b></div>`
+        : (o.deliveryMethod
+            ? `<div class="order-shipping-chip">${o.deliveryMethod === 'stopDesk' ? '🏢 استلام من المكتب' : '🏠 توصيل للمنزل'}: <b>${o.shippingPrice || 0} دج</b></div>`
+            : '');
+
+      const totalBreakdown = (typeof o.subtotal === 'number' && o.subtotal > 0)
+        ? `<small style="display:block;font-size:11px;color:var(--muted)">المنتجات: ${o.subtotal} دج + التوصيل: ${o.shippingPrice || (o.shipping && o.shipping.price) || 0} دج</small>`
+        : '';
+
       return `<tr>
         <td><b>#${esc(o.id.slice(-6).toUpperCase())}</b></td>
         <td>
@@ -1847,9 +1869,16 @@ function renderOrdersTable() {
           </div>
         </td>
         <td><span style="direction:ltr;display:inline-block">${esc(o.phone)}</span></td>
-        <td>${esc(o.wilaya)} — ${esc(o.commune || "")}<br><small style="color:var(--muted)">${esc(o.address || "")}</small></td>
+        <td>
+          ${esc(o.wilaya)} — ${esc(o.commune || "")}
+          ${shippingBadge}
+          <br><small style="color:var(--muted)">${esc(o.address || "")}</small>
+        </td>
         <td><div class="order-items-list">${itemsHTML || "—"}</div></td>
-        <td><b style="color:var(--gold-dark)">${o.total} دج</b></td>
+        <td>
+          <b style="color:var(--gold-dark)">${o.total} دج</b>
+          ${totalBreakdown}
+        </td>
         <td><span class="order-date-time">${dateStr}</span></td>
         <td>
           <button class="icon-btn del" title="حذف الطلب" onclick="askDeleteOrder('${o.id}')">
@@ -1878,6 +1907,292 @@ function askDeleteOrder(orderId) {
 function refreshOrders() {
   toast("جاري تحديث الطلبات من السحابة...");
   renderOrdersTable();
+}
+
+// ==========================================================================
+// Shipping Price Management (Wilayas 69 Rates & Presets System)
+// ==========================================================================
+
+function syncShippingRatesWithLocations(rawRates = {}, presetKey = "custom") {
+  const preset = DEFAULT_SHIPPING_PRESETS[presetKey] || DEFAULT_SHIPPING_PRESETS.custom;
+  const rates = {};
+
+  ALGERIA_LOCATIONS.forEach((w) => {
+    const existing = rawRates[w.code] || {};
+    const fallback = (preset.rates && preset.rates[w.code]) || {};
+
+    rates[w.code] = {
+      wilayaCode: w.code,
+      wilayaName: w.name,
+      wilayaNameLatin: w.name_latin || "",
+      home: typeof existing.home === "number" ? existing.home : (typeof fallback.home === "number" ? fallback.home : 600),
+      stopDesk: typeof existing.stopDesk === "number" ? existing.stopDesk : (typeof fallback.stopDesk === "number" ? fallback.stopDesk : 400)
+    };
+  });
+
+  return rates;
+}
+
+function initShippingSettings() {
+  const shippingDocRef = doc(db, "shippingSettings", "current");
+
+  // 1. Try local cache first for instant UI response
+  try {
+    const cached = localStorage.getItem("hadjaj_shipping_settings");
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed && parsed.rates) {
+        state.shippingSettings.activePreset = parsed.activePreset || "custom";
+        state.shippingSettings.rates = syncShippingRatesWithLocations(parsed.rates, state.shippingSettings.activePreset);
+        state.shippingSettings.isLoaded = true;
+        updateActivePresetUI();
+        renderShippingTable();
+      }
+    }
+  } catch (_) {}
+
+  // 2. Default preset if not loaded yet
+  if (!state.shippingSettings.isLoaded) {
+    state.shippingSettings.activePreset = "custom";
+    state.shippingSettings.rates = syncShippingRatesWithLocations({}, "custom");
+    state.shippingSettings.isLoaded = true;
+    updateActivePresetUI();
+    renderShippingTable();
+  }
+
+  // 3. Real-Time Cloud Firestore Sync
+  onSnapshot(
+    shippingDocRef,
+    (snap) => {
+      if (snap.exists()) {
+        const d = snap.data();
+        if (d && d.rates) {
+          state.shippingSettings.activePreset = d.activePreset || "custom";
+          state.shippingSettings.rates = syncShippingRatesWithLocations(d.rates, state.shippingSettings.activePreset);
+          updateActivePresetUI();
+          renderShippingTable();
+          try {
+            localStorage.setItem("hadjaj_shipping_settings", JSON.stringify({
+              activePreset: state.shippingSettings.activePreset,
+              rates: state.shippingSettings.rates,
+              updatedAt: d.updatedAt || new Date().toISOString()
+            }));
+          } catch (_) {}
+        }
+      }
+    },
+    (err) => {
+      console.warn("Firestore shippingSettings onSnapshot error (using cached rates):", err.message);
+    }
+  );
+}
+
+function updateActivePresetUI() {
+  const activeKey = state.shippingSettings.activePreset || "custom";
+  const presetObj = DEFAULT_SHIPPING_PRESETS[activeKey] || DEFAULT_SHIPPING_PRESETS.custom;
+
+  const badge = $("activePresetBadge");
+  if (badge) {
+    badge.textContent = `النموذج: ${presetObj.name || activeKey}`;
+  }
+
+  ["custom", "yalidine", "yassir", "zrExpress", "noest"].forEach((key) => {
+    const el = $(`presetBox-${key}`);
+    if (el) {
+      el.classList.toggle("active", key === activeKey);
+    }
+  });
+}
+
+function renderShippingTable() {
+  const tbody = $("shippingTbody");
+  const countLabel = $("shippingCountLabel");
+  const searchInput = $("shippingSearch");
+  if (!tbody) return;
+
+  const q = searchInput ? searchInput.value.trim().toLowerCase() : "";
+
+  let list = ALGERIA_LOCATIONS.map((w) => {
+    const rate = (state.shippingSettings.rates && state.shippingSettings.rates[w.code]) || {
+      wilayaCode: w.code,
+      wilayaName: w.name,
+      wilayaNameLatin: w.name_latin || "",
+      home: 600,
+      stopDesk: 400
+    };
+    return { ...w, rate };
+  });
+
+  if (q) {
+    list = list.filter((item) => {
+      const codeMatch = item.code.includes(q) || String(parseInt(item.code, 10)).includes(q);
+      const nameArMatch = item.name.toLowerCase().includes(q);
+      const nameLatMatch = (item.name_latin || "").toLowerCase().includes(q);
+      return codeMatch || nameArMatch || nameLatMatch;
+    });
+  }
+
+  if (countLabel) countLabel.textContent = list.length;
+
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">لا توجد ولايات مطابقة لبحثك "${esc(q)}"</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list
+    .map((item) => {
+      const r = item.rate;
+      const homeVal = typeof r.home === "number" ? r.home : 600;
+      const stopVal = typeof r.stopDesk === "number" ? r.stopDesk : 400;
+
+      return `<tr>
+        <td><span class="wilaya-code-cell">${item.code}</span></td>
+        <td>
+          <div class="wilaya-name-cell">
+            <span class="ar">${esc(item.name)}</span>
+            <span class="lat">${esc(item.name_latin || "")}</span>
+          </div>
+        </td>
+        <td>
+          <div class="rate-input-wrap">
+            <input type="number" 
+                   class="rate-input" 
+                   value="${homeVal}" 
+                   min="0" 
+                   max="10000" 
+                   step="50"
+                   data-code="${item.code}"
+                   data-type="home"
+                   onchange="updateShippingRate('${item.code}', 'home', this.value)"
+                   oninput="updateShippingRate('${item.code}', 'home', this.value)">
+            <span class="rate-currency">دج</span>
+          </div>
+        </td>
+        <td>
+          <div class="rate-input-wrap">
+            <input type="number" 
+                   class="rate-input" 
+                   value="${stopVal}" 
+                   min="0" 
+                   max="10000" 
+                   step="50"
+                   data-code="${item.code}"
+                   data-type="stopDesk"
+                   onchange="updateShippingRate('${item.code}', 'stopDesk', this.value)"
+                   oninput="updateShippingRate('${item.code}', 'stopDesk', this.value)">
+            <span class="rate-currency">دج</span>
+          </div>
+        </td>
+        <td>
+          <span class="shipping-preview-badge" id="prevBadge-${item.code}">
+            🏠 ${homeVal} / 🏢 ${stopVal} دج
+          </span>
+        </td>
+      </tr>`;
+    })
+    .join("");
+}
+
+function updateShippingRate(code, type, val) {
+  const num = Math.max(0, parseInt(val, 10) || 0);
+  if (!state.shippingSettings.rates[code]) {
+    const w = ALGERIA_LOCATIONS.find((x) => x.code === code);
+    state.shippingSettings.rates[code] = {
+      wilayaCode: code,
+      wilayaName: w ? w.name : "",
+      wilayaNameLatin: w ? w.name_latin : "",
+      home: 600,
+      stopDesk: 400
+    };
+  }
+  state.shippingSettings.rates[code][type] = num;
+
+  const badge = $(`prevBadge-${code}`);
+  if (badge) {
+    const r = state.shippingSettings.rates[code];
+    badge.textContent = `🏠 ${r.home || 0} / 🏢 ${r.stopDesk || 0} دج`;
+  }
+}
+
+function filterShippingTable() {
+  renderShippingTable();
+}
+
+function resetShippingSearch() {
+  const searchInput = $("shippingSearch");
+  if (searchInput) searchInput.value = "";
+  renderShippingTable();
+}
+
+function applyShippingPreset(presetKey) {
+  const preset = DEFAULT_SHIPPING_PRESETS[presetKey];
+  if (!preset || !preset.rates) {
+    toast("نموذج الأسعار غير موجود", false);
+    return;
+  }
+
+  state.shippingSettings.activePreset = presetKey;
+  const newRates = {};
+  ALGERIA_LOCATIONS.forEach((w) => {
+    const r = preset.rates[w.code] || {};
+    newRates[w.code] = {
+      wilayaCode: w.code,
+      wilayaName: w.name,
+      wilayaNameLatin: w.name_latin || "",
+      home: typeof r.home === "number" ? r.home : 600,
+      stopDesk: typeof r.stopDesk === "number" ? r.stopDesk : 400
+    };
+  });
+  state.shippingSettings.rates = newRates;
+
+  updateActivePresetUI();
+  renderShippingTable();
+  toast(`تم تطبيق أسعار ${preset.name || presetKey}. يمكنك تعديل أي سعر بالجدول ثم الضغط على "حفظ أسعار التوصيل" ✓`);
+}
+
+function promptApplyPreset(presetKey, presetName) {
+  confirmBox(
+    `تطبيق أسعار ${presetName}`,
+    `هل أنت متأكد من استبدال أسعار الجدول بنموذج <b>${presetName}</b>؟<br><small style="color:var(--muted)">سيتم ملء أسعار جميع الولايات الـ 69، ويمكنك تعديل أي سعر يدوياً قبل الحفظ في السحابة.</small>`,
+    () => {
+      applyShippingPreset(presetKey);
+    }
+  );
+  if ($("cfYes")) $("cfYes").textContent = "نعم، طبق النموذج";
+}
+
+async function saveShippingSettings() {
+  const saveBtn = $("saveShippingBtn");
+  const originalHtml = saveBtn ? saveBtn.innerHTML : "حفظ أسعار التوصيل";
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = "جاري حفظ أسعار التوصيل في السحابة...";
+  }
+
+  const payload = {
+    activePreset: state.shippingSettings.activePreset || "custom",
+    rates: state.shippingSettings.rates,
+    updatedAt: new Date().toISOString()
+  };
+
+  try {
+    try {
+      localStorage.setItem("hadjaj_shipping_settings", JSON.stringify(payload));
+    } catch (_) {}
+
+    const shippingDocRef = doc(db, "shippingSettings", "current");
+    await setDoc(shippingDocRef, payload, { merge: true });
+
+    toast("تم حفظ أسعار التوصيل لجميع الولايات الـ 69 بنجاح ✓");
+  } catch (err) {
+    console.error("Save shipping settings error:", err);
+    toast("تم الحفظ محلياً — تعذر الحفظ في السحابة: " + (err.message || ""), false);
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = originalHtml;
+    }
+  }
 }
 
 // --- Generic Confirmation Modal ---
@@ -2485,6 +2800,15 @@ window.askDeleteOrder = askDeleteOrder;
 window.refreshOrders = refreshOrders;
 window.handleLogout = handleLogout;
 
+// Shipping Settings Global Handlers
+window.renderShippingTable = renderShippingTable;
+window.filterShippingTable = filterShippingTable;
+window.resetShippingSearch = resetShippingSearch;
+window.updateShippingRate = updateShippingRate;
+window.promptApplyPreset = promptApplyPreset;
+window.applyShippingPreset = applyShippingPreset;
+window.saveShippingSettings = saveShippingSettings;
+
 // --- Admin Authorization Guard ---
 async function verifyIsAdmin(user) {
   if (!user) return false;
@@ -2528,6 +2852,7 @@ onAuthStateChanged(auth, async (user) => {
       addColorLine("#f5f2ea", "أبيض عاجي");
       addColorLine("#1d1a16", "أسود");
       updateBannerPreview();
+      initRealtimeFirestore();
     }
     return;
   }

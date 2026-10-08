@@ -9,6 +9,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 import { initCartUI, addToCart, toast as cartToast, sendTelegramOrderNotification } from "./cart.js";
 import { setupWilayaCommuneCascade, ALGERIA_LOCATIONS } from "./locations.js";
+import { loadActiveShippingSettings, getInitialShippingSettings, getShippingPrice, findWilaya } from "./shipping.js";
 
 // Telegram Bot token is strictly stored on server-side (/api/telegram) and never exposed to the browser.
 
@@ -43,6 +44,88 @@ function toast(msg){
   clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 2400);
 }
 
+let activeShippingSettings = getInitialShippingSettings();
+
+function getSelectedDeliveryMethod() {
+  const checked = document.querySelector('input[name="deliveryMethod"]:checked');
+  return checked ? checked.value : "home";
+}
+
+function updateProductCheckoutPricing() {
+  const wilayaSelect = document.getElementById("wilaya");
+  const wilayaVal = wilayaSelect ? wilayaSelect.value : "";
+  const method = getSelectedDeliveryMethod();
+
+  const homePriceEl = document.getElementById("homePriceDisplay");
+  const stopDeskPriceEl = document.getElementById("stopDeskPriceDisplay");
+  const opsSubtotalEl = document.getElementById("opsSubtotal");
+  const opsShippingEl = document.getElementById("opsShipping");
+  const opsMethodLabelEl = document.getElementById("opsMethodLabel");
+  const opsTotalEl = document.getElementById("opsTotal");
+  const cardHome = document.getElementById("cardHome");
+  const cardStopDesk = document.getElementById("cardStopDesk");
+
+  if (cardHome) cardHome.classList.toggle("active", method === "home");
+  if (cardStopDesk) cardStopDesk.classList.toggle("active", method === "stopDesk");
+
+  const rates = (activeShippingSettings && activeShippingSettings.rates) ? activeShippingSettings.rates : null;
+  let homePrice = 0;
+  let stopDeskPrice = 0;
+  let hasWilaya = false;
+
+  if (wilayaVal && rates) {
+    hasWilaya = true;
+    homePrice = getShippingPrice(rates, wilayaVal, "home");
+    stopDeskPrice = getShippingPrice(rates, wilayaVal, "stopDesk");
+  }
+
+  if (homePriceEl) homePriceEl.textContent = hasWilaya ? `${homePrice.toLocaleString("ar-DZ")} دج` : "—";
+  if (stopDeskPriceEl) stopDeskPriceEl.textContent = hasWilaya ? `${stopDeskPrice.toLocaleString("ar-DZ")} دج` : "—";
+
+  const currentPrice = currentProduct ? currentProduct.price : 0;
+  const subtotal = currentPrice * qty;
+  const activeShipping = hasWilaya ? (method === "stopDesk" ? stopDeskPrice : homePrice) : 0;
+  const finalTotal = subtotal + activeShipping;
+
+  if (opsSubtotalEl) opsSubtotalEl.textContent = `${subtotal.toLocaleString("ar-DZ")} دج`;
+  if (opsShippingEl) {
+    opsShippingEl.textContent = hasWilaya ? `${activeShipping.toLocaleString("ar-DZ")} دج` : "اختر الولاية";
+  }
+  if (opsMethodLabelEl) {
+    opsMethodLabelEl.textContent = method === "stopDesk" ? "استلام من المكتب" : "توصيل للمنزل";
+  }
+  if (opsTotalEl) opsTotalEl.textContent = `${finalTotal.toLocaleString("ar-DZ")} دج`;
+}
+
+// Initialize shipping rates
+loadActiveShippingSettings().then((settings) => {
+  activeShippingSettings = settings;
+  updateProductCheckoutPricing();
+});
+
+// Attach delivery option clicks & wilaya change listeners
+document.addEventListener("DOMContentLoaded", () => {
+  setupDeliveryListeners();
+});
+setTimeout(setupDeliveryListeners, 200);
+
+function setupDeliveryListeners() {
+  document.querySelectorAll('input[name="deliveryMethod"]').forEach((radio) => {
+    radio.addEventListener("change", () => updateProductCheckoutPricing());
+  });
+  document.getElementById("cardHome")?.addEventListener("click", () => {
+    const r = document.querySelector('input[name="deliveryMethod"][value="home"]');
+    if (r) { r.checked = true; updateProductCheckoutPricing(); }
+  });
+  document.getElementById("cardStopDesk")?.addEventListener("click", () => {
+    const r = document.querySelector('input[name="deliveryMethod"][value="stopDesk"]');
+    if (r) { r.checked = true; updateProductCheckoutPricing(); }
+  });
+  document.getElementById("wilaya")?.addEventListener("change", () => {
+    updateProductCheckoutPricing();
+  });
+}
+
 function changeQty(d){
   qty = Math.max(1, qty + d);
   const qtyEl = document.getElementById("qty");
@@ -51,6 +134,7 @@ function changeQty(d){
   if (totalEl && currentProduct) {
     totalEl.textContent = (currentProduct.price * qty).toLocaleString('ar-DZ') + " دج";
   }
+  updateProductCheckoutPricing();
 }
 window.changeQty = changeQty;
 
@@ -273,6 +357,10 @@ if (orderForm) {
       submitBtn.textContent = "جاري حفظ الطلب في السحابة...";
     }
 
+    const deliveryMethod = getSelectedDeliveryMethod();
+    const wilayaInfo = findWilaya(wilaya);
+    const wilayaCode = wilayaInfo ? wilayaInfo.code : "";
+
     const colorsList = Array.isArray(currentProduct.colors) && currentProduct.colors.length > 0 ? currentProduct.colors : [{ name: "افتراضي", value: "#1d1a16" }];
     const chosenColor = colorsList[selectedColorIndex] || colorsList[0];
     const colorName = typeof chosenColor === 'object' ? chosenColor.name : (currentProduct.colorNames && currentProduct.colorNames[selectedColorIndex] ? currentProduct.colorNames[selectedColorIndex] : 'لون');
@@ -281,9 +369,12 @@ if (orderForm) {
     const orderPayload = {
       customer: name,
       phone: phone,
-      wilaya: wilaya,
+      wilaya: wilayaInfo ? wilayaInfo.name : wilaya,
+      wilayaCode: wilayaCode,
       commune: commune,
+      communeCode: "",
       address: address || "",
+      deliveryMethod: deliveryMethod,
       items: [
         {
           productId: currentProduct.id,
@@ -295,35 +386,76 @@ if (orderForm) {
           colorHex: colorHex,
           image: currentProduct.img || currentProduct.mainImage || ""
         }
-      ],
-      total: currentProduct.price * qty,
-      paymentMethod: "الدفع عند الاستلام",
-      status: "جديد",
-      createdAt: new Date().toISOString()
+      ]
     };
 
     let createdOrderId = "";
+    let verifiedTotal = 0;
+    let verifiedShipping = 0;
+    let verifiedSubtotal = currentProduct.price * qty;
+
     try {
-      // 1. Save order document to Cloud Firestore
-      const docRef = await addDoc(collection(db, "orders"), orderPayload);
-      createdOrderId = docRef.id;
+      // 1. Submit to Authoritative Backend Endpoint (/api/order)
+      try {
+        const apiRes = await fetch("/api/order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload)
+        });
+        if (apiRes.ok) {
+          const apiData = await apiRes.json();
+          if (apiData && apiData.success) {
+            createdOrderId = apiData.orderId;
+            verifiedTotal = apiData.order.total;
+            verifiedShipping = apiData.order.shippingPrice;
+            verifiedSubtotal = apiData.order.subtotal;
+          }
+        }
+      } catch (apiErr) {
+        console.warn("Backend /api/order unreachable, executing direct client creation:", apiErr);
+      }
 
-      // 2. Send Telegram notification with order ID
-      await sendTelegramOrder({
-        productName: currentProduct.name,
-        color: colorName,
-        size: selectedSize,
-        qty: qty,
-        price: currentProduct.price,
-        total: (currentProduct.price * qty).toLocaleString('ar-DZ'),
-        name: name,
-        phone: phone,
-        wilaya: wilaya,
-        commune: commune,
-        address: address
-      }, createdOrderId);
+      // 2. Direct client fallback if backend was unavailable
+      if (!createdOrderId) {
+        const shippingRate = getShippingPrice((activeShippingSettings && activeShippingSettings.rates), wilaya, deliveryMethod);
+        verifiedShipping = shippingRate;
+        verifiedTotal = verifiedSubtotal + shippingRate;
 
-      // 3. Render success screen
+        const docRef = await addDoc(collection(db, "orders"), {
+          ...orderPayload,
+          shippingPrice: verifiedShipping,
+          subtotal: verifiedSubtotal,
+          total: verifiedTotal,
+          shipping: {
+            method: deliveryMethod,
+            wilayaCode: wilayaCode,
+            price: verifiedShipping
+          },
+          paymentMethod: "الدفع عند الاستلام",
+          status: "جديد",
+          createdAt: new Date().toISOString()
+        });
+        createdOrderId = docRef.id;
+
+        await sendTelegramOrder({
+          productName: currentProduct.name,
+          color: colorName,
+          size: selectedSize,
+          qty: qty,
+          price: currentProduct.price,
+          deliveryMethod: deliveryMethod === "stopDesk" ? "استلام من المكتب" : "توصيل للمنزل",
+          shippingPrice: verifiedShipping,
+          subtotal: verifiedSubtotal,
+          total: verifiedTotal.toLocaleString('ar-DZ'),
+          name: name,
+          phone: phone,
+          wilaya: wilaya,
+          commune: commune,
+          address: address
+        }, createdOrderId);
+      }
+
+      // 3. Render success screen with verified totals and delivery details
       const summary = document.getElementById("orderSummary");
       if (summary) {
         summary.innerHTML = `
@@ -331,7 +463,9 @@ if (orderForm) {
           رقم الطلب: <b>#${createdOrderId.slice(-6).toUpperCase()}</b><br>
           المنتج: ${esc(currentProduct.name)}<br>
           اللون: ${esc(colorName)} — المقاس: ${esc(selectedSize)} — الكمية: ${qty}<br>
-          المجموع: <b>${(currentProduct.price*qty).toLocaleString('ar-DZ')} دج</b> (يدفع عند التسليم)<br>
+          سعر المنتجات: <b>${verifiedSubtotal.toLocaleString('ar-DZ')} دج</b><br>
+          طريقة التوصيل: <b>${deliveryMethod === 'stopDesk' ? '🏢 استلام من المكتب' : '🏠 توصيل للمنزل'} (${verifiedShipping.toLocaleString('ar-DZ')} دج)</b><br>
+          الإجمالي الكلي: <b>${verifiedTotal.toLocaleString('ar-DZ')} دج</b> (يدفع عند التسليم)<br>
           الاسم: ${esc(name)}<br>
           الهاتف: ${esc(phone)}<br>
           الولاية: ${esc(wilaya)} — البلدية: ${esc(commune)}${address ? "<br>العنوان: " + esc(address) : ""}`;
