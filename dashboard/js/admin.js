@@ -18,11 +18,7 @@ import {
   addDoc, 
   updateDoc, 
   deleteDoc, 
-  deleteField,
-  onSnapshot, 
-  query, 
-  orderBy, 
-  serverTimestamp 
+  onSnapshot 
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
 import { DEFAULT_SHIPPING_RATES } from "/frontend/data/default-shipping-rates.js";
@@ -2749,7 +2745,6 @@ async function verifyIsAdmin(user) {
   try {
     const adminSnap = await getDoc(doc(db, "admins", user.uid));
     if (!adminSnap.exists()) {
-      const { setDoc } = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js");
       await setDoc(doc(db, "admins", user.uid), {
         email: user.email,
         role: "admin",

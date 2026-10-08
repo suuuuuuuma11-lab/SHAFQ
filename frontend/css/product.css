@@ -462,11 +462,6 @@
     color: var(--ink);
     line-height: 1.2;
   }
-  .doc-sub {
-    font-size: 10.5px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
   .doc-price {
     font-size: 13.5px;
     font-weight: 800;

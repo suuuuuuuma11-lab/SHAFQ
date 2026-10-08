@@ -20,11 +20,8 @@ import {
 const PRIMARY_CART_KEY = "hadjaj_cart";
 const LEGACY_CART_KEY = "alnoor_cart";
 
-import { setupWilayaCommuneCascade, ALGERIA_LOCATIONS } from "./locations.js";
+import { setupWilayaCommuneCascade } from "./locations.js";
 import { loadActiveShippingSettings, getInitialShippingSettings, getShippingPrice, findWilaya } from "./shipping.js";
-
-// Algeria 69 Wilayas (التقسيم الإداري الرسمي 69 ولاية)
-export const ALGERIA_WILAYAS = ALGERIA_LOCATIONS.map(w => w.name);
 
 export const DEFAULT_SIZES = ["S", "M", "L", "XL", "XXL"];
 

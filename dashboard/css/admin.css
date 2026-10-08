@@ -2609,25 +2609,6 @@ tbody tr:hover {
   pointer-events: none;
 }
 
-.shipping-preview-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: #fbf9f5;
-  border: 1px solid var(--line);
-}
-
-.shipping-save-footer {
-  margin-top: 24px;
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 16px;
-  border-top: 1px solid var(--line);
-}
 
 /* Order row delivery & shipping chips */
 .order-shipping-chip {

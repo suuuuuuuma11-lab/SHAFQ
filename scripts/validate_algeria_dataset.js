@@ -1,13 +1,4 @@
-const fs = require('fs');
-const path = require('path');
-
-const datasetPath = path.join(__dirname, 'frontend', 'data', 'algeria-locations.json');
-if (!fs.existsSync(datasetPath)) {
-  console.error(`Dataset not found at ${datasetPath}`);
-  process.exit(1);
-}
-
-const dataset = JSON.parse(fs.readFileSync(datasetPath, 'utf8'));
+import { ALGERIA_LOCATIONS as dataset } from '../frontend/data/algeria-locations.js';
 
 // Expected counts per Law 26-06 / JO No. 25
 const expectedCounts = {
