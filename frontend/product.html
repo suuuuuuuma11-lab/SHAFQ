@@ -40,15 +40,61 @@
   <!-- Gallery -->
   <div class="p-gallery">
     <span class="badge" id="pBadge" style="display:none"></span>
-    <button class="fav" id="favBtn" aria-label="مفضلة">
+    <button class="fav" id="favBtn" aria-label="مفضلة" style="opacity:0">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7.5-4.7-9.5-9.2C.9 8.4 3 4.5 6.8 4.5c2 0 3.6 1.1 4.6 2.7h1.2c1-1.6 2.6-2.7 4.6-2.7 3.8 0 5.9 3.9 4.3 7.3C19.5 16.3 12 21 12 21z"/></svg>
     </button>
-    <div class="main-img"><img id="pImg" src="" alt=""></div>
+    <div class="main-img">
+      <div class="skel-shimmer" id="pImgSkeleton"></div>
+      <img id="pImg" src="" alt="" style="opacity:0">
+    </div>
   </div>
 
   <!-- Info + Order -->
   <div class="p-info">
-    <div class="form-wrap" id="formWrap">
+    <!-- Professional Skeleton (visible immediately during loading) -->
+    <div class="p-info-skel" id="pInfoSkel" aria-busy="true" aria-label="جاري تحميل بيانات المنتج...">
+      <div class="skel-block skel-title"></div>
+      <div class="skel-block skel-price"></div>
+
+      <div class="skel-block skel-label"></div>
+      <div class="skel-dots">
+        <div class="skel-block skel-dot"></div>
+        <div class="skel-block skel-dot"></div>
+        <div class="skel-block skel-dot"></div>
+      </div>
+
+      <div class="skel-block skel-label"></div>
+      <div class="skel-sizes">
+        <div class="skel-block skel-size"></div>
+        <div class="skel-block skel-size"></div>
+        <div class="skel-block skel-size"></div>
+        <div class="skel-block skel-size"></div>
+        <div class="skel-block skel-size"></div>
+      </div>
+
+      <div class="skel-qty-row">
+        <div class="skel-block skel-stepper"></div>
+        <div class="skel-block skel-total"></div>
+        <div class="skel-block skel-btn-cart"></div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="skel-order-box">
+        <div class="skel-block skel-order-h2"></div>
+        <div class="skel-block skel-order-note"></div>
+        <div class="skel-block skel-field"></div>
+        <div class="skel-block skel-field"></div>
+        <div class="skel-two-col">
+          <div class="skel-block skel-field"></div>
+          <div class="skel-block skel-field"></div>
+        </div>
+        <div class="skel-block skel-btn-order"></div>
+      </div>
+    </div>
+
+    <!-- Real Content (revealed after data is ready) -->
+    <div class="form-wrap" id="formWrap" style="display:none">
       <h1 id="pName">—</h1>
       <div class="p-price"><span id="pPrice">0</span> <span>دج</span></div>
 

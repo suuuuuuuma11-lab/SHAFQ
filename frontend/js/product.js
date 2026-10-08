@@ -81,9 +81,36 @@ function renderProductDetails(p) {
   if (priceEl) priceEl.textContent = p.price;
   
   const mainImg = p.img || p.mainImage || 'img/p1.png';
+  const imgSkel = document.getElementById("pImgSkeleton");
+
   if (imgEl) {
-    imgEl.src = mainImg;
     imgEl.alt = p.name;
+
+    const onImageLoaded = () => {
+      imgEl.src = mainImg;
+      imgEl.style.opacity = "1";
+      if (imgSkel) {
+        imgSkel.style.opacity = "0";
+        setTimeout(() => {
+          if (imgSkel && imgSkel.parentNode) imgSkel.style.display = "none";
+        }, 250);
+      }
+    };
+
+    // Preload image so skeleton stays until the image pixels are actually downloaded
+    const preloader = new Image();
+    preloader.onload = onImageLoaded;
+    preloader.onerror = () => {
+      imgEl.src = 'img/p1.png';
+      imgEl.style.opacity = "1";
+      if (imgSkel) {
+        imgSkel.style.opacity = "0";
+        setTimeout(() => {
+          if (imgSkel && imgSkel.parentNode) imgSkel.style.display = "none";
+        }, 250);
+      }
+    };
+    preloader.src = mainImg;
   }
   
   if (badgeEl) {
@@ -134,9 +161,26 @@ function renderProductDetails(p) {
 
   changeQty(0);
 
+  // Transition info skeleton to real form
+  const infoSkel = document.getElementById("pInfoSkel");
+  const formWrap = document.getElementById("formWrap");
+  if (infoSkel) {
+    infoSkel.classList.add("fade-out");
+    setTimeout(() => {
+      if (infoSkel && infoSkel.parentNode) infoSkel.style.display = "none";
+    }, 220);
+  }
+  if (formWrap) {
+    formWrap.style.display = "block";
+    requestAnimationFrame(() => {
+      formWrap.classList.add("is-visible");
+    });
+  }
+
   // Favorites button
   const favBtn = document.getElementById('favBtn');
   if (favBtn) {
+    favBtn.style.opacity = '1';
     favBtn.classList.toggle('liked', favsP.has(p.id));
   }
 }
@@ -533,6 +577,20 @@ function renderProductHeaderCategories() {
   }
 }
 
+function showProductErrorState(msg = "المنتج غير متوفر حالياً") {
+  const wrap = document.querySelector('.product-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = `
+    <div class="empty-state">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--gold-dark)" stroke-width="1.8" style="margin:0 auto 14px;display:block">
+        <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+      </svg>
+      <h3>المنتج غير متوفر حالياً</h3>
+      <p>${esc(msg)}</p>
+      <a href="/" class="btn-order" style="display:inline-block;margin-top:16px;max-width:240px">العودة إلى المتجر</a>
+    </div>`;
+}
+
 // --- Fetch Data from Cloud Firestore ---
 async function loadProductFromFirestore() {
   try {
@@ -582,10 +640,8 @@ async function loadProductFromFirestore() {
       if (!target && !isNaN(Number(idParam)) && products[Number(idParam)]) {
         target = products[Number(idParam)];
       }
-    }
-    
-    // Default to first product if not matched
-    if (!target && products.length > 0) {
+    } else if (products.length > 0) {
+      // Default to first product if no ID specified
       target = products[0];
     }
 
@@ -594,16 +650,14 @@ async function loadProductFromFirestore() {
       renderProductDetails(target);
       renderProductHeaderCategories();
     } else {
-      document.querySelector('.product-wrap').innerHTML = `
-        <div class="empty-state">
-          <h3>المنتج غير متوفر حالياً</h3>
-          <p>قد يكون المنتج قد تم حذفه أو غير متاح للبيع.</p>
-          <a href="/" class="btn-order" style="display:inline-block;margin-top:16px">العودة للمتجر</a>
-        </div>`;
+      showProductErrorState(
+        idParam ? "قد يكون هذا المنتج قد تم حذفه أو أن الرابط غير صحيح." : "لا توجد منتجات متاحة في المتجر حالياً."
+      );
     }
   } catch (err) {
     console.error("Firestore product load error:", err);
     toast("تعذر تحميل بيانات المنتج من السحابة", false);
+    showProductErrorState("حدث خطأ أثناء الاتصال بالسحابة لتحميل بيانات المنتج. يرجى التحقق من اتصالك بالإنترنت.");
   }
 }
 
