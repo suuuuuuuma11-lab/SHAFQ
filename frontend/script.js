@@ -587,32 +587,8 @@ async function loadStoreData() {
 }
 
 function syncCategoriesFromProducts() {
-  const existingNames = new Set(state.categories.map(c => c.name.trim().toLowerCase()));
-  const existingIds = new Set(state.categories.map(c => c.id));
-
-  state.products.forEach(p => {
-    const catName = (p.category || "").trim();
-    const catId = (p.categoryId || "").trim();
-
-    if (catId && !existingIds.has(catId) && catName && !existingNames.has(catName.toLowerCase())) {
-      state.categories.push({
-        id: catId,
-        name: catName,
-        slug: catName,
-        image: (p.images && p.images[0]) || ""
-      });
-      existingNames.add(catName.toLowerCase());
-      existingIds.add(catId);
-    } else if (catName && catName !== "عام" && !existingNames.has(catName.toLowerCase())) {
-      state.categories.push({
-        id: catId || catName,
-        name: catName,
-        slug: catName,
-        image: (p.images && p.images[0]) || ""
-      });
-      existingNames.add(catName.toLowerCase());
-    }
-  });
+  // Firestore categories collection is the sole authoritative source of truth.
+  // No synthetic or hardcoded categories are created or inferred.
 }
 
 function renderCategoriesUI() {

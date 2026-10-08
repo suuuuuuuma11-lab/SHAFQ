@@ -22,11 +22,21 @@
   .h-icons{display:flex;align-items:center;gap:20px}
   .h-icons button{background:none;border:none;cursor:pointer;color:var(--ink);display:flex;align-items:center;transition:color .2s}
   .h-icons button:hover{color:var(--gold)}
-  nav.main-nav{display:flex;gap:34px}
-  nav.main-nav a{font-size:15px;font-weight:500;position:relative;padding:4px 0}
+  nav.main-nav{display:flex;align-items:center;gap:28px}
+  nav.main-nav a{font-size:15px;font-weight:500;position:relative;padding:4px 0;text-decoration:none;cursor:pointer;color:var(--ink);transition:color .2s;white-space:nowrap}
   nav.main-nav a::after{content:"";position:absolute;bottom:-2px;right:0;width:0;height:2px;background:var(--ink);transition:width .25s}
   nav.main-nav a:hover::after,nav.main-nav a.active::after{width:100%}
   nav.main-nav a.active{font-weight:700}
+
+  .nav-skeleton{display:inline-flex;align-items:center;gap:16px}
+  .nav-skel-pill{display:inline-block;width:60px;height:14px;border-radius:4px;background:linear-gradient(90deg, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.04) 75%);background-size:200% 100%;animation:navSkelPulse 1.4s ease-in-out infinite}
+  @keyframes navSkelPulse{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+  .mobile-cat-bar{display:none;width:100%;background:var(--bg);border-top:1px solid var(--line);padding:8px 16px}
+  .mobile-cat-scroller{display:flex;align-items:center;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .mobile-cat-scroller::-webkit-scrollbar{display:none}
+  .mobile-cat-pill{display:inline-flex;align-items:center;white-space:nowrap;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;color:var(--muted);background:rgba(0,0,0,0.04);border:1px solid var(--line);cursor:pointer;text-decoration:none;font-family:inherit;transition:all .2s ease}
+  .mobile-cat-pill:hover,.mobile-cat-pill.active{color:#fff;background:var(--ink);border-color:var(--ink);font-weight:700}
   .logo{text-align:center;line-height:1.1}
   .logo .mark{font-size:26px;font-weight:900;letter-spacing:2px}
   .logo .sub{font-size:10px;letter-spacing:6px;color:var(--muted);font-weight:500}
@@ -114,7 +124,7 @@
   .socials a:hover{color:var(--gold)}
 
   @media (max-width:900px){.product-wrap{grid-template-columns:1fr;gap:28px}}
-  @media (max-width:768px){nav.main-nav{display:none}}
+  @media (max-width:768px){nav.main-nav{display:none!important}.mobile-cat-bar{display:block}}
   @media (max-width:520px){.two-col{grid-template-columns:1fr}}
 
   /* ===== Fixed features: search / cart / dropdowns / toast ===== */
@@ -224,20 +234,24 @@
       <button aria-label="الحقيبة" id="cartBtn" style="position:relative"><span class="cart-badge" id="cartBadge" style="display:none">0</span><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 7h12l1 13H5L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg></button>
       <button aria-label="بحث" id="searchBtn"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
     </div>
-    <nav class="main-nav">
-      <a href="index.html">المفضلة</a>
-      <a href="index.html">الخصومات</a>
-      <a href="index.html">الجماليات</a>
-      <a href="index.html" class="active">القمصان</a>
+    <nav class="main-nav" id="mainNav" aria-label="أقسام المتجر">
+      <!-- Rendered dynamically from Firestore categories only -->
     </nav>
     <a href="index.html" class="logo">
       <div class="mark">HADJAJ</div>
       <div class="sub">حجاج • SHIRTS</div>
     </a>
   </div>
+
+  <!-- Mobile categories scroll bar -->
+  <div class="mobile-cat-bar" id="mobileCatBar" aria-label="أقسام المتجر للجوال">
+    <div class="mobile-cat-scroller" id="mobileCatScroller">
+      <!-- Rendered dynamically from Firestore categories only -->
+    </div>
+  </div>
 </header>
 
-<div class="breadcrumb"><a href="index.html">الرئيسية</a> — <a href="index.html">القمصان</a> — <b id="crumb">تفاصيل المنتج</b></div>
+<div class="breadcrumb"><a href="index.html">الرئيسية</a> — <a href="index.html" id="crumbCatLink">المنتجات</a> — <b id="crumb">تفاصيل المنتج</b></div>
 
 <section class="product-wrap">
   <!-- Gallery -->
@@ -459,7 +473,8 @@ import {
   doc, 
   getDoc, 
   getDocs, 
-  addDoc 
+  addDoc,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 import { initCartUI, addToCart, toast as cartToast, sendTelegramOrderNotification } from "./cart.js";
 
@@ -886,6 +901,107 @@ sInput?.addEventListener('input', () => {
   }
 });
 
+// --- Dynamic Firestore Categories Synchronization ---
+let categoriesList = [];
+let isCatsLoaded = false;
+let currentTargetProduct = null;
+
+function initCategoriesSync() {
+  const catsCol = collection(db, "categories");
+  onSnapshot(catsCol, (catSnap) => {
+    const list = [];
+    catSnap.forEach(docSnap => {
+      const cd = docSnap.data() || {};
+      if (cd.active === false) return;
+      const name = (cd.name || '').trim();
+      if (!name) return;
+      const rawOrder = cd.order ?? cd.sortOrder;
+      const orderNum = (rawOrder !== undefined && rawOrder !== null && !isNaN(Number(rawOrder))) ? Number(rawOrder) : null;
+      list.push({
+        id: docSnap.id,
+        name: name,
+        order: orderNum,
+        createdAt: cd.createdAt || ''
+      });
+    });
+
+    list.sort((a, b) => {
+      if (a.order !== null && b.order !== null) return a.order - b.order;
+      if (a.order !== null) return -1;
+      if (b.order !== null) return 1;
+      if (a.createdAt && b.createdAt) {
+        const tA = new Date(a.createdAt).getTime();
+        const tB = new Date(b.createdAt).getTime();
+        if (!isNaN(tA) && !isNaN(tB) && tA !== tB) return tA - tB;
+      }
+      return a.name.localeCompare(b.name, 'ar');
+    });
+
+    categoriesList = list;
+    isCatsLoaded = true;
+    renderProductHeaderCategories();
+  }, (err) => {
+    console.warn("Categories onSnapshot error:", err);
+    isCatsLoaded = true;
+    renderProductHeaderCategories();
+  });
+}
+
+function renderProductHeaderCategories() {
+  const mainNav = document.getElementById('mainNav');
+  const mobileScroller = document.getElementById('mobileCatScroller');
+
+  if (!isCatsLoaded) {
+    if (mainNav) {
+      mainNav.innerHTML = `
+        <div class="nav-skeleton" aria-label="جاري التحميل">
+          <span class="nav-skel-pill"></span>
+          <span class="nav-skel-pill"></span>
+          <span class="nav-skel-pill"></span>
+        </div>`;
+    }
+    if (mobileScroller) {
+      mobileScroller.innerHTML = `<span class="mobile-cat-pill" style="opacity:0.5">جاري التحميل...</span>`;
+    }
+    return;
+  }
+
+  const currentCatId = currentTargetProduct ? (currentTargetProduct.categoryId || '') : '';
+  const currentCatName = currentTargetProduct ? (currentTargetProduct.category || '') : '';
+
+  let desktopHtml = `<a href="index.html">الكل</a>`;
+  let mobileHtml = `<a href="index.html" class="mobile-cat-pill">الكل</a>`;
+
+  // Render ONLY categories from Cloud Firestore
+  categoriesList.forEach(cat => {
+    const isActive = (currentCatId && cat.id === currentCatId) || (currentCatName && cat.name.trim().toLowerCase() === currentCatName.trim().toLowerCase());
+    desktopHtml += `<a href="index.html?cat=${encodeURIComponent(cat.id)}" class="${isActive ? 'active' : ''}">${esc(cat.name)}</a>`;
+    mobileHtml += `<a href="index.html?cat=${encodeURIComponent(cat.id)}" class="mobile-cat-pill ${isActive ? 'active' : ''}">${esc(cat.name)}</a>`;
+  });
+
+  desktopHtml += `<a href="index.html?view=sale">الخصومات</a><a href="index.html?view=fav">المفضلة</a>`;
+  mobileHtml += `<a href="index.html?view=sale" class="mobile-cat-pill">الخصومات</a><a href="index.html?view=fav" class="mobile-cat-pill">المفضلة</a>`;
+
+  if (mainNav) mainNav.innerHTML = desktopHtml;
+  if (mobileScroller) mobileScroller.innerHTML = mobileHtml;
+
+  // Synchronize Breadcrumb category
+  const crumbCatLink = document.getElementById('crumbCatLink');
+  if (crumbCatLink && currentTargetProduct) {
+    const matchedCat = categoriesList.find(c => c.id === currentCatId || c.name.trim().toLowerCase() === currentCatName.trim().toLowerCase());
+    if (matchedCat) {
+      crumbCatLink.textContent = matchedCat.name;
+      crumbCatLink.href = `index.html?cat=${encodeURIComponent(matchedCat.id)}`;
+    } else if (currentCatName) {
+      crumbCatLink.textContent = currentCatName;
+      crumbCatLink.href = 'index.html';
+    } else {
+      crumbCatLink.textContent = 'المنتجات';
+      crumbCatLink.href = 'index.html';
+    }
+  }
+}
+
 // --- Fetch Data from Cloud Firestore ---
 async function loadProductFromFirestore() {
   try {
@@ -919,7 +1035,9 @@ async function loadProductFromFirestore() {
         colorNames: colors.map(c => c.name),
         sizes: Array.isArray(d.sizes) && d.sizes.length ? d.sizes : defaultSizes,
         status: d.status || 'active',
-        desc: d.description || d.desc || ''
+        desc: d.description || d.desc || '',
+        category: d.category || '',
+        categoryId: d.categoryId || d.category || ''
       });
     });
 
@@ -941,7 +1059,9 @@ async function loadProductFromFirestore() {
     }
 
     if (target) {
+      currentTargetProduct = target;
       renderProductDetails(target);
+      renderProductHeaderCategories();
     } else {
       document.querySelector('.product-wrap').innerHTML = `
         <div class="empty-state">
@@ -956,6 +1076,8 @@ async function loadProductFromFirestore() {
   }
 }
 
+renderProductHeaderCategories();
+initCategoriesSync();
 loadProductFromFirestore();
 </script>
 

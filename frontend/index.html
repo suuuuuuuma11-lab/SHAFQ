@@ -83,7 +83,8 @@
 
     nav.main-nav {
       display: flex;
-      gap: 34px
+      align-items: center;
+      gap: 28px;
     }
 
     nav.main-nav a {
@@ -92,6 +93,10 @@
       color: var(--ink);
       position: relative;
       padding: 4px 0;
+      text-decoration: none;
+      cursor: pointer;
+      transition: color .2s ease;
+      white-space: nowrap;
     }
 
     nav.main-nav a::after {
@@ -102,16 +107,85 @@
       width: 0;
       height: 2px;
       background: var(--ink);
-      transition: width .25s;
+      transition: width .25s ease;
     }
 
     nav.main-nav a:hover::after,
     nav.main-nav a.active::after {
-      width: 100%
+      width: 100%;
     }
 
     nav.main-nav a.active {
-      font-weight: 700
+      font-weight: 700;
+    }
+
+    /* Skeleton shimmer loader for main-nav */
+    .nav-skeleton {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .nav-skel-pill {
+      display: inline-block;
+      width: 60px;
+      height: 14px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.04) 25%, rgba(255, 255, 255, 0.14) 50%, rgba(255, 255, 255, 0.04) 75%);
+      background-size: 200% 100%;
+      animation: navSkelPulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes navSkelPulse {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Mobile categories horizontal pill scroller */
+    .mobile-cat-bar {
+      display: none;
+      width: 100%;
+      background: var(--bg);
+      border-top: 1px solid var(--line);
+      padding: 8px 16px;
+    }
+
+    .mobile-cat-scroller {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .mobile-cat-scroller::-webkit-scrollbar {
+      display: none;
+    }
+
+    .mobile-cat-pill {
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      text-decoration: none;
+      font-family: inherit;
+      transition: all .2s ease;
+    }
+
+    .mobile-cat-pill:hover,
+    .mobile-cat-pill.active {
+      color: #111;
+      background: var(--gold);
+      border-color: var(--gold);
+      font-weight: 700;
     }
 
     .logo {
@@ -467,7 +541,11 @@
       }
 
       nav.main-nav {
-        display: none
+        display: none !important;
+      }
+
+      .mobile-cat-bar {
+        display: block;
       }
 
       .hero {
@@ -1599,30 +1677,34 @@
         </button>
       </div>
 
-      <nav class="main-nav">
-        <a href="index.html" id="navFav">المفضلة</a>
-        <a href="index.html" id="navSale">الخصومات</a>
-        <a href="index.html">الجماليات</a>
-        <a href="index.html" class="active" id="navAll">القمصان</a>
+      <nav class="main-nav" id="mainNav" aria-label="أقسام المتجر">
+        <!-- Rendered dynamically from Firestore categories only -->
       </nav>
 
-      <a href="#" class="logo">
+      <a href="index.html" class="logo">
         <div class="mark">HADJAJ</div>
         <div class="sub">حجاج • SHIRTS</div>
       </a>
+    </div>
+
+    <!-- Mobile categories scroll bar -->
+    <div class="mobile-cat-bar" id="mobileCatBar" aria-label="أقسام المتجر للجوال">
+      <div class="mobile-cat-scroller" id="mobileCatScroller">
+        <!-- Rendered dynamically from Firestore categories only -->
+      </div>
     </div>
   </header>
 
   <!-- Hero -->
   <section class="hero">
-    <img src="img/hero.png" alt="قمصان حجاج" id="heroBannerImg">
+    <img src="img/hero.png" alt="متجر حجاج" id="heroBannerImg">
     <div class="hero-overlay">
       <div class="hero-content">
         <div class="hero-brand">HADJAJ • حجاج</div>
-        <h1 class="hero-title">القمصان</h1>
-        <p class="hero-sub">أناقة تُرتدى بثقة</p>
-        <p class="hero-desc">قمصان فاخرة بتفاصيل دقيقة وجودة استثنائية</p>
-        <button class="btn-gold">
+        <h1 class="hero-title" id="heroTitle">متجر حجاج</h1>
+        <p class="hero-sub" id="heroSub">أناقة تُرتدى بثقة</p>
+        <p class="hero-desc" id="heroDesc">تشكيلة حصرية من أرقى التصاميم الرجالية بتفاصيل دقيقة وجودة استثنائية</p>
+        <button class="btn-gold" id="heroShopBtn" onclick="document.querySelector('.toolbar')?.scrollIntoView({behavior:'smooth'})">
           تسوّق الآن
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M5 12h14M13 6l6 6-6 6" />
@@ -1634,10 +1716,10 @@
 
   <!-- Page head -->
   <div class="section">
-    <div class="breadcrumb">الرئيسية — <b>القمصان</b></div>
+    <div class="breadcrumb" id="pageBreadcrumb">الرئيسية — <b id="crumbTitle">جميع المنتجات</b></div>
     <div class="page-head">
-      <h1>القمصان</h1>
-      <p>مجموعة مختارة من القمصان الرجالية الفاخرة، بتصاميم كلاسيكية وعصرية تناسب كل إطلالاتك.</p>
+      <h1 id="pageHeading">جميع المنتجات</h1>
+      <p id="pageDesc">مجموعة مختارة من أرقى التصاميم الرجالية الفاخرة، بتصاميم كلاسيكية وعصرية تناسب كل إطلالاتك.</p>
     </div>
   </div>
 
@@ -1877,9 +1959,12 @@
     // Safe HTML escape (including quotes and single quotes)
     const esc = s => String(s || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
 
-    // Products & Categories state (Loaded dynamically from Firestore)
+    // Products & Categories state (Loaded dynamically from Cloud Firestore)
     let products = [];
+    let categories = [];
     let isLoaded = false;
+    let isCatsLoaded = false;
+    let selectedCatId = null;
 
     /* ---------- state ---------- */
     let favs = new Set(JSON.parse(localStorage.getItem('alnoor_favs') || '[]'));
@@ -1906,8 +1991,19 @@
     /* ---------- filter / sort / render ---------- */
     function getList() {
       let list = products.slice();
-      if (view === 'sale') list = list.filter(p => p.oldPrice && p.oldPrice > p.price);
-      if (view === 'fav') list = list.filter(p => favs.has(p.id));
+      if (view === 'sale') {
+        list = list.filter(p => p.oldPrice && p.oldPrice > p.price);
+      } else if (view === 'fav') {
+        list = list.filter(p => favs.has(p.id));
+      } else if (view === 'cat' && selectedCatId) {
+        const selCat = categories.find(c => c.id === selectedCatId);
+        list = list.filter(p => {
+          if (p.categoryId && p.categoryId === selectedCatId) return true;
+          if (selCat && p.category && p.category.trim().toLowerCase() === selCat.name.trim().toLowerCase()) return true;
+          if (selCat && p.categoryId && p.categoryId.trim().toLowerCase() === selCat.name.trim().toLowerCase()) return true;
+          return false;
+        });
+      }
       if (priceFilter === 'lt300') list = list.filter(p => p.price < 300);
       else if (priceFilter === 'mid') list = list.filter(p => p.price >= 300 && p.price <= 350);
       else if (priceFilter === 'gt350') list = list.filter(p => p.price > 350);
@@ -1974,17 +2070,233 @@
       }).join('');
     }
 
-    /* ---------- nav views ---------- */
-    function setView(v, el) {
-      view = v;
-      document.querySelectorAll('nav.main-nav a').forEach(a => a.classList.remove('active'));
-      if (el) el.classList.add('active');
-      render();
-      window.scrollTo({ top: document.querySelector('.toolbar').offsetTop - 80, behavior: 'smooth' });
+    /* ---------- Dynamic Categories & Nav Logic ---------- */
+    function applyBannerImage(imgUrl, crop) {
+      const heroImg = document.getElementById("heroBannerImg");
+      if (!heroImg || !imgUrl) return;
+      heroImg.src = imgUrl;
+      if (crop) {
+        const dx = typeof crop.desktop?.x === 'number' ? crop.desktop.x : 50;
+        const dy = typeof crop.desktop?.y === 'number' ? crop.desktop.y : 50;
+        const dz = typeof crop.desktop?.zoom === 'number' ? crop.desktop.zoom : 1;
+        const mx = typeof crop.mobile?.x === 'number' ? crop.mobile.x : (typeof crop.mobile?.focusX === 'number' ? crop.mobile.focusX : dx);
+        const my = typeof crop.mobile?.y === 'number' ? crop.mobile.y : dy;
+        const mz = typeof crop.mobile?.zoom === 'number' ? crop.mobile.zoom : dz;
+
+        heroImg.style.setProperty('--crop-dx', `${dx}%`);
+        heroImg.style.setProperty('--crop-dy', `${dy}%`);
+        heroImg.style.setProperty('--crop-dz', `${dz}`);
+        heroImg.style.setProperty('--crop-mx', `${mx}%`);
+        heroImg.style.setProperty('--crop-my', `${my}%`);
+        heroImg.style.setProperty('--crop-mz', `${mz}`);
+      }
     }
-    document.getElementById('navFav').addEventListener('click', e => { e.preventDefault(); setView('fav', e.currentTarget); });
-    document.getElementById('navSale').addEventListener('click', e => { e.preventDefault(); setView('sale', e.currentTarget); });
-    document.getElementById('navAll').addEventListener('click', e => { e.preventDefault(); setView('all', e.currentTarget); });
+
+    function updateHeroAndHeaders() {
+      const heroTitle = document.getElementById('heroTitle');
+      const heroSub = document.getElementById('heroSub');
+      const heroDesc = document.getElementById('heroDesc');
+      const crumbTitle = document.getElementById('crumbTitle');
+      const pageHeading = document.getElementById('pageHeading');
+      const pageDesc = document.getElementById('pageDesc');
+
+      if (view === 'sale') {
+        if (heroTitle) heroTitle.textContent = 'الخصومات والعروض';
+        if (heroSub) heroSub.textContent = 'تخفيضات استثنائية';
+        if (heroDesc) heroDesc.textContent = 'أفضل العروض والأسعار الخاصة على تشكيلاتنا الفاخرة';
+        if (crumbTitle) crumbTitle.textContent = 'الخصومات';
+        if (pageHeading) pageHeading.textContent = 'الخصومات';
+        if (pageDesc) pageDesc.textContent = 'استمتع بأقوى العروض والخصومات على تشكيلة فاخرة من منتجاتنا.';
+        return;
+      }
+
+      if (view === 'fav') {
+        if (heroTitle) heroTitle.textContent = 'قائمتي المفضلة';
+        if (heroSub) heroSub.textContent = 'قطعك المختارة بعناية';
+        if (heroDesc) heroDesc.textContent = 'تصفح وأدر جميع المنتجات التي نالت إعجابك';
+        if (crumbTitle) crumbTitle.textContent = 'المفضلة';
+        if (pageHeading) pageHeading.textContent = 'المفضلة';
+        if (pageDesc) pageDesc.textContent = 'المنتجات التي قمت بحفظها في قائمتك المفضلة لسهولة الوصول إليها لاحقاً.';
+        return;
+      }
+
+      if (view === 'cat' && selectedCatId) {
+        const selCat = categories.find(c => c.id === selectedCatId);
+        if (selCat) {
+          if (heroTitle) heroTitle.textContent = selCat.name;
+          if (heroSub) heroSub.textContent = selCat.msg || 'أناقة تُرتدى بثقة';
+          if (heroDesc) heroDesc.textContent = selCat.desc || 'تشكيلة فاخرة بتفاصيل دقيقة وجودة استثنائية';
+          if (crumbTitle) crumbTitle.textContent = selCat.name;
+          if (pageHeading) pageHeading.textContent = selCat.name;
+          if (pageDesc) pageDesc.textContent = selCat.desc || selCat.msg || 'مجموعة مختارة من التصاميم الفاخرة تناسب كل إطلالاتك.';
+
+          if (selCat.banner && selCat.banner.type === 'image' && selCat.banner.img) {
+            applyBannerImage(selCat.banner.img, selCat.banner.crop);
+          }
+          return;
+        }
+      }
+
+      // Default: "all" view
+      if (heroTitle) heroTitle.textContent = 'متجر حجاج';
+      if (heroSub) heroSub.textContent = 'أناقة تُرتدى بثقة';
+      if (heroDesc) heroDesc.textContent = 'تشكيلة حصرية من أرقى التصاميم الرجالية بتفاصيل دقيقة وجودة استثنائية';
+      if (crumbTitle) crumbTitle.textContent = 'جميع المنتجات';
+      if (pageHeading) pageHeading.textContent = 'جميع المنتجات';
+      if (pageDesc) pageDesc.textContent = 'مجموعة مختارة من أرقى التصاميم الرجالية الفاخرة، بتصاميم كلاسيكية وعصرية تناسب كل إطلالاتك.';
+
+      const firstBannerCat = categories.find(c => c.banner && c.banner.type === 'image' && c.banner.img);
+      if (firstBannerCat) {
+        applyBannerImage(firstBannerCat.banner.img, firstBannerCat.banner.crop);
+      }
+    }
+
+    function renderCategoriesNav() {
+      const mainNav = document.getElementById('mainNav');
+      const mobileScroller = document.getElementById('mobileCatScroller');
+
+      if (!isCatsLoaded) {
+        if (mainNav) {
+          mainNav.innerHTML = `
+            <div class="nav-skeleton" aria-label="جاري التحميل">
+              <span class="nav-skel-pill"></span>
+              <span class="nav-skel-pill"></span>
+              <span class="nav-skel-pill"></span>
+            </div>
+          `;
+        }
+        if (mobileScroller) {
+          mobileScroller.innerHTML = `<span class="mobile-cat-pill" style="opacity:0.5">جاري التحميل...</span>`;
+        }
+        return;
+      }
+
+      const isAllActive = view === 'all' && !selectedCatId;
+      const isSaleActive = view === 'sale';
+      const isFavActive = view === 'fav';
+
+      let desktopHtml = `<a href="index.html" data-view="all" class="${isAllActive ? 'active' : ''}">الكل</a>`;
+      let mobileHtml = `<button type="button" class="mobile-cat-pill ${isAllActive ? 'active' : ''}" data-view="all">الكل</button>`;
+
+      // Render ONLY categories from Cloud Firestore categories collection
+      categories.forEach(cat => {
+        const isCatActive = view === 'cat' && selectedCatId === cat.id;
+        desktopHtml += `<a href="index.html?cat=${encodeURIComponent(cat.id)}" data-view="cat" data-cat-id="${esc(cat.id)}" class="${isCatActive ? 'active' : ''}">${esc(cat.name)}</a>`;
+        mobileHtml += `<button type="button" class="mobile-cat-pill ${isCatActive ? 'active' : ''}" data-view="cat" data-cat-id="${esc(cat.id)}">${esc(cat.name)}</button>`;
+      });
+
+      desktopHtml += `
+        <a href="index.html?view=sale" data-view="sale" class="${isSaleActive ? 'active' : ''}">الخصومات</a>
+        <a href="index.html?view=fav" data-view="fav" class="${isFavActive ? 'active' : ''}">المفضلة</a>
+      `;
+
+      mobileHtml += `
+        <button type="button" class="mobile-cat-pill ${isSaleActive ? 'active' : ''}" data-view="sale">الخصومات</button>
+        <button type="button" class="mobile-cat-pill ${isFavActive ? 'active' : ''}" data-view="fav">المفضلة</button>
+      `;
+
+      if (mainNav) mainNav.innerHTML = desktopHtml;
+      if (mobileScroller) mobileScroller.innerHTML = mobileHtml;
+
+      bindNavEvents();
+    }
+
+    function bindNavEvents() {
+      const handleNavClick = (e) => {
+        const target = e.target.closest('[data-view]');
+        if (!target) return;
+        e.preventDefault();
+
+        const v = target.dataset.view;
+        const catId = target.dataset.catId || null;
+
+        if (v === 'all') {
+          view = 'all';
+          selectedCatId = null;
+          try {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('cat');
+            url.searchParams.delete('category');
+            url.searchParams.delete('view');
+            window.history.pushState({}, '', url.pathname + (url.search ? url.search : ''));
+          } catch (_) {}
+        } else if (v === 'cat') {
+          view = 'cat';
+          selectedCatId = catId;
+          try {
+            const url = new URL(window.location.href);
+            url.searchParams.set('cat', catId);
+            url.searchParams.delete('view');
+            window.history.pushState({}, '', url);
+          } catch (_) {}
+        } else if (v === 'sale') {
+          view = 'sale';
+          selectedCatId = null;
+          try {
+            const url = new URL(window.location.href);
+            url.searchParams.set('view', 'sale');
+            url.searchParams.delete('cat');
+            url.searchParams.delete('category');
+            window.history.pushState({}, '', url);
+          } catch (_) {}
+        } else if (v === 'fav') {
+          view = 'fav';
+          selectedCatId = null;
+          try {
+            const url = new URL(window.location.href);
+            url.searchParams.set('view', 'fav');
+            url.searchParams.delete('cat');
+            url.searchParams.delete('category');
+            window.history.pushState({}, '', url);
+          } catch (_) {}
+        }
+
+        renderCategoriesNav();
+        updateHeroAndHeaders();
+        render();
+
+        const toolbarEl = document.querySelector('.toolbar');
+        if (toolbarEl) {
+          window.scrollTo({ top: toolbarEl.offsetTop - 80, behavior: 'smooth' });
+        }
+      };
+
+      const mainNav = document.getElementById('mainNav');
+      if (mainNav && !mainNav._hasHandler) {
+        mainNav.addEventListener('click', handleNavClick);
+        mainNav._hasHandler = true;
+      }
+
+      const mobileScroller = document.getElementById('mobileCatScroller');
+      if (mobileScroller && !mobileScroller._hasHandler) {
+        mobileScroller.addEventListener('click', handleNavClick);
+        mobileScroller._hasHandler = true;
+      }
+    }
+
+    function parseInitialUrlState() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const catParam = params.get('cat') || params.get('category');
+        const viewParam = params.get('view');
+
+        if (viewParam === 'sale') {
+          view = 'sale';
+          selectedCatId = null;
+        } else if (viewParam === 'fav') {
+          view = 'fav';
+          selectedCatId = null;
+        } else if (catParam) {
+          view = 'cat';
+          const matched = categories.find(c => c.id === catParam || c.name.trim().toLowerCase() === catParam.trim().toLowerCase());
+          if (matched) {
+            selectedCatId = matched.id;
+          } else {
+            selectedCatId = catParam;
+          }
+        }
+      } catch (_) {}
+    }
 
     /* ---------- dropdowns ---------- */
     function setupDrop(btnId, menuId, onPick) {
@@ -2359,6 +2671,7 @@
             colorNames: colors.map(c => c.name),
             sizes: Array.isArray(d.sizes) ? d.sizes : [],
             status: d.status || 'active',
+            category: d.category || '',
             categoryId: d.categoryId || d.category || ''
           });
         });
@@ -2372,42 +2685,70 @@
         render();
       });
 
-      // Categories Listener for Custom Banner & Crop Settings
+      // Sole Authoritative Categories Listener from Cloud Firestore
       const catsRef = collection(db, "categories");
       onSnapshot(catsRef, (catSnap) => {
-        let activeCatWithBanner = null;
+        const list = [];
         catSnap.forEach(docSnap => {
-          const cd = docSnap.data();
-          if (cd && cd.active !== false && cd.banner && cd.banner.type === 'image' && cd.banner.img) {
-            if (!activeCatWithBanner) activeCatWithBanner = cd;
-          }
+          const cd = docSnap.data() || {};
+          if (cd.active === false) return;
+          const name = (cd.name || '').trim();
+          if (!name) return;
+
+          const rawOrder = cd.order ?? cd.sortOrder;
+          const orderNum = (rawOrder !== undefined && rawOrder !== null && !isNaN(Number(rawOrder))) ? Number(rawOrder) : null;
+
+          list.push({
+            id: docSnap.id,
+            name: name,
+            order: orderNum,
+            createdAt: cd.createdAt || '',
+            banner: cd.banner || null,
+            msg: cd.msg || '',
+            desc: cd.desc || ''
+          });
         });
 
-        if (activeCatWithBanner) {
-          const heroImg = document.getElementById("heroBannerImg");
-          if (heroImg && activeCatWithBanner.banner.img) {
-            heroImg.src = activeCatWithBanner.banner.img;
-            const crop = activeCatWithBanner.banner.crop;
-            if (crop) {
-              const dx = typeof crop.desktop?.x === 'number' ? crop.desktop.x : 50;
-              const dy = typeof crop.desktop?.y === 'number' ? crop.desktop.y : 50;
-              const dz = typeof crop.desktop?.zoom === 'number' ? crop.desktop.zoom : 1;
-              const mx = typeof crop.mobile?.x === 'number' ? crop.mobile.x : (typeof crop.mobile?.focusX === 'number' ? crop.mobile.focusX : dx);
-              const my = typeof crop.mobile?.y === 'number' ? crop.mobile.y : dy;
-              const mz = typeof crop.mobile?.zoom === 'number' ? crop.mobile.zoom : dz;
+        // Sort by order/sortOrder -> createdAt -> name (Arabic)
+        list.sort((a, b) => {
+          if (a.order !== null && b.order !== null) return a.order - b.order;
+          if (a.order !== null) return -1;
+          if (b.order !== null) return 1;
+          if (a.createdAt && b.createdAt) {
+            const tA = new Date(a.createdAt).getTime();
+            const tB = new Date(b.createdAt).getTime();
+            if (!isNaN(tA) && !isNaN(tB) && tA !== tB) return tA - tB;
+          }
+          return a.name.localeCompare(b.name, 'ar');
+        });
 
-              heroImg.style.setProperty('--crop-dx', `${dx}%`);
-              heroImg.style.setProperty('--crop-dy', `${dy}%`);
-              heroImg.style.setProperty('--crop-dz', `${dz}`);
-              heroImg.style.setProperty('--crop-mx', `${mx}%`);
-              heroImg.style.setProperty('--crop-my', `${my}%`);
-              heroImg.style.setProperty('--crop-mz', `${mz}`);
-            }
+        const isFirstLoad = !isCatsLoaded;
+        categories = list;
+        isCatsLoaded = true;
+
+        if (isFirstLoad) {
+          parseInitialUrlState();
+        } else if (selectedCatId) {
+          // If the currently selected category was deleted or renamed in Firestore
+          const exists = categories.find(c => c.id === selectedCatId);
+          if (!exists) {
+            selectedCatId = null;
+            view = 'all';
           }
         }
-      }, (err) => console.warn("Categories banner onSnapshot error:", err));
+
+        renderCategoriesNav();
+        updateHeroAndHeaders();
+        render();
+      }, (err) => {
+        console.warn("Categories onSnapshot error:", err);
+        isCatsLoaded = true;
+        renderCategoriesNav();
+      });
     }
 
+    // Initial render with loading skeleton states
+    renderCategoriesNav();
     render();
     initFirestoreSync();
   </script>
