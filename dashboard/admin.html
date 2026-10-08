@@ -130,10 +130,6 @@
                     <div class="pic-actions">
                       <span class="pic-size-info" id="pSizeInfo">WebP جاهز</span>
                       <div class="pic-btn-group">
-                        <button type="button" class="btn-ghost btn-sm" id="pRecropBtn" style="display:none">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>
-                          تعديل الكادر
-                        </button>
                         <button type="button" class="btn-ghost btn-sm" id="pReplaceBtn">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
                           استبدال الصورة
@@ -582,12 +578,27 @@
       </div>
 
       <!-- Live WYSIWYG Target Preview -->
+      <!-- Live WYSIWYG Target Preview -->
       <div class="crop-preview-box">
-        <div class="preview-title" id="cropPvTitle">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          معاينة حية — هكذا سيظهر البنر المعتمد بالضبط على المتجر
+        <div class="preview-head-row">
+          <div class="preview-title" id="cropPvTitle">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            معاينة حية — هكذا سيظهر البنر المعتمد بالضبط على المتجر
+          </div>
+          <div class="pv-device-toggle" id="cropPvDeviceToggle" style="display:none">
+            <button type="button" class="pv-toggle-btn active" id="cropPvToggleDesktop" data-device="desktop">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              كمبيوتر (Desktop)
+            </button>
+            <button type="button" class="pv-toggle-btn" id="cropPvToggleMobile" data-device="mobile">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+              جوال (Mobile)
+            </button>
+          </div>
         </div>
+
         <div class="crop-pv-viewport-wrap">
+          <!-- Category Banner Preview Window -->
           <div class="crop-pv-window desktop-ratio" id="cropPvWindow">
             <div class="preview-inner" id="cropPvInner">
               <img id="cropPvImg" alt="" draggable="false">
@@ -595,6 +606,36 @@
                 <span class="pv-brand">HADJAJ COLLECTION</span>
                 <strong class="pv-cat-name" id="pvCropName">اسم التصنيف</strong>
                 <span class="pv-cat-msg" id="pvCropMsg">الرسالة التسويقية تظهر هنا</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- COMPLETE Storefront Product Card Live Preview -->
+          <div class="crop-card-preview desktop-mode" id="cropPvProductCard" style="display:none">
+            <div class="card storefront-pv-card" id="cropPvStorefrontCard">
+              <div class="card-img" id="cropPvCardImg">
+                <span class="badge" id="cropPvBadge">جديد</span>
+                <button type="button" class="fav" aria-label="مفضلة" tabindex="-1">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7.5-4.7-9.5-9.2C.9 8.4 3 4.5 6.8 4.5c2 0 3.6 1.1 4.6 2.7h1.2c1-1.6 2.6-2.7 4.6-2.7 3.8 0 5.9 3.9 4.3 7.3C19.5 16.3 12 21 12 21z"/></svg>
+                </button>
+                <div class="card-img-inner">
+                  <img id="cropPvCardImgElem" alt="" draggable="false">
+                </div>
+              </div>
+              <div class="card-info-top">
+                <h3 id="cropPvProdName">قميص كلاسيك فاخر</h3>
+                <div class="dots" id="cropPvDots">
+                  <span class="dot active" style="background:#1d1a16"></span>
+                  <span class="dot" style="background:#b99a6b"></span>
+                  <span class="dot" style="background:#f5f2ea;border:1.5px solid #d1cbbf"></span>
+                </div>
+                <div class="price" id="cropPvPrice">299 <span>دج</span></div>
+              </div>
+              <div class="card-btn-wrap">
+                <button type="button" class="card-cart-btn" tabindex="-1">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 7h12l1 13H5L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+                  <span class="btn-text">إضافة إلى السلة</span>
+                </button>
               </div>
             </div>
           </div>

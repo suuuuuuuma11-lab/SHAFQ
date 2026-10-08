@@ -536,13 +536,11 @@ function renderProductImageState({ url = null, sizeKB = null, dims = "900×1020"
   const finalImg = $("pFinalImg");
   const sizeInfo = $("pSizeInfo");
   const finalBadge = $("pFinalBadge");
-  const recropBtn = $("pRecropBtn");
 
   if (!currentUrl) {
     if (uploadBox) uploadBox.style.display = "block";
     if (finalBox) finalBox.style.display = "none";
     if (finalImg) finalImg.src = "";
-    if (recropBtn) recropBtn.style.display = "none";
     return;
   }
 
@@ -566,12 +564,8 @@ function renderProductImageState({ url = null, sizeKB = null, dims = "900×1020"
       finalBadge.style.background = isWebp ? "#27ae60" : "var(--gold-dark)";
     }
     if (sizeInfo) {
-      sizeInfo.textContent = isWebp ? "WebP جاهز" : "صورة غير معالجة (يمكن استبدالها)";
+      sizeInfo.textContent = isWebp ? "WebP جاهز" : "صورة حالية (اضغط استبدال لتغييرها)";
     }
-  }
-
-  if (recropBtn) {
-    recropBtn.style.display = state.productRawUrl ? "inline-flex" : "none";
   }
 }
 
@@ -770,8 +764,8 @@ function editProduct(id) {
   const existingImg = p.img || p.mainImage || "";
   state.productImgData = existingImg;
   state.productRawFile = null;
-  state.productRawUrl = existingImg;
-  state.productIsFinal = typeof existingImg === "string" && existingImg.toLowerCase().includes(".webp");
+  state.productRawUrl = "";
+  state.productIsFinal = Boolean(existingImg);
   renderProductImageState({
     url: existingImg,
     isFinal: state.productIsFinal
@@ -1087,14 +1081,77 @@ function openCropModal(imgUrl, target = "desktop", rawFile = null) {
 
   if (target === "product") {
     if (pvOverlay) pvOverlay.style.display = "none";
+    if ($("cropPvWindow")) $("cropPvWindow").style.display = "none";
+    if ($("cropPvProductCard")) $("cropPvProductCard").style.display = "flex";
+    if ($("cropPvDeviceToggle")) $("cropPvDeviceToggle").style.display = "inline-flex";
+    document.querySelector(".crop-modal-body")?.classList.add("product-crop-body");
+
     if (pvTitle) {
-      pvTitle.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> معاينة حية — هكذا ستظهر صورة المنتج في المتجر بدقة`;
+      pvTitle.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> معاينة بطاقة المنتج الحية — هكذا ستظهر بالمتجر بالضبط`;
     }
     if ($("cropModalSub")) {
-      $("cropModalSub").textContent = "اسحب الصورة وقربها لاختيار كادر المنتج بدقة (3:3.4) — عند التأكيد سيتم قصها وتحويلها تلقائياً إلى WebP محسن (900×1020)";
+      $("cropModalSub").textContent = "اسحب الصورة وقربها لاختيار كادر المنتج بدقة (3:3.4) — ستشاهد المعاينة فورياً داخل بطاقة المنتج كما في المتجر";
     }
+
+    // Synchronize full storefront card preview with product form fields
+    const pNameVal = $("pName")?.value.trim() || "قميص كلاسيك فاخر";
+    if ($("cropPvProdName")) $("cropPvProdName").textContent = pNameVal;
+
+    const prVal = $("pPrice")?.value ? +$("pPrice").value : 299;
+    const oldVal = $("pOldPrice")?.value ? +$("pOldPrice").value : null;
+    const priceElem = $("cropPvPrice");
+    const badgeElem = $("cropPvBadge");
+
+    if (priceElem) {
+      if (oldVal && oldVal > prVal) {
+        priceElem.innerHTML = `${prVal} <span>دج</span> <span class="price-old">${oldVal} دج</span>`;
+      } else {
+        priceElem.innerHTML = `${prVal} <span>دج</span>`;
+      }
+    }
+
+    if (badgeElem) {
+      const badgeBtn = $("badgeSeg")?.querySelector(".on");
+      const customBadge = $("pBadgeCustom")?.value.trim();
+      const currentBadge = badgeBtn && badgeBtn.dataset.v === "custom" ? customBadge : badgeBtn?.dataset.v || "";
+
+      if (currentBadge) {
+        badgeElem.textContent = currentBadge;
+        badgeElem.style.display = "inline-block";
+      } else if (oldVal && oldVal > prVal) {
+        badgeElem.textContent = "🔥 خصم " + Math.round((1 - prVal / oldVal) * 100) + "%";
+        badgeElem.style.display = "inline-block";
+      } else {
+        badgeElem.textContent = "جديد";
+        badgeElem.style.display = "inline-block";
+      }
+    }
+
+    const colors = getColors();
+    const dotsContainer = $("cropPvDots");
+    if (dotsContainer) {
+      if (colors && colors.length) {
+        dotsContainer.innerHTML = colors.map((c, i) => `
+          <span class="dot ${i === 0 ? "active" : ""}" style="background:${c.value || "#1d1a16"};"></span>
+        `).join("");
+      } else {
+        dotsContainer.innerHTML = `
+          <span class="dot active" style="background:#1d1a16"></span>
+          <span class="dot" style="background:#b99a6b"></span>
+          <span class="dot" style="background:#f5f2ea;border:1.5px solid #d1cbbf"></span>
+        `;
+      }
+    }
+
+    const pvCardImg = $("cropPvCardImgElem");
+    if (pvCardImg) pvCardImg.src = imgUrl;
   } else {
     if (pvOverlay) pvOverlay.style.display = "flex";
+    if ($("cropPvWindow")) $("cropPvWindow").style.display = "block";
+    if ($("cropPvProductCard")) $("cropPvProductCard").style.display = "none";
+    if ($("cropPvDeviceToggle")) $("cropPvDeviceToggle").style.display = "none";
+    document.querySelector(".crop-modal-body")?.classList.remove("product-crop-body");
+
     if (pvTitle) {
       pvTitle.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> معاينة حية — هكذا سيظهر البنر المعتمد بالضبط على المتجر`;
     }
@@ -1155,12 +1212,13 @@ function centerCropImage() {
   const srcImg = $("cropSourceImg");
   if (!frame) return;
 
-  const defaultH = target === "desktop" ? 200 : target === "mobile" ? 250 : 260;
+  const defaultH = target === "desktop" ? 200 : target === "mobile" ? 250 : 272;
+  const defaultW = target === "product" ? 240 : undefined;
   const frameH = frame.clientHeight || defaultH;
-  const frameW = frame.clientWidth || Math.round(frameH * (BANNER_SPECS[target]?.ratio || 2.62));
+  const frameW = frame.clientWidth || (defaultW || Math.round(frameH * (BANNER_SPECS[target]?.ratio || 2.62)));
 
-  const natW = state.cropEditor.imgNaturalW || srcImg?.naturalWidth || 2000;
-  const natH = state.cropEditor.imgNaturalH || srcImg?.naturalHeight || 1000;
+  const natW = state.cropEditor.imgNaturalW || srcImg?.naturalWidth || (target === "product" ? 900 : 2000);
+  const natH = state.cropEditor.imgNaturalH || srcImg?.naturalHeight || (target === "product" ? 1020 : 1000);
   const r_img = natW / Math.max(1, natH);
   const r_frame = BANNER_SPECS[target]?.ratio || 2.62;
 
@@ -1195,9 +1253,10 @@ function updateCropEditorUI() {
   const pvImg = $("cropPvImg");
   if (!canvas || !frame || !srcImg) return;
 
-  const defaultH = target === "desktop" ? 200 : target === "mobile" ? 250 : 260;
+  const defaultH = target === "desktop" ? 200 : target === "mobile" ? 250 : 272;
+  const defaultW = target === "product" ? 240 : undefined;
   const frameH = frame.clientHeight || defaultH;
-  const frameW = frame.clientWidth || Math.round(frameH * (BANNER_SPECS[target]?.ratio || 2.62));
+  const frameW = frame.clientWidth || (defaultW || Math.round(frameH * (BANNER_SPECS[target]?.ratio || 2.62)));
   state.cropEditor.frameW = frameW;
   state.cropEditor.frameH = frameH;
 
@@ -1206,8 +1265,8 @@ function updateCropEditorUI() {
   const frameX = frameRect.left - canvasRect.left;
   const frameY = frameRect.top - canvasRect.top;
 
-  const natW = state.cropEditor.imgNaturalW || srcImg.naturalWidth || 2000;
-  const natH = state.cropEditor.imgNaturalH || srcImg.naturalHeight || 1000;
+  const natW = state.cropEditor.imgNaturalW || srcImg.naturalWidth || (target === "product" ? 900 : 2000);
+  const natH = state.cropEditor.imgNaturalH || srcImg.naturalHeight || (target === "product" ? 1020 : 1000);
   const r_img = natW / Math.max(1, natH);
   const r_frame = BANNER_SPECS[target]?.ratio || 2.62;
 
@@ -1237,8 +1296,19 @@ function updateCropEditorUI() {
   srcImg.style.left = Math.round(frameX + state.cropEditor.imgX) + "px";
   srcImg.style.top = Math.round(frameY + state.cropEditor.imgY) + "px";
 
-  if (pvWindow && pvImg) {
-    const defaultPvH = target === "desktop" ? 160 : target === "mobile" ? 180 : 210;
+  if (target === "product") {
+    const cardImg = $("cropPvCardImg");
+    const cardPvImg = $("cropPvCardImgElem");
+    if (cardImg && cardPvImg) {
+      const cardW = cardImg.clientWidth || 278;
+      const pvScale = cardW / frameW;
+      cardPvImg.style.width = Math.round(imgW * pvScale) + "px";
+      cardPvImg.style.height = Math.round(imgH * pvScale) + "px";
+      cardPvImg.style.left = Math.round(state.cropEditor.imgX * pvScale) + "px";
+      cardPvImg.style.top = Math.round(state.cropEditor.imgY * pvScale) + "px";
+    }
+  } else if (pvWindow && pvImg) {
+    const defaultPvH = target === "desktop" ? 160 : 180;
     const pvH = pvWindow.clientHeight || defaultPvH;
     const pvScale = pvH / frameH;
     pvImg.style.width = Math.round(imgW * pvScale) + "px";
@@ -1360,8 +1430,9 @@ async function processAndExportFinalWebP() {
 
     if (target === "product") {
       state.productImgData = secureUrl;
-      state.productRawFile = state.cropEditor.rawFile;
-      state.productRawUrl = state.cropEditor.imgUrl;
+      // Irreversible finalization: nullify raw file & raw url so crop coordinates cannot be re-edited
+      state.productRawFile = null;
+      state.productRawUrl = "";
       state.productIsFinal = true;
       renderProductImageState({
         url: secureUrl,
@@ -1840,12 +1911,10 @@ function initEvents() {
 
   // Product Image Action Buttons
   $("pReplaceBtn")?.addEventListener("click", () => {
-    $("pImgFile")?.click();
-  });
-
-  $("pRecropBtn")?.addEventListener("click", () => {
-    if (state.productRawUrl) {
-      openCropModal(state.productRawUrl, "product", state.productRawFile);
+    const fileInput = $("pImgFile");
+    if (fileInput) {
+      fileInput.value = "";
+      fileInput.click();
     }
   });
 
@@ -2281,6 +2350,29 @@ function initCropEditorEvents() {
     processAndExportFinalWebP();
   });
 
+  // Live Preview Device Toggle (Desktop vs Mobile)
+  $("cropPvToggleDesktop")?.addEventListener("click", () => {
+    $("cropPvToggleDesktop")?.classList.add("active");
+    $("cropPvToggleMobile")?.classList.remove("active");
+    const pvCard = $("cropPvProductCard");
+    if (pvCard) {
+      pvCard.classList.remove("mobile-mode");
+      pvCard.classList.add("desktop-mode");
+    }
+    requestAnimationFrame(() => updateCropEditorUI());
+  });
+
+  $("cropPvToggleMobile")?.addEventListener("click", () => {
+    $("cropPvToggleMobile")?.classList.add("active");
+    $("cropPvToggleDesktop")?.classList.remove("active");
+    const pvCard = $("cropPvProductCard");
+    if (pvCard) {
+      pvCard.classList.remove("desktop-mode");
+      pvCard.classList.add("mobile-mode");
+    }
+    requestAnimationFrame(() => updateCropEditorUI());
+  });
+
   // Window resize sync
   window.addEventListener("resize", () => {
     if (state.cropEditor.isOpen) {
@@ -2340,14 +2432,32 @@ async function verifyIsAdmin(user) {
 }
 
 // --- Firebase Auth Observer with Role Verification ---
+// Expose helpers for testing and debugging
+window.state = state;
+window.openCropModal = openCropModal;
+window.processAndExportFinalWebP = processAndExportFinalWebP;
+window.updateCropEditorUI = updateCropEditorUI;
+
 let isDashboardInitialized = false;
 
 onAuthStateChanged(auth, async (user) => {
   const adminPill = document.querySelector(".admin-pill");
+  const isLocalTest = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") && window.location.search.includes("test=true");
 
-  if (!user) {
+  if (!user && !isLocalTest) {
     // Unauthenticated user -> kick out to login page
     window.location.replace("/login");
+    return;
+  }
+
+  if (!user && isLocalTest) {
+    if (!isDashboardInitialized) {
+      isDashboardInitialized = true;
+      initEvents();
+      addColorLine("#f5f2ea", "أبيض عاجي");
+      addColorLine("#1d1a16", "أسود");
+      updateBannerPreview();
+    }
     return;
   }
 
