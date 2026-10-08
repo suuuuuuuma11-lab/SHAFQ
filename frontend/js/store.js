@@ -12,6 +12,14 @@ import { db } from "./firebase-config.js";
     let isCatsLoaded = false;
     let selectedCatId = null;
 
+    try {
+      const cachedCats = JSON.parse(localStorage.getItem('clothstore_categories_cache') || 'null');
+      if (Array.isArray(cachedCats) && cachedCats.length > 0) {
+        categories = cachedCats;
+        isCatsLoaded = true;
+      }
+    } catch (_) {}
+
     /* ---------- state ---------- */
     let favs = new Set(JSON.parse(localStorage.getItem('alnoor_favs') || '[]'));
     let view = 'all', priceFilter = 'all', sortMode = 'default';
@@ -128,10 +136,32 @@ import { db } from "./firebase-config.js";
       const desktopSrc = b.img;
       const mobileSrc = b.mobileImg || b.img;
 
-      if (heroMobile) {
-        heroMobile.srcset = mobileSrc;
+      // Cache active banner for instant load on reload
+      try {
+        localStorage.setItem('clothstore_active_banner', JSON.stringify({
+          desktop: desktopSrc,
+          mobile: mobileSrc
+        }));
+      } catch (_) {}
+
+      const currentSrc = heroImg.getAttribute('src');
+      if (currentSrc === desktopSrc && !heroImg.classList.contains('hero-img-loading')) {
+        return;
       }
-      heroImg.src = desktopSrc;
+
+      // Preload off-screen to ensure smooth swap without visual pop or flash
+      const preloader = new Image();
+      preloader.onload = () => {
+        if (heroMobile) heroMobile.srcset = mobileSrc;
+        heroImg.src = desktopSrc;
+        heroImg.classList.remove('hero-img-loading');
+      };
+      preloader.onerror = () => {
+        if (heroMobile) heroMobile.srcset = mobileSrc;
+        heroImg.src = desktopSrc;
+        heroImg.classList.remove('hero-img-loading');
+      };
+      preloader.src = desktopSrc;
 
       // Handle legacy banners with crop coordinates
       if (!b.isFinal && b.crop) {
@@ -220,6 +250,41 @@ import { db } from "./firebase-config.js";
       }
     }
 
+    function updateActiveCategoryNav() {
+      const isAllActive = view === 'all' && !selectedCatId;
+      const isSaleActive = view === 'sale';
+      const isFavActive = view === 'fav';
+
+      const updateItems = (container) => {
+        if (!container) return;
+        container.querySelectorAll('[data-view]').forEach(el => {
+          const v = el.dataset.view;
+          let active = false;
+          if (v === 'all') active = isAllActive;
+          else if (v === 'sale') active = isSaleActive;
+          else if (v === 'fav') active = isFavActive;
+          else if (v === 'cat') active = (view === 'cat' && el.dataset.catId === selectedCatId);
+          el.classList.toggle('active', active);
+        });
+      };
+
+      updateItems(document.getElementById('mainNav'));
+      updateItems(document.getElementById('mobileCatScroller'));
+    }
+
+    let navReadyTimer = null;
+    function markNavReady() {
+      clearTimeout(navReadyTimer);
+      navReadyTimer = setTimeout(() => {
+        const mainNav = document.getElementById('mainNav');
+        const mobileCatBar = document.querySelector('.mobile-cat-bar');
+        const mobileScroller = document.getElementById('mobileCatScroller');
+        if (mainNav) mainNav.classList.add('nav-ready');
+        if (mobileCatBar) mobileCatBar.classList.add('nav-ready');
+        if (mobileScroller) mobileScroller.classList.add('nav-ready');
+      }, 700);
+    }
+
     function renderCategoriesNav() {
       const mainNav = document.getElementById('mainNav');
       const mobileScroller = document.getElementById('mobileCatScroller');
@@ -237,6 +302,17 @@ import { db } from "./firebase-config.js";
         if (mobileScroller) {
           mobileScroller.innerHTML = `<span class="mobile-cat-pill" style="opacity:0.5">جاري التحميل...</span>`;
         }
+        return;
+      }
+
+      // Check if navigation elements already exist with matching categories
+      const existingPills = mobileScroller ? mobileScroller.querySelectorAll('[data-view="cat"]') : [];
+      const isMatchingCats = existingPills.length === categories.length &&
+        Array.from(existingPills).every((el, idx) => el.dataset.catId === categories[idx]?.id);
+
+      if (isMatchingCats && mainNav && mainNav.querySelector('[data-view]')) {
+        updateActiveCategoryNav();
+        markNavReady();
         return;
       }
 
@@ -268,6 +344,7 @@ import { db } from "./firebase-config.js";
       if (mobileScroller) mobileScroller.innerHTML = mobileHtml;
 
       bindNavEvents();
+      markNavReady();
     }
 
     function bindNavEvents() {
@@ -320,14 +397,9 @@ import { db } from "./firebase-config.js";
           } catch (_) {}
         }
 
-        renderCategoriesNav();
+        updateActiveCategoryNav();
         updateHeroAndHeaders();
         render();
-
-        const toolbarEl = document.querySelector('.toolbar');
-        if (toolbarEl) {
-          window.scrollTo({ top: toolbarEl.offsetTop - 80, behavior: 'smooth' });
-        }
       };
 
       const mainNav = document.getElementById('mainNav');
@@ -795,6 +867,10 @@ import { db } from "./firebase-config.js";
         categories = list;
         isCatsLoaded = true;
 
+        try {
+          localStorage.setItem('clothstore_categories_cache', JSON.stringify(list));
+        } catch (_) {}
+
         if (isFirstLoad) {
           parseInitialUrlState();
         } else if (selectedCatId) {
@@ -816,10 +892,20 @@ import { db } from "./firebase-config.js";
       });
     }
 
-    // Initial render with loading skeleton states
+    // Initial parse and render with cached or skeleton state
+    parseInitialUrlState();
     renderCategoriesNav();
+    updateHeroAndHeaders();
     render();
     initFirestoreSync();
+
+    // Browser back/forward navigation support
+    window.addEventListener('popstate', () => {
+      parseInitialUrlState();
+      updateActiveCategoryNav();
+      updateHeroAndHeaders();
+      render();
+    });
 
 // Smooth scroll for Hero Shop button
 const heroShopBtn = document.getElementById("heroShopBtn");

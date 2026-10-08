@@ -202,6 +202,7 @@
       width: 100%;
       aspect-ratio: 2.62 / 1;
       max-height: 580px;
+      background: #1d1a16;
     }
 
     .hero picture {
@@ -218,7 +219,11 @@
       object-position: var(--crop-dx, 50%) var(--crop-dy, 50%);
       transform: scale(var(--crop-dz, 1));
       transform-origin: var(--crop-dx, 50%) var(--crop-dy, 50%);
-      transition: object-position .3s ease;
+      transition: opacity .35s ease;
+    }
+
+    .hero img.hero-img-loading {
+      opacity: 0;
     }
 
     .hero-overlay {

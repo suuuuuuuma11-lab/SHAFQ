@@ -76,6 +76,21 @@ nav.main-nav a:nth-child(6){ animation-delay: .45s; }
   to  { opacity: 1; transform: none; }
 }
 
+.mobile-cat-bar {
+  animation: navIn var(--m-base) var(--ease-out) both;
+  animation-delay: .10s;
+}
+
+/* Category/navigation elements remain stable after initial entrance */
+nav.main-nav.nav-ready a,
+.mobile-cat-bar.nav-ready,
+.mobile-cat-bar.nav-ready .mobile-cat-pill,
+.mobile-cat-scroller.nav-ready .mobile-cat-pill {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
 /* Header gently compresses once the page is scrolled (adds .scrolled via JS,
    harmless if the class is never applied) */
 .header-inner{ transition: padding var(--m-fast) var(--ease-out); }

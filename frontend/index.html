@@ -54,9 +54,42 @@
   <!-- Hero -->
   <section class="hero">
     <picture id="heroBannerPic">
-      <source media="(max-width: 768px)" srcset="/frontend/img/hero.png" id="heroBannerMobile">
-      <img src="/frontend/img/hero.png" alt="متجر حجاج" id="heroBannerImg">
+      <source media="(max-width: 768px)" srcset="" id="heroBannerMobile">
+      <img src="" alt="متجر حجاج" id="heroBannerImg" class="hero-img-loading">
     </picture>
+    <script>
+      (function(){
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var catId = params.get('cat') || params.get('category');
+          var viewParam = params.get('view');
+          var cachedCats = JSON.parse(localStorage.getItem('clothstore_categories_cache') || 'null');
+          var b = null;
+          if (catId && Array.isArray(cachedCats)) {
+            var found = cachedCats.find(function(c){ return c.id === catId || (c.name && c.name.trim().toLowerCase() === catId.trim().toLowerCase()); });
+            if (found && found.banner && found.banner.img) {
+              b = { desktop: found.banner.img, mobile: found.banner.mobileImg || found.banner.img };
+            }
+          }
+          if (!b && (!viewParam || viewParam === 'all')) {
+            b = JSON.parse(localStorage.getItem('clothstore_active_banner') || 'null');
+            if (!b && Array.isArray(cachedCats)) {
+              var firstWithBanner = cachedCats.find(function(c){ return c.banner && c.banner.img; });
+              if (firstWithBanner) {
+                b = { desktop: firstWithBanner.banner.img, mobile: firstWithBanner.banner.mobileImg || firstWithBanner.banner.img };
+              }
+            }
+          }
+          var m = document.getElementById('heroBannerMobile');
+          var img = document.getElementById('heroBannerImg');
+          if (b && b.desktop && img) {
+            if (m && b.mobile) m.srcset = b.mobile;
+            img.src = b.desktop;
+            img.classList.remove('hero-img-loading');
+          }
+        } catch(e){}
+      })();
+    </script>
     <div class="hero-overlay">
       <div class="hero-content">
         <div class="hero-brand">HADJAJ • حجاج</div>
