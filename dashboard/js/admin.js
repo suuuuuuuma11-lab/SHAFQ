@@ -214,28 +214,32 @@ const state = {
   editingProductId: null,
   editingCatId: null,
   productImgData: "",
-  catImgData: "",
-  catCropSettings: null,
+  catDesktopImg: "",
+  catMobileImg: "",
+  catDesktopIsFinal: false,
+  catMobileIsFinal: false,
+  previewTarget: "desktop",
   bannerMode: "color",
   confirmCb: null,
   cropEditor: {
     isOpen: false,
+    target: "desktop",
     imgUrl: "",
-    desktop: { x: 50, y: 50, zoom: 1.0 },
-    mobile: { focusX: 50, x: 50, y: 50, zoom: 1.0 },
+    rawFile: null,
+    zoom: 1.0,
     imgNaturalW: 0,
     imgNaturalH: 0,
-    isDraggingImage: false,
-    isDraggingMobile: false,
+    isDragging: false,
     dragStartX: 0,
     dragStartY: 0,
     startImgX: 0,
     startImgY: 0,
-    startFocusX_px: 0,
     imgW: 0,
     imgH: 0,
     imgX: 0,
-    imgY: 0
+    imgY: 0,
+    frameW: 0,
+    frameH: 0
   }
 };
 
@@ -884,6 +888,7 @@ function renderProductsTable() {
 }
 
 // --- Category Form & Banners ---
+// --- Category Form & Banners ---
 function updateBannerPreview() {
   const nameInput = $("cName");
   const msgInput = $("cMsg");
@@ -901,118 +906,161 @@ function updateBannerPreview() {
   const c1 = $("cColor1") ? $("cColor1").value : "#1d1a16";
   const c2 = $("cColor2") ? $("cColor2").value : "#b99a6b";
 
-  if (state.bannerMode === "image" && state.catImgData) {
-    pv.style.background = "#1d1a16";
-    pv.querySelector("img")?.remove();
-    const im = document.createElement("img");
-    im.src = state.catImgData;
-    if (state.catCropSettings && state.catCropSettings.desktop) {
-      im.style.objectPosition = `${state.catCropSettings.desktop.x}% ${state.catCropSettings.desktop.y}%`;
-      if (state.catCropSettings.desktop.zoom > 1) {
-        im.style.transform = `scale(${state.catCropSettings.desktop.zoom})`;
-        im.style.transformOrigin = `${state.catCropSettings.desktop.x}% ${state.catCropSettings.desktop.y}%`;
-      }
+  const isMobileTarget = state.previewTarget === "mobile";
+  pv.className = isMobileTarget ? "banner-preview mobile-view" : "banner-preview desktop-view";
+
+  if (state.bannerMode === "image") {
+    const bannerImgSrc = isMobileTarget
+      ? (state.catMobileImg || state.catDesktopImg)
+      : (state.catDesktopImg || state.catMobileImg);
+
+    if (bannerImgSrc) {
+      pv.style.background = "#1d1a16";
+      pv.querySelector("img")?.remove();
+      const im = document.createElement("img");
+      im.src = bannerImgSrc;
+      im.alt = name;
+      pv.insertBefore(im, pv.firstChild);
+    } else {
+      pv.querySelector("img")?.remove();
+      pv.style.background = "#1d1a16";
     }
-    pv.insertBefore(im, pv.firstChild);
   } else {
     pv.querySelector("img")?.remove();
     pv.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
   }
 }
 
-// --- Category Banner Crop & Position Editor ---
-const DESKTOP_BANNER_RATIO = 2.62; // 2.62 : 1 (e.g. 2620 x 1000)
-const MOBILE_FOCUS_RATIO = 0.94;   // 0.94 : 1 (e.g. 940 x 1000)
+// --- Category Banner Crop & Optimization Settings ---
+const DESKTOP_BANNER_RATIO = 2.62; // 2.62 : 1 (1965 x 750)
+const MOBILE_BANNER_RATIO = 0.94;  // 0.94 : 1 (846 x 900)
 
-function openCropModal(imgUrl, existingCrop) {
+const BANNER_SPECS = {
+  desktop: {
+    ratio: DESKTOP_BANNER_RATIO,
+    width: 1965,
+    height: 750,
+    quality: 0.86,
+    title: "قص واعتماد بنر الكمبيوتر (Desktop)",
+    badge: "2.62 : 1",
+    tag: "مساحة بنر الكمبيوتر (2.62:1)",
+    tagClass: "desktop-tag",
+    frameClass: "desktop-frame",
+    ratioClass: "desktop-ratio"
+  },
+  mobile: {
+    ratio: MOBILE_BANNER_RATIO,
+    width: 846,
+    height: 900,
+    quality: 0.85,
+    title: "قص واعتماد بنر الجوال (Mobile)",
+    badge: "0.94 : 1",
+    tag: "مساحة بنر الجوال (0.94:1)",
+    tagClass: "mobile-tag",
+    frameClass: "mobile-frame",
+    ratioClass: "mobile-ratio"
+  }
+};
+
+function openCropModal(imgUrl, target = "desktop", rawFile = null) {
   if (!imgUrl) return;
+  const spec = BANNER_SPECS[target] || BANNER_SPECS.desktop;
+
   state.cropEditor.isOpen = true;
+  state.cropEditor.target = target;
   state.cropEditor.imgUrl = imgUrl;
+  state.cropEditor.rawFile = rawFile;
+  state.cropEditor.zoom = 1.0;
+  state.cropEditor.isDragging = false;
 
-  const defaultCrop = {
-    desktop: { x: 50, y: 50, zoom: 1.0 },
-    mobile: { focusX: 50, x: 50, y: 50, zoom: 1.0 }
-  };
+  if ($("cropModalTitle")) $("cropModalTitle").textContent = spec.title;
+  const targetBadge = $("cropTargetBadge");
+  if (targetBadge) {
+    targetBadge.textContent = spec.badge;
+    targetBadge.className = target === "desktop" ? "tag gold" : "tag";
+    if (target === "mobile") {
+      targetBadge.style.background = "#27ae60";
+      targetBadge.style.color = "#fff";
+    } else {
+      targetBadge.style.background = "";
+      targetBadge.style.color = "";
+    }
+  }
 
-  const crop = existingCrop || defaultCrop;
-  state.cropEditor.desktop = {
-    x: typeof crop.desktop?.x === "number" ? crop.desktop.x : 50,
-    y: typeof crop.desktop?.y === "number" ? crop.desktop.y : 50,
-    zoom: typeof crop.desktop?.zoom === "number" ? crop.desktop.zoom : 1.0
-  };
-  state.cropEditor.mobile = {
-    focusX: typeof crop.mobile?.focusX === "number" ? crop.mobile.focusX : (typeof crop.mobile?.x === "number" ? crop.mobile.x : 50),
-    x: typeof crop.mobile?.x === "number" ? crop.mobile.x : 50,
-    y: typeof crop.mobile?.y === "number" ? crop.mobile.y : 50,
-    zoom: typeof crop.mobile?.zoom === "number" ? crop.mobile.zoom : 1.0
-  };
+  const frame = $("cropFrame");
+  if (frame) {
+    frame.className = `crop-active-frame ${spec.frameClass}`;
+  }
+  const frameTag = $("cropFrameTag");
+  if (frameTag) {
+    frameTag.textContent = spec.tag;
+    frameTag.className = `frame-tag ${spec.tagClass}`;
+  }
 
-  state.cropEditor.isDraggingImage = false;
-  state.cropEditor.isDraggingMobile = false;
+  const pvWindow = $("cropPvWindow");
+  if (pvWindow) {
+    pvWindow.className = `crop-pv-window ${spec.ratioClass}`;
+  }
+
+  if ($("cropZoomRange")) $("cropZoomRange").value = "1";
+  if ($("cropZoomVal")) $("cropZoomVal").textContent = "100%";
 
   const srcImg = $("cropSourceImg");
-  const pvDImg = $("pvDesktopImg");
-  const pvMImg = $("pvMobileImg");
-
+  const pvImg = $("cropPvImg");
   if (srcImg) srcImg.src = imgUrl;
-  if (pvDImg) pvDImg.src = imgUrl;
-  if (pvMImg) pvMImg.src = imgUrl;
+  if (pvImg) pvImg.src = imgUrl;
 
   const catName = $("cName") ? $("cName").value.trim() : "";
   const catMsg = $("cMsg") ? $("cMsg").value.trim() : "";
-  if ($("pvCropNameDesktop")) $("pvCropNameDesktop").textContent = catName || "اسم التصنيف";
-  if ($("pvCropMsgDesktop")) $("pvCropMsgDesktop").textContent = catMsg || "الرسالة التسويقية تظهر هنا";
-  if ($("pvCropNameMobile")) $("pvCropNameMobile").textContent = catName || "اسم التصنيف";
+  if ($("pvCropName")) $("pvCropName").textContent = catName || "اسم التصنيف";
+  if ($("pvCropMsg")) $("pvCropMsg").textContent = catMsg || "الرسالة التسويقية تظهر هنا";
+
+  const coordInfo = $("cropCoordInfo");
+  if (coordInfo) {
+    coordInfo.textContent = `نسبة العرض: ${spec.badge} • تصدير بدقة (${spec.width}×${spec.height}px) كـ WebP فائق الجودة`;
+  }
 
   $("cropModal")?.classList.add("open");
 
-  // Load natural dimensions to ensure exact aspect ratio coverage
   const testImg = new Image();
   testImg.src = imgUrl;
   testImg.onload = () => {
     state.cropEditor.imgNaturalW = testImg.naturalWidth;
     state.cropEditor.imgNaturalH = testImg.naturalHeight;
+    centerCropImage();
     updateCropEditorUI();
   };
   if (testImg.naturalWidth && testImg.naturalHeight) {
     state.cropEditor.imgNaturalW = testImg.naturalWidth;
     state.cropEditor.imgNaturalH = testImg.naturalHeight;
+    centerCropImage();
   }
 
   requestAnimationFrame(() => {
+    centerCropImage();
     updateCropEditorUI();
   });
 }
 
 function closeCropModal() {
   state.cropEditor.isOpen = false;
-  state.cropEditor.isDraggingImage = false;
-  state.cropEditor.isDraggingMobile = false;
+  state.cropEditor.isDragging = false;
   $("cropModal")?.classList.remove("open");
 }
 
-function updateCropEditorUI() {
-  const d = state.cropEditor.desktop;
-  const m = state.cropEditor.mobile;
-
-  const canvas = $("cropCanvas");
-  const frame = $("desktopBannerFrame");
-  const mobBox = $("mobileFocusBox");
+function centerCropImage() {
+  const target = state.cropEditor.target || "desktop";
+  const frame = $("cropFrame");
   const srcImg = $("cropSourceImg");
-  if (!canvas || !frame || !srcImg) return;
+  if (!frame) return;
 
-  const frameH = frame.clientHeight || 200;
-  const frameW = frame.clientWidth || Math.round(frameH * DESKTOP_BANNER_RATIO);
-  const canvasRect = canvas.getBoundingClientRect();
-  const frameRect = frame.getBoundingClientRect();
-  const frameX = frameRect.left - canvasRect.left;
-  const frameY = frameRect.top - canvasRect.top;
+  const frameH = frame.clientHeight || (target === "desktop" ? 200 : 250);
+  const frameW = frame.clientWidth || Math.round(frameH * (BANNER_SPECS[target]?.ratio || 2.62));
 
-  // Aspect ratio calculations: Desktop Banner fixed at 2.62 : 1
-  const natW = state.cropEditor.imgNaturalW || srcImg.naturalWidth || 2620;
-  const natH = state.cropEditor.imgNaturalH || srcImg.naturalHeight || 1000;
+  const natW = state.cropEditor.imgNaturalW || srcImg?.naturalWidth || 2000;
+  const natH = state.cropEditor.imgNaturalH || srcImg?.naturalHeight || 1000;
   const r_img = natW / Math.max(1, natH);
-  const r_frame = DESKTOP_BANNER_RATIO; // 2.62 : 1
+  const r_frame = BANNER_SPECS[target]?.ratio || 2.62;
 
   let baseW, baseH;
   if (r_img >= r_frame) {
@@ -1023,7 +1071,53 @@ function updateCropEditorUI() {
     baseH = frameW / r_img;
   }
 
-  const zoom = Math.max(1.0, Math.min(3.0, d.zoom || 1.0));
+  const zoom = state.cropEditor.zoom || 1.0;
+  const imgW = baseW * zoom;
+  const imgH = baseH * zoom;
+
+  state.cropEditor.imgW = imgW;
+  state.cropEditor.imgH = imgH;
+  state.cropEditor.frameW = frameW;
+  state.cropEditor.frameH = frameH;
+
+  state.cropEditor.imgX = -(imgW - frameW) / 2;
+  state.cropEditor.imgY = -(imgH - frameH) / 2;
+}
+
+function updateCropEditorUI() {
+  const target = state.cropEditor.target || "desktop";
+  const canvas = $("cropCanvas");
+  const frame = $("cropFrame");
+  const srcImg = $("cropSourceImg");
+  const pvWindow = $("cropPvWindow");
+  const pvImg = $("cropPvImg");
+  if (!canvas || !frame || !srcImg) return;
+
+  const frameH = frame.clientHeight || (target === "desktop" ? 200 : 250);
+  const frameW = frame.clientWidth || Math.round(frameH * (BANNER_SPECS[target]?.ratio || 2.62));
+  state.cropEditor.frameW = frameW;
+  state.cropEditor.frameH = frameH;
+
+  const canvasRect = canvas.getBoundingClientRect();
+  const frameRect = frame.getBoundingClientRect();
+  const frameX = frameRect.left - canvasRect.left;
+  const frameY = frameRect.top - canvasRect.top;
+
+  const natW = state.cropEditor.imgNaturalW || srcImg.naturalWidth || 2000;
+  const natH = state.cropEditor.imgNaturalH || srcImg.naturalHeight || 1000;
+  const r_img = natW / Math.max(1, natH);
+  const r_frame = BANNER_SPECS[target]?.ratio || 2.62;
+
+  let baseW, baseH;
+  if (r_img >= r_frame) {
+    baseH = frameH;
+    baseW = frameH * r_img;
+  } else {
+    baseW = frameW;
+    baseH = frameW / r_img;
+  }
+
+  const zoom = Math.max(1.0, Math.min(3.0, state.cropEditor.zoom || 1.0));
   const imgW = baseW * zoom;
   const imgH = baseH * zoom;
   state.cropEditor.imgW = imgW;
@@ -1032,86 +1126,151 @@ function updateCropEditorUI() {
   const rangeX = Math.max(0, imgW - frameW);
   const rangeY = Math.max(0, imgH - frameH);
 
-  // Position image if not currently actively dragging
-  if (!state.cropEditor.isDraggingImage) {
-    state.cropEditor.imgX = rangeX > 0 ? -(d.x / 100) * rangeX : 0;
-    state.cropEditor.imgY = rangeY > 0 ? -(d.y / 100) * rangeY : 0;
-  }
+  state.cropEditor.imgX = Math.max(-rangeX, Math.min(0, state.cropEditor.imgX));
+  state.cropEditor.imgY = Math.max(-rangeY, Math.min(0, state.cropEditor.imgY));
 
-  // Render cropSourceImg in canvas relative to desktop frame
   srcImg.style.width = Math.round(imgW) + "px";
   srcImg.style.height = Math.round(imgH) + "px";
   srcImg.style.left = Math.round(frameX + state.cropEditor.imgX) + "px";
   srcImg.style.top = Math.round(frameY + state.cropEditor.imgY) + "px";
 
-  // Mobile Focus Box: STRICTLY FIXED 0.94 : 1 RATIO INSIDE DESKTOP FRAME
-  const boxW = Math.round(frameH * MOBILE_FOCUS_RATIO); // e.g. 200 * 0.94 = 188px
-  const maxXM = Math.max(0, frameW - boxW);
-
-  if (!state.cropEditor.isDraggingMobile) {
-    const fx = typeof m.focusX === "number" ? m.focusX : 50;
-    state.cropEditor.mobile.focusX_px = (fx / 100) * maxXM;
+  if (pvWindow && pvImg) {
+    const pvH = pvWindow.clientHeight || (target === "desktop" ? 160 : 180);
+    const pvScale = pvH / frameH;
+    pvImg.style.width = Math.round(imgW * pvScale) + "px";
+    pvImg.style.height = Math.round(imgH * pvScale) + "px";
+    pvImg.style.left = Math.round(state.cropEditor.imgX * pvScale) + "px";
+    pvImg.style.top = Math.round(state.cropEditor.imgY * pvScale) + "px";
   }
 
-  const focusX_px = Math.max(0, Math.min(maxXM, state.cropEditor.mobile.focusX_px || 0));
-  state.cropEditor.mobile.focusX_px = focusX_px;
-  if (maxXM > 0) {
-    state.cropEditor.mobile.focusX = (focusX_px / maxXM) * 100;
-  }
-
-  if (mobBox) {
-    mobBox.style.width = boxW + "px";
-    mobBox.style.left = Math.round(focusX_px) + "px";
-    mobBox.style.top = "0px";
-    mobBox.style.bottom = "0px";
-    mobBox.style.height = "100%";
-  }
-
-  // Live Desktop Preview: Fixed 2.62 : 1
-  const pvDInner = $("pvDesktopInner");
-  const pvDImg = $("pvDesktopImg");
-  if (pvDInner && pvDImg) {
-    const pvDH = pvDInner.clientHeight || 100;
-    const scaleD = pvDH / frameH;
-    pvDImg.style.width = Math.round(imgW * scaleD) + "px";
-    pvDImg.style.height = Math.round(imgH * scaleD) + "px";
-    pvDImg.style.left = Math.round(state.cropEditor.imgX * scaleD) + "px";
-    pvDImg.style.top = Math.round(state.cropEditor.imgY * scaleD) + "px";
-  }
-
-  // Live Mobile Preview: EXACT 0.94 : 1 SUB-WINDOW OF MOBILE FOCUS BOX
-  const pvMInner = $("pvMobileInner");
-  const pvMImg = $("pvMobileImg");
-  if (pvMInner && pvMImg) {
-    const pvMH = pvMInner.clientHeight || 120;
-    const scaleM = pvMH / frameH;
-    pvMImg.style.width = Math.round(imgW * scaleM) + "px";
-    pvMImg.style.height = Math.round(imgH * scaleM) + "px";
-    pvMImg.style.left = Math.round((state.cropEditor.imgX - focusX_px) * scaleM) + "px";
-    pvMImg.style.top = Math.round(state.cropEditor.imgY * scaleM) + "px";
-  }
-
-  // Zoom display in toolbar
   const zoomSlider = $("cropZoomRange");
   if (zoomSlider) zoomSlider.value = zoom;
   const zoomBadge = $("cropZoomVal");
   if (zoomBadge) zoomBadge.textContent = Math.round(zoom * 100) + "%";
+}
 
-  // Calculate focal coordinates on the image for mobile storefront
-  const mobileCenterX = focusX_px + (boxW / 2) - state.cropEditor.imgX;
-  const mobileCenterY = (frameH / 2) - state.cropEditor.imgY;
-  const focalImageXPct = Math.max(0, Math.min(100, (mobileCenterX / imgW) * 100));
-  const focalImageYPct = Math.max(0, Math.min(100, (mobileCenterY / imgH) * 100));
+async function processAndExportFinalWebP() {
+  const target = state.cropEditor.target || "desktop";
+  const spec = BANNER_SPECS[target] || BANNER_SPECS.desktop;
+  const srcImg = $("cropSourceImg");
+  if (!srcImg) return;
 
-  state.cropEditor.mobile.x = Math.round(focalImageXPct * 10) / 10;
-  state.cropEditor.mobile.y = Math.round(focalImageYPct * 10) / 10;
+  const confirmBtn = $("cropConfirmBtn");
+  const origBtnText = confirmBtn ? confirmBtn.innerHTML : "";
+  if (confirmBtn) {
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin">
+        <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/>
+      </svg>
+      جاري القص والتحويل إلى WebP...
+    `;
+  }
 
-  const coordInfo = $("cropCoordInfo");
-  if (coordInfo) {
-    const dX = Math.round(state.cropEditor.desktop.x);
-    const dY = Math.round(state.cropEditor.desktop.y);
-    const mFocus = Math.round(state.cropEditor.mobile.focusX);
-    coordInfo.textContent = `💻 بنر الكمبيوتر (2.62:1): (${dX}%, ${dY}%) • تقريب: ${zoom.toFixed(1)}x | 📱 تركيز الجوال (0.94:1): ${mFocus}% (أفقي)`;
+  try {
+    const imgElement = new Image();
+    imgElement.crossOrigin = "anonymous";
+    await new Promise((resolve, reject) => {
+      imgElement.onload = resolve;
+      imgElement.onerror = () => reject(new Error("تعذر تحميل الصورة الأصلية للمعالجة"));
+      imgElement.src = state.cropEditor.imgUrl;
+    });
+
+    const natW = imgElement.naturalWidth;
+    const natH = imgElement.naturalHeight;
+    const imgW = state.cropEditor.imgW;
+    const imgH = state.cropEditor.imgH;
+    const frameW = state.cropEditor.frameW;
+    const frameH = state.cropEditor.frameH;
+
+    const scaleX = natW / imgW;
+    const scaleY = natH / imgH;
+
+    let sx = (-state.cropEditor.imgX) * scaleX;
+    let sy = (-state.cropEditor.imgY) * scaleY;
+    let sw = frameW * scaleX;
+    let sh = frameH * scaleY;
+
+    sx = Math.max(0, Math.min(natW - sw, sx));
+    sy = Math.max(0, Math.min(natH - sh, sy));
+    sw = Math.min(natW - sx, sw);
+    sh = Math.min(natH - sy, sh);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = spec.width;
+    canvas.height = spec.height;
+    const ctx = canvas.getContext("2d");
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(imgElement, sx, sy, sw, sh, 0, 0, spec.width, spec.height);
+
+    const blob = await new Promise((resolve) => {
+      canvas.toBlob(
+        (b) => {
+          if (b) resolve(b);
+          else {
+            const dataUrl = canvas.toDataURL("image/webp", spec.quality);
+            const arr = dataUrl.split(",");
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) u8arr[n] = bstr.charCodeAt(n);
+            resolve(new Blob([u8arr], { type: mime }));
+          }
+        },
+        "image/webp",
+        spec.quality
+      );
+    });
+
+    const fileName = `${target}_banner_${Date.now()}.webp`;
+    const webpFile = new File([blob], fileName, { type: "image/webp" });
+    const sizeKB = Math.round(blob.size / 1024);
+
+    if (confirmBtn) {
+      confirmBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin">
+          <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/>
+        </svg>
+        جاري الحفظ في السحابة (${sizeKB} KB)...
+      `;
+    }
+
+    const secureUrl = await uploadImageToCloudinary(webpFile);
+    if (!secureUrl) {
+      throw new Error("فشل رفع صورة البنر المحسنة إلى Cloudinary");
+    }
+
+    if (target === "desktop") {
+      state.catDesktopImg = secureUrl;
+      state.catDesktopIsFinal = true;
+      if ($("desktopUploadBox")) $("desktopUploadBox").style.display = "none";
+      if ($("desktopFinalBox")) $("desktopFinalBox").style.display = "block";
+      if ($("desktopFinalImg")) $("desktopFinalImg").src = secureUrl;
+      if ($("desktopSizeInfo")) $("desktopSizeInfo").textContent = `${sizeKB} KB • WebP (${spec.width}×${spec.height})`;
+      clearErr("cBanner");
+    } else {
+      state.catMobileImg = secureUrl;
+      state.catMobileIsFinal = true;
+      if ($("mobileUploadBox")) $("mobileUploadBox").style.display = "none";
+      if ($("mobileFinalBox")) $("mobileFinalBox").style.display = "block";
+      if ($("mobileFinalImg")) $("mobileFinalImg").src = secureUrl;
+      if ($("mobileSizeInfo")) $("mobileSizeInfo").textContent = `${sizeKB} KB • WebP (${spec.width}×${spec.height})`;
+    }
+
+    closeCropModal();
+    updateBannerPreview();
+    toast(`تم اعتماد بنر ${target === "desktop" ? "الكمبيوتر" : "الجوال"} النهائي (WebP: ${sizeKB} KB) بنجاح ✓`);
+  } catch (err) {
+    console.error("Banner processing error:", err);
+    toast("حدث خطأ أثناء معالجة البنر: " + err.message, false);
+  } finally {
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = origBtnText;
+    }
   }
 }
 
@@ -1131,21 +1290,24 @@ function resetCatForm() {
   if ($("bannerColorBox")) $("bannerColorBox").style.display = "block";
   if ($("bannerImgBox")) $("bannerImgBox").style.display = "none";
 
-  state.catImgData = "";
-  state.catCropSettings = null;
-  if ($("cImgFile")) $("cImgFile").value = "";
+  state.catDesktopImg = "";
+  state.catMobileImg = "";
+  state.catDesktopIsFinal = false;
+  state.catMobileIsFinal = false;
+  state.previewTarget = "desktop";
 
-  const uploader = $("cUploader");
-  if (uploader) {
-    uploader.classList.remove("has-img");
-    uploader.innerHTML =
-      '<div class="up-txt" id="cUpTxt"><b>اضغط لرفع صورة البنر</b>عرض 1600×500 بكسل يُفضل</div>';
+  if ($("desktopImgFileInput")) $("desktopImgFileInput").value = "";
+  if ($("mobileImgFileInput")) $("mobileImgFileInput").value = "";
+
+  if ($("desktopUploadBox")) $("desktopUploadBox").style.display = "block";
+  if ($("desktopFinalBox")) $("desktopFinalBox").style.display = "none";
+  if ($("mobileUploadBox")) $("mobileUploadBox").style.display = "block";
+  if ($("mobileFinalBox")) $("mobileFinalBox").style.display = "none";
+
+  const prevSeg = $("previewDeviceSeg");
+  if (prevSeg) {
+    prevSeg.querySelectorAll("button").forEach((b, i) => b.classList.toggle("on", i === 0));
   }
-
-  const cropTrigger = $("cropTriggerWrap");
-  if (cropTrigger) cropTrigger.style.display = "none";
-  const cropBadge = $("cropStatusBadge");
-  if (cropBadge) cropBadge.style.display = "none";
 
   state.editingCatId = null;
   const modeTag = $("catFormMode");
@@ -1180,27 +1342,40 @@ function editCat(id) {
   if (state.bannerMode === "color") {
     if ($("cColor1")) $("cColor1").value = c.banner.c1 || "#1d1a16";
     if ($("cColor2")) $("cColor2").value = c.banner.c2 || "#b99a6b";
-    state.catImgData = "";
-    state.catCropSettings = null;
-    if ($("cropTriggerWrap")) $("cropTriggerWrap").style.display = "none";
-    if ($("cropStatusBadge")) $("cropStatusBadge").style.display = "none";
+    state.catDesktopImg = "";
+    state.catMobileImg = "";
+    state.catDesktopIsFinal = false;
+    state.catMobileIsFinal = false;
+
+    if ($("desktopUploadBox")) $("desktopUploadBox").style.display = "block";
+    if ($("desktopFinalBox")) $("desktopFinalBox").style.display = "none";
+    if ($("mobileUploadBox")) $("mobileUploadBox").style.display = "block";
+    if ($("mobileFinalBox")) $("mobileFinalBox").style.display = "none";
   } else {
-    state.catImgData = c.banner.img || "";
-    state.catCropSettings = (c.banner && c.banner.crop) || {
-      desktop: { x: 50, y: 50, zoom: 1.0 },
-      mobile: { focusX: 50, x: 50, y: 50, zoom: 1.0 }
-    };
-    const uploader = $("cUploader");
-    if (uploader) {
-      uploader.classList.add("has-img");
-      uploader.innerHTML = `<img src="${state.catImgData}" alt="" style="height:150px">`;
+    const b = c.banner || {};
+    state.catDesktopImg = b.img || "";
+    state.catMobileImg = b.mobileImg || "";
+    state.catDesktopIsFinal = !!(b.isFinal || b.img);
+    state.catMobileIsFinal = !!(b.isFinal || b.mobileImg);
+
+    if (state.catDesktopImg) {
+      if ($("desktopUploadBox")) $("desktopUploadBox").style.display = "none";
+      if ($("desktopFinalBox")) $("desktopFinalBox").style.display = "block";
+      if ($("desktopFinalImg")) $("desktopFinalImg").src = state.catDesktopImg;
+      if ($("desktopSizeInfo")) $("desktopSizeInfo").textContent = b.isFinal ? "WebP معتمد (1965×750)" : "صورة سابقة";
+    } else {
+      if ($("desktopUploadBox")) $("desktopUploadBox").style.display = "block";
+      if ($("desktopFinalBox")) $("desktopFinalBox").style.display = "none";
     }
-    if ($("cropTriggerWrap")) $("cropTriggerWrap").style.display = "flex";
-    const cropBadge = $("cropStatusBadge");
-    if (cropBadge) {
-      cropBadge.style.display = "inline-block";
-      const fx = typeof state.catCropSettings.mobile?.focusX === "number" ? state.catCropSettings.mobile.focusX : (state.catCropSettings.mobile?.x ?? 50);
-      cropBadge.textContent = `موضع مخصص (تركيز الجوال: ${fx}%) ✓`;
+
+    if (state.catMobileImg) {
+      if ($("mobileUploadBox")) $("mobileUploadBox").style.display = "none";
+      if ($("mobileFinalBox")) $("mobileFinalBox").style.display = "block";
+      if ($("mobileFinalImg")) $("mobileFinalImg").src = state.catMobileImg;
+      if ($("mobileSizeInfo")) $("mobileSizeInfo").textContent = b.isFinal ? "WebP معتمد (846×900)" : "صورة سابقة";
+    } else {
+      if ($("mobileUploadBox")) $("mobileUploadBox").style.display = "block";
+      if ($("mobileFinalBox")) $("mobileFinalBox").style.display = "none";
     }
   }
 
@@ -1261,9 +1436,10 @@ function renderCatsGrid() {
     .map((c) => {
       const n = state.products.filter((p) => p.categoryId === c.id || p.category === c.name).length;
       const isImg = c.banner && c.banner.type === "image" && c.banner.img;
-      const crop = c.banner && c.banner.crop;
-      const cropStyle = isImg && crop
-        ? `style="object-position:${crop.desktop.x}% ${crop.desktop.y}%;${crop.desktop.zoom > 1 ? `transform:scale(${crop.desktop.zoom});transform-origin:${crop.desktop.x}% ${crop.desktop.y}%;` : ''}"`
+      const isFinal = c.banner && c.banner.isFinal;
+      const legacyCrop = !isFinal && c.banner && c.banner.crop;
+      const cropStyle = legacyCrop && legacyCrop.desktop
+        ? `style="object-position:${legacyCrop.desktop.x}% ${legacyCrop.desktop.y}%;${legacyCrop.desktop.zoom > 1 ? `transform:scale(${legacyCrop.desktop.zoom});transform-origin:${legacyCrop.desktop.x}% ${legacyCrop.desktop.y}%;` : ''}"`
         : "";
       const bg = isImg ? `<img src="${esc(c.banner.img)}" alt="" ${cropStyle}>` : "";
       const style = isImg
@@ -1685,49 +1861,67 @@ function initEvents() {
   $("cColor1")?.addEventListener("input", updateBannerPreview);
   $("cColor2")?.addEventListener("input", updateBannerPreview);
 
-  // Category Banner Image File Input
-  $("cImgFile")?.addEventListener("change", async (e) => {
+  // Desktop Banner Image File Input
+  $("desktopImgFileInput")?.addEventListener("change", (e) => {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
     if (!f.type.startsWith("image/")) {
       toast("الملف المختار ليس صورة صالحة", false);
       return;
     }
-    if (f.size > 5 * 1024 * 1024) {
-      toast("حجم البنر كبير (الحد الأقصى 5MB)", false);
+    if (f.size > 15 * 1024 * 1024) {
+      toast("حجم الصورة كبير جداً (الحد الأقصى 15MB)", false);
       return;
     }
-
     const r = new FileReader();
     r.onload = (ev) => {
-      state.catImgData = ev.target.result;
-      const uploader = $("cUploader");
-      if (uploader) {
-        uploader.classList.add("has-img");
-        uploader.innerHTML = `<img src="${state.catImgData}" alt="" style="height:150px">`;
-      }
-      $("cropTriggerWrap")?.style.setProperty("display", "flex");
-      updateBannerPreview();
-      clearErr("cBanner");
-
-      // Auto-open Crop & Position Editor Modal immediately after upload
-      openCropModal(state.catImgData, state.catCropSettings || null);
+      openCropModal(ev.target.result, "desktop", f);
     };
     r.readAsDataURL(f);
-
-    try {
-      const secureUrl = await uploadImageToCloudinary(f);
-      if (secureUrl) {
-        state.catImgData = secureUrl;
-        if (state.cropEditor.isOpen && $("cropSourceImg")) {
-          $("cropSourceImg").src = secureUrl;
-          if ($("pvDesktopImg")) $("pvDesktopImg").src = secureUrl;
-          if ($("pvMobileImg")) $("pvMobileImg").src = secureUrl;
-        }
-        updateBannerPreview();
-      }
-    } catch (_) {}
+    e.target.value = "";
   });
+
+  // Mobile Banner Image File Input
+  $("mobileImgFileInput")?.addEventListener("change", (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    if (!f.type.startsWith("image/")) {
+      toast("الملف المختار ليس صورة صالحة", false);
+      return;
+    }
+    if (f.size > 15 * 1024 * 1024) {
+      toast("حجم الصورة كبير جداً (الحد الأقصى 15MB)", false);
+      return;
+    }
+    const r = new FileReader();
+    r.onload = (ev) => {
+      openCropModal(ev.target.result, "mobile", f);
+    };
+    r.readAsDataURL(f);
+    e.target.value = "";
+  });
+
+  // Replace Buttons
+  $("desktopReplaceBtn")?.addEventListener("click", () => {
+    $("desktopImgFileInput")?.click();
+  });
+
+  $("mobileReplaceBtn")?.addEventListener("click", () => {
+    $("mobileImgFileInput")?.click();
+  });
+
+  // Storefront Live Preview Device Segmented Control
+  const prevSeg = $("previewDeviceSeg");
+  if (prevSeg) {
+    prevSeg.addEventListener("click", (e) => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      prevSeg.querySelectorAll("button").forEach((x) => x.classList.remove("on"));
+      b.classList.add("on");
+      state.previewTarget = b.dataset.target || "desktop";
+      updateBannerPreview();
+    });
+  }
 
   // Category Form Submit -> Firestore (addDoc or updateDoc)
   $("categoryForm")?.addEventListener("submit", async (e) => {
@@ -1754,7 +1948,7 @@ function initEvents() {
       markErr("cMsg");
       ok = false;
     }
-    if (state.bannerMode === "image" && !state.catImgData) {
+    if (state.bannerMode === "image" && !state.catDesktopImg && !state.catMobileImg) {
       setErr("cBanner");
       ok = false;
     }
@@ -1764,10 +1958,8 @@ function initEvents() {
       return;
     }
 
-    const cropSettings = state.catCropSettings || {
-      desktop: { x: 50, y: 50, zoom: 1.0 },
-      mobile: { x: 50, y: 50, zoom: 1.0 }
-    };
+    const primaryImg = state.catDesktopImg || state.catMobileImg;
+    const mobileImg = state.catMobileImg || state.catDesktopImg;
 
     const banner =
       state.bannerMode === "color"
@@ -1781,8 +1973,9 @@ function initEvents() {
             type: "image",
             c1: "#1d1a16",
             c2: "#1d1a16",
-            img: state.catImgData,
-            crop: cropSettings
+            img: primaryImg,
+            mobileImg: mobileImg,
+            isFinal: true
           };
 
     const categoryPayload = {
@@ -1831,30 +2024,19 @@ function initEvents() {
 // --- Crop Editor Event Listeners ---
 function initCropEditorEvents() {
   const canvas = $("cropCanvas");
-  const mobBox = $("mobileFocusBox");
   if (!canvas) return;
 
   canvas.addEventListener("pointerdown", (e) => {
     if (e.button !== 0 || !state.cropEditor.isOpen) return;
-    const target = e.target;
-    const frame = $("desktopBannerFrame");
+    const frame = $("cropFrame");
     if (!frame) return;
 
-    if (mobBox && (target === mobBox || mobBox.contains(target))) {
-      state.cropEditor.isDraggingMobile = true;
-      state.cropEditor.isDraggingImage = false;
-      mobBox.classList.add("dragging");
-      state.cropEditor.dragStartX = e.clientX;
-      state.cropEditor.startFocusX_px = state.cropEditor.mobile.focusX_px || 0;
-    } else {
-      state.cropEditor.isDraggingImage = true;
-      state.cropEditor.isDraggingMobile = false;
-      canvas.classList.add("grabbing");
-      state.cropEditor.dragStartX = e.clientX;
-      state.cropEditor.dragStartY = e.clientY;
-      state.cropEditor.startImgX = state.cropEditor.imgX || 0;
-      state.cropEditor.startImgY = state.cropEditor.imgY || 0;
-    }
+    state.cropEditor.isDragging = true;
+    canvas.classList.add("grabbing");
+    state.cropEditor.dragStartX = e.clientX;
+    state.cropEditor.dragStartY = e.clientY;
+    state.cropEditor.startImgX = state.cropEditor.imgX || 0;
+    state.cropEditor.startImgY = state.cropEditor.imgY || 0;
 
     if (canvas.setPointerCapture) {
       try {
@@ -1864,50 +2046,30 @@ function initCropEditorEvents() {
   });
 
   canvas.addEventListener("pointermove", (e) => {
-    if (!state.cropEditor.isDraggingImage && !state.cropEditor.isDraggingMobile) return;
-    const frame = $("desktopBannerFrame");
-    if (!frame) return;
+    if (!state.cropEditor.isDragging) return;
+    const deltaX = e.clientX - state.cropEditor.dragStartX;
+    const deltaY = e.clientY - state.cropEditor.dragStartY;
 
-    if (state.cropEditor.isDraggingMobile) {
-      // STRICTLY HORIZONTAL: vertical delta is completely ignored!
-      const deltaX = e.clientX - state.cropEditor.dragStartX;
-      const frameH = frame.clientHeight || 200;
-      const frameW = frame.clientWidth || Math.round(frameH * DESKTOP_BANNER_RATIO);
-      const boxW = Math.round(frameH * MOBILE_FOCUS_RATIO);
-      const maxXM = Math.max(0, frameW - boxW);
-      let newXM = (state.cropEditor.startFocusX_px || 0) + deltaX;
-      newXM = Math.max(0, Math.min(maxXM, newXM));
-      state.cropEditor.mobile.focusX_px = newXM;
-      state.cropEditor.mobile.focusX = (maxXM > 0) ? (newXM / maxXM) * 100 : 50;
-      updateCropEditorUI();
-    } else if (state.cropEditor.isDraggingImage) {
-      const deltaX = e.clientX - state.cropEditor.dragStartX;
-      const deltaY = e.clientY - state.cropEditor.dragStartY;
-      const frameH = frame.clientHeight || 200;
-      const frameW = frame.clientWidth || Math.round(frameH * DESKTOP_BANNER_RATIO);
-      const rangeX = Math.max(0, (state.cropEditor.imgW || frameW) - frameW);
-      const rangeY = Math.max(0, (state.cropEditor.imgH || frameH) - frameH);
+    const frameW = state.cropEditor.frameW;
+    const frameH = state.cropEditor.frameH;
+    const rangeX = Math.max(0, (state.cropEditor.imgW || frameW) - frameW);
+    const rangeY = Math.max(0, (state.cropEditor.imgH || frameH) - frameH);
 
-      let newImgX = (state.cropEditor.startImgX || 0) + deltaX;
-      let newImgY = (state.cropEditor.startImgY || 0) + deltaY;
+    let newImgX = (state.cropEditor.startImgX || 0) + deltaX;
+    let newImgY = (state.cropEditor.startImgY || 0) + deltaY;
 
-      newImgX = Math.max(-rangeX, Math.min(0, newImgX));
-      newImgY = Math.max(-rangeY, Math.min(0, newImgY));
+    newImgX = Math.max(-rangeX, Math.min(0, newImgX));
+    newImgY = Math.max(-rangeY, Math.min(0, newImgY));
 
-      state.cropEditor.imgX = newImgX;
-      state.cropEditor.imgY = newImgY;
+    state.cropEditor.imgX = newImgX;
+    state.cropEditor.imgY = newImgY;
 
-      state.cropEditor.desktop.x = (rangeX > 0) ? (-newImgX / rangeX) * 100 : 50;
-      state.cropEditor.desktop.y = (rangeY > 0) ? (-newImgY / rangeY) * 100 : 50;
-      updateCropEditorUI();
-    }
+    updateCropEditorUI();
   });
 
   const stopDrag = (e) => {
-    state.cropEditor.isDraggingImage = false;
-    state.cropEditor.isDraggingMobile = false;
+    state.cropEditor.isDragging = false;
     canvas.classList.remove("grabbing");
-    mobBox?.classList.remove("dragging");
     if (e && e.pointerId && canvas.hasPointerCapture && canvas.hasPointerCapture(e.pointerId)) {
       try {
         canvas.releasePointerCapture(e.pointerId);
@@ -1920,63 +2082,35 @@ function initCropEditorEvents() {
 
   // Zoom controls
   $("cropZoomRange")?.addEventListener("input", (e) => {
-    state.cropEditor.desktop.zoom = parseFloat(e.target.value) || 1.0;
+    state.cropEditor.zoom = parseFloat(e.target.value) || 1.0;
     updateCropEditorUI();
   });
 
   $("cropZoomIn")?.addEventListener("click", () => {
-    const cur = state.cropEditor.desktop.zoom || 1.0;
-    state.cropEditor.desktop.zoom = Math.min(3.0, Math.round((cur + 0.1) * 100) / 100);
+    const cur = state.cropEditor.zoom || 1.0;
+    state.cropEditor.zoom = Math.min(3.0, Math.round((cur + 0.1) * 100) / 100);
     updateCropEditorUI();
   });
 
   $("cropZoomOut")?.addEventListener("click", () => {
-    const cur = state.cropEditor.desktop.zoom || 1.0;
-    state.cropEditor.desktop.zoom = Math.max(1.0, Math.round((cur - 0.1) * 100) / 100);
+    const cur = state.cropEditor.zoom || 1.0;
+    state.cropEditor.zoom = Math.max(1.0, Math.round((cur - 0.1) * 100) / 100);
     updateCropEditorUI();
   });
 
   // Quick centering
-  $("cropCenterDesktop")?.addEventListener("click", () => {
-    state.cropEditor.desktop.x = 50;
-    state.cropEditor.desktop.y = 50;
-    state.cropEditor.isDraggingImage = false;
+  $("cropCenterBtn")?.addEventListener("click", () => {
+    centerCropImage();
     updateCropEditorUI();
   });
 
-  $("cropCenterMobile")?.addEventListener("click", () => {
-    state.cropEditor.mobile.focusX = 50;
-    const frame = $("desktopBannerFrame");
-    if (frame) {
-      const frameH = frame.clientHeight || 200;
-      const frameW = frame.clientWidth || Math.round(frameH * DESKTOP_BANNER_RATIO);
-      const boxW = Math.round(frameH * MOBILE_FOCUS_RATIO);
-      const maxXM = Math.max(0, frameW - boxW);
-      state.cropEditor.mobile.focusX_px = maxXM / 2;
-    }
-    state.cropEditor.isDraggingMobile = false;
-    updateCropEditorUI();
-  });
-
-  const resetAll = () => {
-    state.cropEditor.desktop = { x: 50, y: 50, zoom: 1.0 };
-    state.cropEditor.mobile = { focusX: 50, x: 50, y: 50, zoom: 1.0 };
-    const frame = $("desktopBannerFrame");
-    if (frame) {
-      const frameH = frame.clientHeight || 200;
-      const frameW = frame.clientWidth || Math.round(frameH * DESKTOP_BANNER_RATIO);
-      const boxW = Math.round(frameH * MOBILE_FOCUS_RATIO);
-      const maxXM = Math.max(0, frameW - boxW);
-      state.cropEditor.mobile.focusX_px = maxXM / 2;
-    }
-    state.cropEditor.isDraggingImage = false;
-    state.cropEditor.isDraggingMobile = false;
+  // Reset button
+  $("cropResetBtn")?.addEventListener("click", () => {
+    state.cropEditor.zoom = 1.0;
+    centerCropImage();
     updateCropEditorUI();
     toast("تمت إعادة ضبط الموضع والتقريب");
-  };
-
-  $("cropResetTop")?.addEventListener("click", resetAll);
-  $("cropResetBottomBtn")?.addEventListener("click", resetAll);
+  });
 
   // Close and Cancel
   $("cropCloseBtn")?.addEventListener("click", closeCropModal);
@@ -1985,40 +2119,9 @@ function initCropEditorEvents() {
     if (e.target.id === "cropModal") closeCropModal();
   });
 
-  // Save Customization
-  $("cropSaveBtn")?.addEventListener("click", () => {
-    state.catCropSettings = {
-      desktop: {
-        x: Math.round(state.cropEditor.desktop.x * 10) / 10,
-        y: Math.round(state.cropEditor.desktop.y * 10) / 10,
-        zoom: Number(state.cropEditor.desktop.zoom.toFixed(2))
-      },
-      mobile: {
-        focusX: Math.round(state.cropEditor.mobile.focusX * 10) / 10,
-        x: Math.round(state.cropEditor.mobile.x * 10) / 10,
-        y: Math.round(state.cropEditor.mobile.y * 10) / 10,
-        zoom: Number(state.cropEditor.desktop.zoom.toFixed(2))
-      }
-    };
-
-    const badge = $("cropStatusBadge");
-    if (badge) {
-      badge.style.display = "inline-block";
-      badge.textContent = `موضع مخصص (تركيز الجوال: ${state.catCropSettings.mobile.focusX}%) ✓`;
-    }
-
-    updateBannerPreview();
-    closeCropModal();
-    toast("تم حفظ تخصيص موضع البنر وتركيز الجوال بنجاح ✓");
-  });
-
-  // Open trigger button from category form
-  $("openCropModalBtn")?.addEventListener("click", () => {
-    if (!state.catImgData) {
-      toast("يرجى اختيار صورة بنر أولاً", false);
-      return;
-    }
-    openCropModal(state.catImgData, state.catCropSettings || null);
+  // Confirm Final WebP Crop
+  $("cropConfirmBtn")?.addEventListener("click", () => {
+    processAndExportFinalWebP();
   });
 
   // Window resize sync

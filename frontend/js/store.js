@@ -117,11 +117,25 @@ import { db } from "./firebase-config.js";
     }
 
     /* ---------- Dynamic Categories & Nav Logic ---------- */
-    function applyBannerImage(imgUrl, crop) {
+    function applyBanner(banner, legacyCrop) {
       const heroImg = document.getElementById("heroBannerImg");
-      if (!heroImg || !imgUrl) return;
-      heroImg.src = imgUrl;
-      if (crop) {
+      const heroMobile = document.getElementById("heroBannerMobile");
+      if (!heroImg) return;
+
+      const b = typeof banner === 'object' && banner !== null ? banner : { img: banner, crop: legacyCrop };
+      if (!b.img) return;
+
+      const desktopSrc = b.img;
+      const mobileSrc = b.mobileImg || b.img;
+
+      if (heroMobile) {
+        heroMobile.srcset = mobileSrc;
+      }
+      heroImg.src = desktopSrc;
+
+      // Handle legacy banners with crop coordinates
+      if (!b.isFinal && b.crop) {
+        const crop = b.crop;
         const dx = typeof crop.desktop?.x === 'number' ? crop.desktop.x : 50;
         const dy = typeof crop.desktop?.y === 'number' ? crop.desktop.y : 50;
         const dz = typeof crop.desktop?.zoom === 'number' ? crop.desktop.zoom : 1;
@@ -135,8 +149,17 @@ import { db } from "./firebase-config.js";
         heroImg.style.setProperty('--crop-mx', `${mx}%`);
         heroImg.style.setProperty('--crop-my', `${my}%`);
         heroImg.style.setProperty('--crop-mz', `${mz}`);
+      } else {
+        // Finalized banner: pure physical WebP crop, clean defaults
+        heroImg.style.setProperty('--crop-dx', '50%');
+        heroImg.style.setProperty('--crop-dy', '50%');
+        heroImg.style.setProperty('--crop-dz', '1');
+        heroImg.style.setProperty('--crop-mx', '50%');
+        heroImg.style.setProperty('--crop-my', '50%');
+        heroImg.style.setProperty('--crop-mz', '1');
       }
     }
+    const applyBannerImage = applyBanner;
 
     function updateHeroAndHeaders() {
       const heroTitle = document.getElementById('heroTitle');
@@ -177,7 +200,7 @@ import { db } from "./firebase-config.js";
           if (pageDesc) pageDesc.textContent = selCat.desc || selCat.msg || 'مجموعة مختارة من التصاميم الفاخرة تناسب كل إطلالاتك.';
 
           if (selCat.banner && selCat.banner.type === 'image' && selCat.banner.img) {
-            applyBannerImage(selCat.banner.img, selCat.banner.crop);
+            applyBanner(selCat.banner);
           }
           return;
         }
@@ -193,7 +216,7 @@ import { db } from "./firebase-config.js";
 
       const firstBannerCat = categories.find(c => c.banner && c.banner.type === 'image' && c.banner.img);
       if (firstBannerCat) {
-        applyBannerImage(firstBannerCat.banner.img, firstBannerCat.banner.crop);
+        applyBanner(firstBannerCat.banner);
       }
     }
 

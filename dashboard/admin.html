@@ -226,28 +226,99 @@
                 </div>
 
                 <div id="bannerImgBox" style="display:none;margin-top:12px">
-                  <div class="uploader" id="cUploader" onclick="document.getElementById('cImgFile').click()" style="height:auto">
-                    <div class="up-txt" id="cUpTxt"><b>اضغط لرفع صورة البنر</b>عرض 1600×500 بكسل يُفضل</div>
+                  <div class="banner-devices-grid">
+                    <!-- Desktop Banner Card -->
+                    <div class="banner-device-card" id="desktopBannerCard">
+                      <div class="bdc-head">
+                        <div class="bdc-title">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                          <span>بنر الكمبيوتر (Desktop)</span>
+                        </div>
+                        <span class="bdc-ratio-tag">2.62 : 1</span>
+                      </div>
+
+                      <div class="bdc-upload-box" id="desktopUploadBox">
+                        <input type="file" id="desktopImgFileInput" accept="image/*" style="display:none">
+                        <div class="bdc-dropzone" onclick="document.getElementById('desktopImgFileInput').click()">
+                          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                          </svg>
+                          <b>اختر صورة للكمبيوتر</b>
+                          <small>اضغط للرفع وقص الكادر النهائي</small>
+                        </div>
+                      </div>
+
+                      <div class="bdc-final-box" id="desktopFinalBox" style="display:none">
+                        <div class="bdc-preview-wrap desktop-ratio">
+                          <img id="desktopFinalImg" alt="Desktop Final WebP">
+                          <span class="bdc-badge">✓ معتمد (WebP)</span>
+                        </div>
+                        <div class="bdc-actions">
+                          <span class="bdc-size-info" id="desktopSizeInfo">WebP جاهز</span>
+                          <button type="button" class="btn-ghost btn-sm" id="desktopReplaceBtn">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                            استبدال الصورة
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Mobile Banner Card -->
+                    <div class="banner-device-card" id="mobileBannerCard">
+                      <div class="bdc-head">
+                        <div class="bdc-title">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>
+                          <span>بنر الجوال (Mobile)</span>
+                        </div>
+                        <span class="bdc-ratio-tag">0.94 : 1</span>
+                      </div>
+
+                      <div class="bdc-upload-box" id="mobileUploadBox">
+                        <input type="file" id="mobileImgFileInput" accept="image/*" style="display:none">
+                        <div class="bdc-dropzone" onclick="document.getElementById('mobileImgFileInput').click()">
+                          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                          </svg>
+                          <b>اختر صورة للجوال</b>
+                          <small>صورة رأسية أو مربعة خاصة بالهاتف</small>
+                        </div>
+                      </div>
+
+                      <div class="bdc-final-box" id="mobileFinalBox" style="display:none">
+                        <div class="bdc-preview-wrap mobile-ratio">
+                          <img id="mobileFinalImg" alt="Mobile Final WebP">
+                          <span class="bdc-badge">✓ معتمد (WebP)</span>
+                        </div>
+                        <div class="bdc-actions">
+                          <span class="bdc-size-info" id="mobileSizeInfo">WebP جاهز</span>
+                          <button type="button" class="btn-ghost btn-sm" id="mobileReplaceBtn">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                            استبدال الصورة
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <input type="file" id="cImgFile" accept="image/*">
-                  <div id="cropTriggerWrap" style="display:none;margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                    <button type="button" class="btn-ghost" id="openCropModalBtn" style="gap:7px;font-size:13px;padding:8px 16px;border-color:var(--gold);color:var(--ink);font-weight:700">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>
-                      تخصيص موضع البنر وتركيز الجوال (Crop & Focus)
-                    </button>
-                    <span class="tag gold" id="cropStatusBadge" style="display:none;font-size:11px">موضع مخصص محدد ✓</span>
-                  </div>
+                  <div class="bdc-note">💡 في حال عدم رفع صورة خاصة بالجوال، سيتم استخدام صورة الكمبيوتر تلقائياً كخيار بديل.</div>
                 </div>
-                <span class="err-msg" id="e-cBanner">أضف بنراً للتصنيف (لون أو صورة)</span>
+                <span class="err-msg" id="e-cBanner">أضف بنراً للتصنيف (لون أو صورة كمبيوتر معتمدة)</span>
               </div>
 
               <div class="field full">
-                <label>معاينة حية — هكذا سيظهر البنر في المتجر</label>
-                <div class="banner-preview" id="bannerPreview">
-                  <div class="ov">
-                    <div class="bt">HADJAJ COLLECTION</div>
-                    <div class="bn" id="pvName">اسم التصنيف</div>
-                    <div class="bm" id="pvMsg">رسالتك التسويقية تظهر هنا…</div>
+                <div class="pv-head-row">
+                  <label style="margin:0">معاينة حية — هكذا سيظهر البنر في المتجر</label>
+                  <div class="seg seg-sm" id="previewDeviceSeg">
+                    <button type="button" class="on" data-target="desktop">💻 كمبيوتر (2.62:1)</button>
+                    <button type="button" data-target="mobile">📱 جوال (0.94:1)</button>
+                  </div>
+                </div>
+                <div class="banner-preview-outer">
+                  <div class="banner-preview desktop-view" id="bannerPreview">
+                    <div class="ov" id="bannerPreviewOverlay">
+                      <div class="bt">HADJAJ COLLECTION</div>
+                      <div class="bn" id="pvName">اسم التصنيف</div>
+                      <div class="bm" id="pvMsg">رسالتك التسويقية تظهر هنا…</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -417,9 +488,10 @@
             <path d="M6 2v14a2 2 0 0 0 2 2h14"/>
             <path d="M18 22V8a2 2 0 0 0-2-2H2"/>
           </svg>
-          محرر موضع بنر التصنيف وتحديد تركيز الجوال
+          <span id="cropModalTitle">قص واعتماد بنر الكمبيوتر</span>
+          <span class="tag gold" id="cropTargetBadge" style="margin-right:8px;font-size:11px">2.62 : 1</span>
         </h3>
-        <p>اسحب الصورة خلف إطار الكمبيوتر، وحرك مستطيل الجوال لتحديد الجزء الأهم على الهواتف بدقة</p>
+        <p id="cropModalSub">اسحب الصورة وقربها لاختيار الكادر النهائي بدقة — عند الضغط على تأكيد سيتم قصها وتحويلها تلقائياً إلى WebP محسن</p>
       </div>
       <button type="button" class="crop-close-btn" id="cropCloseBtn" title="إغلاق">&times;</button>
     </div>
@@ -436,15 +508,11 @@
         </div>
 
         <div class="crop-tool-group crop-actions-group">
-          <button type="button" class="crop-quick-btn" id="cropCenterDesktop">
+          <button type="button" class="crop-quick-btn" id="cropCenterBtn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg>
             توسيط الصورة
           </button>
-          <button type="button" class="crop-quick-btn" id="cropCenterMobile">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="18" r="1"/></svg>
-            توسيط الجوال
-          </button>
-          <button type="button" class="crop-quick-btn" id="cropResetTop">
+          <button type="button" class="crop-quick-btn" id="cropResetBtn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
             إعادة ضبط
           </button>
@@ -457,58 +525,33 @@
           <!-- The moveable / zoomable image layer -->
           <img id="cropSourceImg" class="crop-source-img" alt="Banner Source" draggable="false">
 
-          <!-- Desktop Banner Frame -->
-          <div class="desktop-banner-frame" id="desktopBannerFrame">
-            <div class="frame-tag desktop-tag">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          <!-- Target Banner Frame (changes class between desktop-frame and mobile-frame) -->
+          <div class="crop-active-frame desktop-frame" id="cropFrame">
+            <div class="frame-tag" id="cropFrameTag">
               مساحة بنر الكمبيوتر (Desktop 2.62:1)
             </div>
-
-            <!-- Inside Desktop: Mobile Focus Box -->
-            <div class="mobile-focus-box" id="mobileFocusBox">
-              <div class="mobile-tag">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>
-                منطقة تركيز الجوال (0.94:1)
-              </div>
-              <div class="mobile-crosshair"></div>
-            </div>
+            <div class="crop-thirds-grid"></div>
           </div>
         </div>
         <div class="crop-canvas-hint">
-          <span>💡 <b>اسحب الصورة</b> بالماوس أو اللمس لتحريك موضع الكمبيوتر • <b>اسحب إطار الجوال الأخضر</b> لتحديد منطقة التركيز</span>
+          <span>💡 <b>اسحب الصورة</b> بالماوس أو اللمس لتحديد الجزء الأهم • استخدم شريط التقريب لتكبير الصورة</span>
         </div>
       </div>
 
-      <!-- Live Dual Previews -->
-      <div class="crop-previews-section">
-        <div class="preview-box desktop-pv-box">
-          <div class="preview-title">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-            معاينة الكمبيوتر (Desktop 2.62:1)
-          </div>
-          <div class="desktop-preview-window">
-            <div class="preview-inner" id="pvDesktopInner">
-              <img id="pvDesktopImg" alt="" draggable="false">
-              <div class="pv-overlay">
-                <span class="pv-brand">HADJAJ COLLECTION</span>
-                <strong class="pv-cat-name" id="pvCropNameDesktop">اسم التصنيف</strong>
-                <span class="pv-cat-msg" id="pvCropMsgDesktop">الرسالة التسويقية تظهر هنا</span>
-              </div>
-            </div>
-          </div>
+      <!-- Live WYSIWYG Target Preview -->
+      <div class="crop-preview-box">
+        <div class="preview-title" id="cropPvTitle">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          معاينة حية — هكذا سيظهر البنر المعتمد بالضبط على المتجر
         </div>
-
-        <div class="preview-box mobile-pv-box">
-          <div class="preview-title">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>
-            معاينة الجوال (Mobile 0.94:1)
-          </div>
-          <div class="mobile-preview-window">
-            <div class="preview-inner" id="pvMobileInner">
-              <img id="pvMobileImg" alt="" draggable="false">
-              <div class="pv-overlay mobile-pv-overlay">
-                <span class="pv-brand">HADJAJ</span>
-                <strong class="pv-cat-name" id="pvCropNameMobile">اسم التصنيف</strong>
+        <div class="crop-pv-viewport-wrap">
+          <div class="crop-pv-window desktop-ratio" id="cropPvWindow">
+            <div class="preview-inner" id="cropPvInner">
+              <img id="cropPvImg" alt="" draggable="false">
+              <div class="pv-overlay" id="cropPvOverlay">
+                <span class="pv-brand">HADJAJ COLLECTION</span>
+                <strong class="pv-cat-name" id="pvCropName">اسم التصنيف</strong>
+                <span class="pv-cat-msg" id="pvCropMsg">الرسالة التسويقية تظهر هنا</span>
               </div>
             </div>
           </div>
@@ -519,13 +562,12 @@
     <!-- Modal Footer Actions -->
     <div class="crop-modal-footer">
       <div class="footer-coord-badge" id="cropCoordInfo">
-        💻 Desktop: (50%, 50%) • 📱 Mobile Focus: (50%, 50%)
+        نسبة العرض: 2.62 : 1 • سيتم التصدير كـ WebP فائق الجودة
       </div>
       <div class="crop-footer-btns">
         <button type="button" class="btn-cancel" id="cropCancelBtn">إلغاء</button>
-        <button type="button" class="btn-ghost" id="cropResetBottomBtn">إعادة ضبط</button>
-        <button type="button" class="btn-primary gold" id="cropSaveBtn" style="padding:10px 28px;font-size:14px;font-weight:800">
-          حفظ التخصيص ✓
+        <button type="button" class="btn-primary gold" id="cropConfirmBtn" style="padding:10px 28px;font-size:14px;font-weight:800">
+          تأكيد واعتماد البنر النهائي (Done) ✓
         </button>
       </div>
     </div>

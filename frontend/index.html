@@ -53,7 +53,10 @@
 
   <!-- Hero -->
   <section class="hero">
-    <img src="/frontend/img/hero.png" alt="متجر حجاج" id="heroBannerImg">
+    <picture id="heroBannerPic">
+      <source media="(max-width: 768px)" srcset="/frontend/img/hero.png" id="heroBannerMobile">
+      <img src="/frontend/img/hero.png" alt="متجر حجاج" id="heroBannerImg">
+    </picture>
     <div class="hero-overlay">
       <div class="hero-content">
         <div class="hero-brand">HADJAJ • حجاج</div>
