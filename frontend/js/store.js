@@ -125,9 +125,12 @@ import { db } from "./firebase-config.js";
     }
 
     /* ---------- Dynamic Categories & Nav Logic ---------- */
+    let currentBannerRequestId = 0;
+
     function applyBanner(banner, legacyCrop) {
       const heroImg = document.getElementById("heroBannerImg");
       const heroMobile = document.getElementById("heroBannerMobile");
+      const heroSec = document.querySelector(".hero");
       if (!heroImg) return;
 
       const b = typeof banner === 'object' && banner !== null ? banner : { img: banner, crop: legacyCrop };
@@ -149,44 +152,70 @@ import { db } from "./firebase-config.js";
         return;
       }
 
-      // Preload off-screen to ensure smooth swap without visual pop or flash
+      // Track request ID to prevent race conditions when user switches rapidly (A -> B -> C)
+      const requestId = ++currentBannerRequestId;
+
+      // Immediately hide previous banner and show skeleton loading state
+      heroImg.classList.add('hero-img-loading');
+      if (heroSec) heroSec.classList.add('is-loading');
+
+      // Target image for current screen mode (mobile vs desktop)
+      const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+      const targetSrc = (isMobile && mobileSrc) ? mobileSrc : desktopSrc;
+
+      const applyCrop = () => {
+        if (!b.isFinal && b.crop) {
+          const crop = b.crop;
+          const dx = typeof crop.desktop?.x === 'number' ? crop.desktop.x : 50;
+          const dy = typeof crop.desktop?.y === 'number' ? crop.desktop.y : 50;
+          const dz = typeof crop.desktop?.zoom === 'number' ? crop.desktop.zoom : 1;
+          const mx = typeof crop.mobile?.x === 'number' ? crop.mobile.x : (typeof crop.mobile?.focusX === 'number' ? crop.mobile.focusX : dx);
+          const my = typeof crop.mobile?.y === 'number' ? crop.mobile.y : dy;
+          const mz = typeof crop.mobile?.zoom === 'number' ? crop.mobile.zoom : dz;
+
+          heroImg.style.setProperty('--crop-dx', `${dx}%`);
+          heroImg.style.setProperty('--crop-dy', `${dy}%`);
+          heroImg.style.setProperty('--crop-dz', `${dz}`);
+          heroImg.style.setProperty('--crop-mx', `${mx}%`);
+          heroImg.style.setProperty('--crop-my', `${my}%`);
+          heroImg.style.setProperty('--crop-mz', `${mz}`);
+        } else {
+          // Finalized banner: pure physical WebP crop, clean defaults
+          heroImg.style.setProperty('--crop-dx', '50%');
+          heroImg.style.setProperty('--crop-dy', '50%');
+          heroImg.style.setProperty('--crop-dz', '1');
+          heroImg.style.setProperty('--crop-mx', '50%');
+          heroImg.style.setProperty('--crop-my', '50%');
+          heroImg.style.setProperty('--crop-mz', '1');
+        }
+      };
+
+      const finishLoading = () => {
+        // Drop stale results from previous rapid category switches
+        if (requestId !== currentBannerRequestId) return;
+
+        applyCrop();
+        if (heroMobile) heroMobile.srcset = mobileSrc;
+        heroImg.src = desktopSrc;
+
+        requestAnimationFrame(() => {
+          if (requestId !== currentBannerRequestId) return;
+          heroImg.classList.remove('hero-img-loading');
+          if (heroSec) heroSec.classList.remove('is-loading');
+        });
+      };
+
+      // Preload the target banner before revealing
       const preloader = new Image();
-      preloader.onload = () => {
-        if (heroMobile) heroMobile.srcset = mobileSrc;
-        heroImg.src = desktopSrc;
-        heroImg.classList.remove('hero-img-loading');
-      };
-      preloader.onerror = () => {
-        if (heroMobile) heroMobile.srcset = mobileSrc;
-        heroImg.src = desktopSrc;
-        heroImg.classList.remove('hero-img-loading');
-      };
-      preloader.src = desktopSrc;
+      preloader.onload = finishLoading;
+      preloader.onerror = finishLoading;
+      preloader.src = targetSrc;
 
-      // Handle legacy banners with crop coordinates
-      if (!b.isFinal && b.crop) {
-        const crop = b.crop;
-        const dx = typeof crop.desktop?.x === 'number' ? crop.desktop.x : 50;
-        const dy = typeof crop.desktop?.y === 'number' ? crop.desktop.y : 50;
-        const dz = typeof crop.desktop?.zoom === 'number' ? crop.desktop.zoom : 1;
-        const mx = typeof crop.mobile?.x === 'number' ? crop.mobile.x : (typeof crop.mobile?.focusX === 'number' ? crop.mobile.focusX : dx);
-        const my = typeof crop.mobile?.y === 'number' ? crop.mobile.y : dy;
-        const mz = typeof crop.mobile?.zoom === 'number' ? crop.mobile.zoom : dz;
-
-        heroImg.style.setProperty('--crop-dx', `${dx}%`);
-        heroImg.style.setProperty('--crop-dy', `${dy}%`);
-        heroImg.style.setProperty('--crop-dz', `${dz}`);
-        heroImg.style.setProperty('--crop-mx', `${mx}%`);
-        heroImg.style.setProperty('--crop-my', `${my}%`);
-        heroImg.style.setProperty('--crop-mz', `${mz}`);
-      } else {
-        // Finalized banner: pure physical WebP crop, clean defaults
-        heroImg.style.setProperty('--crop-dx', '50%');
-        heroImg.style.setProperty('--crop-dy', '50%');
-        heroImg.style.setProperty('--crop-dz', '1');
-        heroImg.style.setProperty('--crop-mx', '50%');
-        heroImg.style.setProperty('--crop-my', '50%');
-        heroImg.style.setProperty('--crop-mz', '1');
+      // Also warm cache for alternate viewport
+      const altSrc = (targetSrc === mobileSrc) ? desktopSrc : mobileSrc;
+      if (altSrc && altSrc !== targetSrc) {
+        const altPreloader = new Image();
+        altPreloader.src = altSrc;
       }
     }
     const applyBannerImage = applyBanner;
@@ -206,6 +235,8 @@ import { db } from "./firebase-config.js";
         if (crumbTitle) crumbTitle.textContent = 'الخصومات';
         if (pageHeading) pageHeading.textContent = 'الخصومات';
         if (pageDesc) pageDesc.textContent = 'استمتع بأقوى العروض والخصومات على تشكيلة فاخرة من منتجاتنا.';
+        const firstBannerCat = categories.find(c => c.banner && c.banner.type === 'image' && c.banner.img);
+        if (firstBannerCat) applyBanner(firstBannerCat.banner);
         return;
       }
 
@@ -216,6 +247,8 @@ import { db } from "./firebase-config.js";
         if (crumbTitle) crumbTitle.textContent = 'المفضلة';
         if (pageHeading) pageHeading.textContent = 'المفضلة';
         if (pageDesc) pageDesc.textContent = 'المنتجات التي قمت بحفظها في قائمتك المفضلة لسهولة الوصول إليها لاحقاً.';
+        const firstBannerCat = categories.find(c => c.banner && c.banner.type === 'image' && c.banner.img);
+        if (firstBannerCat) applyBanner(firstBannerCat.banner);
         return;
       }
 
@@ -231,6 +264,9 @@ import { db } from "./firebase-config.js";
 
           if (selCat.banner && selCat.banner.type === 'image' && selCat.banner.img) {
             applyBanner(selCat.banner);
+          } else {
+            const firstBannerCat = categories.find(c => c.banner && c.banner.type === 'image' && c.banner.img);
+            if (firstBannerCat) applyBanner(firstBannerCat.banner);
           }
           return;
         }

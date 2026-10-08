@@ -52,7 +52,8 @@
   </header>
 
   <!-- Hero -->
-  <section class="hero">
+  <section class="hero is-loading">
+    <div class="hero-skel" id="heroBannerSkel" aria-hidden="true"></div>
     <picture id="heroBannerPic">
       <source media="(max-width: 768px)" srcset="" id="heroBannerMobile">
       <img src="" alt="متجر حجاج" id="heroBannerImg" class="hero-img-loading">
@@ -86,6 +87,8 @@
             if (m && b.mobile) m.srcset = b.mobile;
             img.src = b.desktop;
             img.classList.remove('hero-img-loading');
+            var hero = document.querySelector('.hero');
+            if (hero) hero.classList.remove('is-loading');
           }
         } catch(e){}
       })();
