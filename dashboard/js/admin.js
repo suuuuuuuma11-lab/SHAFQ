@@ -1083,7 +1083,6 @@ function openCropModal(imgUrl, target = "desktop", rawFile = null) {
     if (pvOverlay) pvOverlay.style.display = "none";
     if ($("cropPvWindow")) $("cropPvWindow").style.display = "none";
     if ($("cropPvProductCard")) $("cropPvProductCard").style.display = "flex";
-    if ($("cropPvDeviceToggle")) $("cropPvDeviceToggle").style.display = "inline-flex";
     document.querySelector(".crop-modal-body")?.classList.add("product-crop-body");
 
     if (pvTitle) {
@@ -1149,7 +1148,6 @@ function openCropModal(imgUrl, target = "desktop", rawFile = null) {
     if (pvOverlay) pvOverlay.style.display = "flex";
     if ($("cropPvWindow")) $("cropPvWindow").style.display = "block";
     if ($("cropPvProductCard")) $("cropPvProductCard").style.display = "none";
-    if ($("cropPvDeviceToggle")) $("cropPvDeviceToggle").style.display = "none";
     document.querySelector(".crop-modal-body")?.classList.remove("product-crop-body");
 
     if (pvTitle) {
@@ -2350,28 +2348,7 @@ function initCropEditorEvents() {
     processAndExportFinalWebP();
   });
 
-  // Live Preview Device Toggle (Desktop vs Mobile)
-  $("cropPvToggleDesktop")?.addEventListener("click", () => {
-    $("cropPvToggleDesktop")?.classList.add("active");
-    $("cropPvToggleMobile")?.classList.remove("active");
-    const pvCard = $("cropPvProductCard");
-    if (pvCard) {
-      pvCard.classList.remove("mobile-mode");
-      pvCard.classList.add("desktop-mode");
-    }
-    requestAnimationFrame(() => updateCropEditorUI());
-  });
 
-  $("cropPvToggleMobile")?.addEventListener("click", () => {
-    $("cropPvToggleMobile")?.classList.add("active");
-    $("cropPvToggleDesktop")?.classList.remove("active");
-    const pvCard = $("cropPvProductCard");
-    if (pvCard) {
-      pvCard.classList.remove("desktop-mode");
-      pvCard.classList.add("mobile-mode");
-    }
-    requestAnimationFrame(() => updateCropEditorUI());
-  });
 
   // Window resize sync
   window.addEventListener("resize", () => {
