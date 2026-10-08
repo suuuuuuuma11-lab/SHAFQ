@@ -617,3 +617,13 @@ const qtyMinus = document.getElementById("qtyMinusBtn");
 if (qtyPlus) qtyPlus.addEventListener("click", () => changeQty(1));
 if (qtyMinus) qtyMinus.addEventListener("click", () => changeQty(-1));
 
+// Motion System: Header scroll compression
+window.addEventListener('scroll', () => {
+  const header = document.querySelector('header');
+  if (header) {
+    if (window.scrollY > 25) header.classList.add('scrolled');
+    else header.classList.remove('scrolled');
+  }
+}, { passive: true });
+
+
