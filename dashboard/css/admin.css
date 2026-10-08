@@ -2627,3 +2627,62 @@ tbody tr:hover {
 
 
 
+
+/* ===== A5 Order Card — Print & PDF System ===== */
+#printArea{display:none}
+.row-actions{display:flex;gap:6px}
+.icon-btn.print:hover{border-color:var(--green);color:var(--green);background:var(--green-soft)}
+.card-modal{max-width:600px}
+.card-preview-stage{background:#ece7dd;border:1px solid var(--line);border-radius:10px;padding:12px;margin:12px 0;overflow:auto;max-height:56vh;display:flex;justify-content:center}
+.card-preview-stage .a5-card{transform:scale(0.5);transform-origin:top center;margin-bottom:-101mm;flex:none}
+.card-modal-actions{display:flex;gap:8px;margin-top:4px}
+.card-hint{font-size:11px;color:var(--muted);margin-top:10px;text-align:center}
+
+.a5-card{width:148mm;height:210mm;background:#fff;color:#1d1a16;font-family:'Tajawal',sans-serif;display:flex;flex-direction:column;overflow:hidden;border:0.4mm solid #e7e1d7;box-shadow:var(--shadow-lg);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.oc-head{background:#1d1a16;color:#fff;padding:5mm 6mm 4mm;display:flex;align-items:center;justify-content:space-between;gap:4mm}
+.oc-logo{font-size:20pt;font-weight:900;letter-spacing:2px;line-height:1}
+.oc-brand-sub{font-size:6.5pt;letter-spacing:4px;color:#b99a6b;margin-top:1mm}
+.oc-titlebox{text-align:center}
+.oc-title{font-size:12pt;font-weight:800;opacity:.85}
+.oc-order-no{font-size:17pt;font-weight:900;color:#b99a6b;direction:ltr}
+.oc-tracking{background:#fff;border-radius:1.5mm;padding:1.5mm 2.5mm;min-width:38mm;display:flex;flex-direction:column;justify-content:center}
+.oc-tr-header{display:flex;align-items:baseline;justify-content:space-between;gap:2mm}
+.oc-tr-ar{font-size:7pt;font-weight:900;color:#1d1a16}
+.oc-tr-en{font-size:5.5pt;font-weight:700;color:#8a8277;letter-spacing:.5px;direction:ltr}
+.oc-tr-line{height:7mm;border-bottom:0.4mm dashed #1d1a16;margin-top:1mm}
+.oc-statusstrip{display:flex;align-items:center;justify-content:space-between;background:#f0e7d8;padding:2mm 6mm;border-bottom:0.3mm solid #e7e1d7}
+.oc-status{font-size:8.5pt;font-weight:800;padding:0.8mm 3mm;border-radius:6mm;color:#fff}
+.oc-status.st-new{background:#2b5ea7}.oc-status.st-proc{background:#a5875a}
+.oc-status.st-conf{background:#2e7d4f}.oc-status.st-done{background:#1d1a16}.oc-status.st-canc{background:#c0392b}
+.oc-date{font-size:8pt;color:#8a8277;font-weight:700}
+.oc-body{padding:4mm 6mm;flex:1}
+.oc-sec{margin-bottom:4mm}
+.oc-sec-title{font-size:9.5pt;font-weight:900;color:#a5875a;border-right:1mm solid #b99a6b;padding-right:2mm;margin-bottom:2mm}
+.oc-cust-grid{display:grid;grid-template-columns:1fr 1fr;gap:2mm}
+.oc-cell{border:0.3mm solid #e7e1d7;border-radius:1.5mm;padding:1.6mm 2.5mm;background:#fbfaf7}
+.oc-cell.oc-wide{grid-column:1/-1}
+.oc-cell label{display:block;font-size:6.5pt;color:#8a8277;font-weight:700;margin-bottom:.5mm}
+.oc-cell b{font-size:9pt;font-weight:800}
+.oc-ltr{direction:ltr;display:inline-block}
+.oc-items{width:100%;border-collapse:collapse;font-size:8pt}
+.oc-items th{background:#1d1a16;color:#fff;font-weight:800;padding:1.8mm 1mm;border:0.3mm solid #1d1a16;font-size:7.5pt}
+.oc-items td{border:0.3mm solid #e7e1d7;padding:1.6mm 1mm}
+.oc-items tbody tr:nth-child(even){background:#fbfaf7}
+.oc-c{text-align:center}.oc-pname{font-weight:700}.oc-bold{font-weight:900}
+.oc-total{margin:0 6mm;background:#1d1a16;color:#fff;border-radius:2mm;padding:2.5mm 5mm;display:flex;align-items:center;justify-content:space-between;font-size:9.5pt;font-weight:800}
+.oc-total b{color:#b99a6b;font-size:14pt;font-weight:900}
+.oc-foot{margin-top:auto;padding:3mm 6mm 5mm}
+.oc-thanks{text-align:center;font-size:8pt;color:#8a8277;font-weight:700;margin-bottom:3mm}
+.oc-receive{display:flex;align-items:flex-end;justify-content:space-between;font-size:8.5pt;font-weight:800}
+.oc-check{border:0.3mm solid #1d1a16;border-radius:1.5mm;padding:1.5mm 3mm}
+.oc-sign{display:flex;align-items:flex-end;gap:2mm}
+.oc-sign::after{content:"";display:inline-block;width:42mm;border-bottom:0.4mm dashed #8a8277}
+
+@media print{
+  @page{size:A5 portrait;margin:0}
+  body.printing{background:#fff}
+  body.printing header,body.printing .wrap,body.printing .modal-bg,body.printing #toast{display:none!important}
+  body.printing #printArea{display:block!important}
+  #printArea .a5-card{box-shadow:none;border:none;page-break-after:always;break-after:page;margin:0 auto}
+  #printArea .a5-card:last-child{page-break-after:auto;break-after:auto}
+}

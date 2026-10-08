@@ -452,6 +452,10 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
               تحديث
             </button>
+            <button class="btn-ghost" onclick="printAllFiltered()" title="طباعة كل الطلبات المعروضة حالياً كبطاقات A5 جاهزة للشحن">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              طباعة الكل (A5)
+            </button>
           </div>
         </div>
         <div class="panel-body">
@@ -722,6 +726,24 @@
     </div>
   </div>
 </div>
+
+<!-- ===== A5 Order Card: Preview & Print Modal ===== -->
+<div class="modal-bg" id="cardModal" onclick="if(event.target===this)closeCardModal()">
+  <div class="modal card-modal">
+    <h3>بطاقة الطلب — مقاس A5 <span class="tag gold" id="cardModalOrderNo"></span></h3>
+    <p>معاينة حية للبطاقة بحجمها الحقيقي، جاهزة للطباعة المباشرة أو الحفظ كملف PDF.</p>
+    <div class="card-preview-stage" id="cardPreviewStage"></div>
+    <div class="card-modal-actions">
+      <button class="btn-cancel" onclick="closeCardModal()">إغلاق</button>
+      <button class="btn-ghost" onclick="downloadCardPDF()">⬇️ تحميل PDF</button>
+      <button class="btn-primary gold" onclick="printCurrentCards()">🖨️ طباعة مباشرة</button>
+    </div>
+    <p class="card-hint">لتحويلها إلى ملف PDF: اضغط «تحميل PDF» ثم اختر <b>Save as PDF / حفظ كـ PDF</b> من نافذة الطباعة.</p>
+  </div>
+</div>
+
+<!-- ===== A5 Order Card: Hidden print area ===== -->
+<div id="printArea" aria-hidden="true"></div>
 
 <div id="toast"></div>
 

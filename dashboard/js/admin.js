@@ -1912,11 +1912,16 @@ function renderOrdersTable() {
         </td>
         <td><span class="order-date-time">${dateStr}</span></td>
         <td>
-          <button class="icon-btn del" title="حذف الطلب" onclick="askDeleteOrder('${o.id}')">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 6h18M8 6V4h8v2m1 0v14a2 2 0 01-2 2H9a2 2 0 01-2-2V6"/>
-            </svg>
-          </button>
+          <div class="row-actions">
+            <button class="icon-btn print" title="بطاقة الطلب A5 — طباعة / PDF" onclick="printOrderCard('${o.id}')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            </button>
+            <button class="icon-btn del" title="حذف الطلب" onclick="askDeleteOrder('${o.id}')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M8 6V4h8v2m1 0v14a2 2 0 01-2 2H9a2 2 0 01-2-2V6"/>
+              </svg>
+            </button>
+          </div>
         </td>
       </tr>`;
     })
@@ -2133,6 +2138,201 @@ async function saveShippingSettings() {
     }
   }
 }
+
+// ============================================================
+// A5 ORDER CARD — PRINT & PDF ENGINE (148 × 210 mm)
+// بطاقة طلب احترافية مع حقل كتابة رقم التتبع يدوياً
+// ============================================================
+
+function orderShortId(o) { 
+  return String(o.id || "").slice(-6).toUpperCase(); 
+}
+
+function getFilteredOrders() {
+  const q = $("orderSearch") ? $("orderSearch").value.trim().toLowerCase() : "";
+  const filterTime = $("orderFilterTime");
+  const dateFrom = $("orderDateFrom");
+  const dateTo = $("orderDateTo");
+
+  const timeMode = filterTime ? filterTime.value : "all";
+  const fromVal = dateFrom ? dateFrom.value : "";
+  const toVal = dateTo ? dateTo.value : "";
+
+  let list = state.orders.slice();
+
+  if (q) {
+    const cleanQ = q.replace(/^#/, "");
+    list = list.filter((o) => {
+      const fullId = (o.id || "").toLowerCase();
+      const shortId = (o.id || "").slice(-6).toLowerCase();
+      const hashShortId = `#${shortId}`;
+
+      const idMatch =
+        fullId.includes(q) ||
+        shortId.includes(cleanQ) ||
+        hashShortId.includes(q);
+
+      const customerMatch = (o.customer || "").toLowerCase().includes(q);
+      const phoneMatch = (o.phone || "").includes(q);
+      const wilayaMatch = (o.wilaya || "").toLowerCase().includes(q);
+      const communeMatch = (o.commune || "").toLowerCase().includes(q);
+      const addressMatch = (o.address || "").toLowerCase().includes(q);
+
+      const itemsMatch =
+        Array.isArray(o.items) &&
+        o.items.some((it) => (it.name || "").toLowerCase().includes(q));
+
+      return (
+        idMatch ||
+        customerMatch ||
+        phoneMatch ||
+        wilayaMatch ||
+        communeMatch ||
+        addressMatch ||
+        itemsMatch
+      );
+    });
+  }
+
+  if (timeMode !== "all") {
+    const todayAlgeria = getAlgerianDateString(new Date());
+
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayAlgeria = getAlgerianDateString(yesterdayDate);
+
+    const weekDate = new Date();
+    weekDate.setDate(weekDate.getDate() - 7);
+    const weekAlgeria = getAlgerianDateString(weekDate);
+
+    const monthDate = new Date();
+    monthDate.setDate(monthDate.getDate() - 30);
+    const monthAlgeria = getAlgerianDateString(monthDate);
+
+    list = list.filter((o) => {
+      if (!o.createdAt) return false;
+      const orderYMD = getAlgerianDateString(o.createdAt);
+      if (!orderYMD) return false;
+
+      if (timeMode === "today") return orderYMD === todayAlgeria;
+      if (timeMode === "yesterday") return orderYMD === yesterdayAlgeria;
+      if (timeMode === "week") return orderYMD >= weekAlgeria && orderYMD <= todayAlgeria;
+      if (timeMode === "month") return orderYMD >= monthAlgeria && orderYMD <= todayAlgeria;
+      if (timeMode === "custom") {
+        if (fromVal && toVal) return orderYMD >= fromVal && orderYMD <= toVal;
+        if (fromVal) return orderYMD >= fromVal;
+        if (toVal) return orderYMD <= toVal;
+        return true;
+      }
+      return true;
+    });
+  }
+
+  return list;
+}
+
+const CARD_STATUS_CLASS = { 
+  "جديد": "st-new", 
+  "قيد المعالجة": "st-proc", 
+  "مؤكد": "st-conf", 
+  "تم التوصيل": "st-done", 
+  "ملغي": "st-canc" 
+};
+
+function buildOrderCardHTML(o) {
+  const shortId = orderShortId(o);
+  const dateStr = o.createdAt ? formatAlgerianDateTime(o.createdAt) : "—";
+  const rows = (o.items || []).map((it, i) => {
+    const qty = it.quantity || 1, price = it.price || 0;
+    return `<tr><td class="oc-c">${i+1}</td><td class="oc-pname">${esc(it.name||"منتج")}</td>
+      <td class="oc-c">${esc(it.size||"—")}</td><td>${esc(it.color||"—")}</td>
+      <td class="oc-c">${qty}</td><td class="oc-c">${price}</td><td class="oc-c oc-bold">${qty*price}</td></tr>`;
+  }).join("");
+
+  return `
+  <div class="a5-card" dir="rtl">
+    <div class="oc-head">
+      <div class="oc-brand"><div class="oc-logo">حجاج</div><div class="oc-brand-sub">HADJAJ&nbsp;SHIRTS</div></div>
+      <div class="oc-titlebox"><div class="oc-title">بطاقة الطلب</div><div class="oc-order-no">#${shortId}</div></div>
+      <div class="oc-tracking">
+        <div class="oc-tr-header">
+          <span class="oc-tr-ar">رقم التتبع</span>
+          <span class="oc-tr-en">Tracking Number</span>
+        </div>
+        <div class="oc-tr-line"></div>
+      </div>
+    </div>
+    <div class="oc-statusstrip">
+      <span class="oc-status ${CARD_STATUS_CLASS[o.status]||"st-new"}">${esc(o.status||"جديد")}</span>
+      <span class="oc-date">${dateStr}</span>
+    </div>
+    <div class="oc-body">
+      <div class="oc-sec">
+        <div class="oc-sec-title">معلومات الزبون</div>
+        <div class="oc-cust-grid">
+          <div class="oc-cell"><label>الاسم الكامل</label><b>${esc(o.customer||"—")}</b></div>
+          <div class="oc-cell"><label>رقم الهاتف</label><b class="oc-ltr">${esc(o.phone||"—")}</b></div>
+          <div class="oc-cell"><label>الولاية</label><b>${esc(o.wilaya||"—")}</b></div>
+          <div class="oc-cell"><label>البلدية</label><b>${esc(o.commune||"—")}</b></div>
+          <div class="oc-cell oc-wide"><label>العنوان الكامل</label><b>${esc(o.address||"—")}</b></div>
+        </div>
+      </div>
+      <div class="oc-sec">
+        <div class="oc-sec-title">تفاصيل المنتجات</div>
+        <table class="oc-items">
+          <thead><tr><th>#</th><th>المنتج</th><th>المقاس</th><th>اللون</th><th>الكمية</th><th>سعر الوحدة</th><th>المجموع</th></tr></thead>
+          <tbody>${rows||'<tr><td colspan="7" class="oc-c">لا توجد منتجات</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="oc-total"><span>الإجمالي — يُدفع عند الاستلام (COD)</span><b>${o.total||0} دج</b></div>
+    <div class="oc-foot">
+      <div class="oc-thanks">شكرًا لثقتكم بحجاج ✦ نتمنى لكم إطلالة تليق بكم</div>
+      <div class="oc-receive"><span class="oc-check">استلمت الطلب بحالة جيدة ✓</span><span class="oc-sign">توقيع الزبون :</span></div>
+    </div>
+  </div>`;
+}
+
+function fillPrintAreas(orders) {
+  const html = orders.map(buildOrderCardHTML).join("");
+  const printArea = $("printArea"), stage = $("cardPreviewStage");
+  if (printArea) { printArea.innerHTML = html; }
+  if (stage) { stage.innerHTML = html; }
+}
+
+function printOrderCard(orderId) {
+  const o = state.orders.find((x) => x.id === orderId);
+  if (!o) { toast("تعذر العثور على الطلب", false); return; }
+  fillPrintAreas([o]);
+  const tag = $("cardModalOrderNo"); if (tag) tag.textContent = "#" + orderShortId(o);
+  $("cardModal")?.classList.add("open");
+}
+
+function printAllFiltered() {
+  const list = getFilteredOrders();
+  if (!list.length) { toast("لا توجد طلبات للطباعة في القائمة الحالية", false); return; }
+  fillPrintAreas(list);
+  const tag = $("cardModalOrderNo"); if (tag) tag.textContent = `دفعة — ${list.length} بطاقة`;
+  $("cardModal")?.classList.add("open");
+  toast(`تم تجهيز ${list.length} بطاقة A5 للطباعة ✓`);
+}
+
+function closeCardModal() { 
+  $("cardModal")?.classList.remove("open"); 
+}
+
+function printCurrentCards() { 
+  document.body.classList.add("printing"); 
+  setTimeout(() => window.print(), 60); 
+}
+
+function downloadCardPDF() {
+  toast("في نافذة الطباعة اختر «Save as PDF / حفظ كـ PDF» 📄");
+  document.body.classList.add("printing");
+  setTimeout(() => window.print(), 350);
+}
+
+window.addEventListener("afterprint", () => document.body.classList.remove("printing"));
 
 // --- Generic Confirmation Modal ---
 function confirmBox(title, text, cb, yesLabel = "نعم، احذف") {
@@ -2738,6 +2938,11 @@ window.renderOrdersTable = renderOrdersTable;
 window.handleOrderTimeFilterChange = handleOrderTimeFilterChange;
 window.askDeleteOrder = askDeleteOrder;
 window.refreshOrders = refreshOrders;
+window.printOrderCard = printOrderCard;
+window.printAllFiltered = printAllFiltered;
+window.printCurrentCards = printCurrentCards;
+window.downloadCardPDF = downloadCardPDF;
+window.closeCardModal = closeCardModal;
 window.handleLogout = handleLogout;
 
 // Shipping Settings Global Handlers
