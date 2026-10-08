@@ -282,7 +282,7 @@ import { db } from "./firebase-config.js";
         if (mainNav) mainNav.classList.add('nav-ready');
         if (mobileCatBar) mobileCatBar.classList.add('nav-ready');
         if (mobileScroller) mobileScroller.classList.add('nav-ready');
-      }, 700);
+      }, 1200);
     }
 
     function renderCategoriesNav() {
@@ -320,19 +320,20 @@ import { db } from "./firebase-config.js";
       const isSaleActive = view === 'sale';
       const isFavActive = view === 'fav';
 
-      let desktopHtml = `<a href="/" data-view="all" class="${isAllActive ? 'active' : ''}">الكل</a>`;
+      let idx = 0;
+      let desktopHtml = `<a href="/" data-view="all" style="--i:${idx++}" class="${isAllActive ? 'active' : ''}">الكل</a>`;
       let mobileHtml = `<button type="button" class="mobile-cat-pill ${isAllActive ? 'active' : ''}" data-view="all">الكل</button>`;
 
       // Render ONLY categories from Cloud Firestore categories collection
       categories.forEach(cat => {
         const isCatActive = view === 'cat' && selectedCatId === cat.id;
-        desktopHtml += `<a href="/?cat=${encodeURIComponent(cat.id)}" data-view="cat" data-cat-id="${esc(cat.id)}" class="${isCatActive ? 'active' : ''}">${esc(cat.name)}</a>`;
+        desktopHtml += `<a href="/?cat=${encodeURIComponent(cat.id)}" data-view="cat" data-cat-id="${esc(cat.id)}" style="--i:${idx++}" class="${isCatActive ? 'active' : ''}">${esc(cat.name)}</a>`;
         mobileHtml += `<button type="button" class="mobile-cat-pill ${isCatActive ? 'active' : ''}" data-view="cat" data-cat-id="${esc(cat.id)}">${esc(cat.name)}</button>`;
       });
 
       desktopHtml += `
-        <a href="/?view=sale" data-view="sale" class="${isSaleActive ? 'active' : ''}">الخصومات</a>
-        <a href="/?view=fav" data-view="fav" class="${isFavActive ? 'active' : ''}">المفضلة</a>
+        <a href="/?view=sale" data-view="sale" style="--i:${idx++}" class="${isSaleActive ? 'active' : ''}">الخصومات</a>
+        <a href="/?view=fav" data-view="fav" style="--i:${idx++}" class="${isFavActive ? 'active' : ''}">المفضلة</a>
       `;
 
       mobileHtml += `
