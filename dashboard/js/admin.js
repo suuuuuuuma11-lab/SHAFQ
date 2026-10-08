@@ -454,7 +454,6 @@ function initRealtimeFirestore() {
           items: Array.isArray(d.items) ? d.items : [],
           total: d.total || 0,
           paymentMethod: d.paymentMethod || "الدفع عند الاستلام",
-          status: d.status || "جديد",
           createdAt: d.createdAt || new Date().toISOString()
         });
       });
@@ -1678,29 +1677,146 @@ function renderCatsGrid() {
     .join("");
 }
 
-// --- Orders Management (Cloud Firestore) ---
+// --- Algeria Timezone & Orders Management (Cloud Firestore) ---
+const ALGERIA_TIMEZONE = "Africa/Algiers";
+
+function formatAlgerianDateTime(dateValue) {
+  if (!dateValue) return "—";
+  const d = dateValue instanceof Date ? dateValue : new Date(dateValue);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleString("ar-DZ", {
+    timeZone: ALGERIA_TIMEZONE,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true
+  });
+}
+
+function getAlgerianDateString(dateValue) {
+  if (!dateValue) return "";
+  const d = dateValue instanceof Date ? dateValue : new Date(dateValue);
+  if (isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: ALGERIA_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(d); // Returns "YYYY-MM-DD" in Algeria time
+}
+
+function handleOrderTimeFilterChange() {
+  const filterTime = $("orderFilterTime");
+  const customRange = $("orderCustomDateRange");
+  const val = filterTime ? filterTime.value : "all";
+  if (customRange) {
+    customRange.style.display = (val === "custom") ? "inline-flex" : "none";
+  }
+  renderOrdersTable();
+}
+
 function renderOrdersTable() {
   const tbody = $("ordersTbody");
   const empty = $("orderEmpty");
   const searchInput = $("orderSearch");
-  const filterStatus = $("orderFilterStatus");
+  const filterTime = $("orderFilterTime");
+  const dateFrom = $("orderDateFrom");
+  const dateTo = $("orderDateTo");
 
   if (!tbody) return;
 
   const q = searchInput ? searchInput.value.trim().toLowerCase() : "";
-  const fs = filterStatus ? filterStatus.value : "";
+  const timeMode = filterTime ? filterTime.value : "all";
+  const fromVal = dateFrom ? dateFrom.value : "";
+  const toVal = dateTo ? dateTo.value : "";
 
   let list = state.orders.slice();
+
+  // 1. Search Filter: Search by Order ID (# or without #, or full id), Customer, Phone, Wilaya, Commune, Address, or Product Name
   if (q) {
-    list = list.filter(
-      (o) =>
-        (o.customer || "").toLowerCase().includes(q) ||
-        (o.phone || "").includes(q) ||
-        (o.wilaya || "").toLowerCase().includes(q)
-    );
+    const cleanQ = q.replace(/^#/, "");
+    list = list.filter((o) => {
+      const fullId = (o.id || "").toLowerCase();
+      const shortId = (o.id || "").slice(-6).toLowerCase();
+      const hashShortId = `#${shortId}`;
+
+      const idMatch =
+        fullId.includes(q) ||
+        shortId.includes(cleanQ) ||
+        hashShortId.includes(q);
+
+      const customerMatch = (o.customer || "").toLowerCase().includes(q);
+      const phoneMatch = (o.phone || "").includes(q);
+      const wilayaMatch = (o.wilaya || "").toLowerCase().includes(q);
+      const communeMatch = (o.commune || "").toLowerCase().includes(q);
+      const addressMatch = (o.address || "").toLowerCase().includes(q);
+
+      const itemsMatch =
+        Array.isArray(o.items) &&
+        o.items.some((it) => (it.name || "").toLowerCase().includes(q));
+
+      return (
+        idMatch ||
+        customerMatch ||
+        phoneMatch ||
+        wilayaMatch ||
+        communeMatch ||
+        addressMatch ||
+        itemsMatch
+      );
+    });
   }
-  if (fs) {
-    list = list.filter((o) => o.status === fs);
+
+  // 2. Time Filter: Calculated using Algeria Time (UTC+1)
+  if (timeMode !== "all") {
+    const todayAlgeria = getAlgerianDateString(new Date());
+
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayAlgeria = getAlgerianDateString(yesterdayDate);
+
+    const weekDate = new Date();
+    weekDate.setDate(weekDate.getDate() - 7);
+    const weekAlgeria = getAlgerianDateString(weekDate);
+
+    const monthDate = new Date();
+    monthDate.setDate(monthDate.getDate() - 30);
+    const monthAlgeria = getAlgerianDateString(monthDate);
+
+    list = list.filter((o) => {
+      if (!o.createdAt) return false;
+      const orderYMD = getAlgerianDateString(o.createdAt);
+      if (!orderYMD) return false;
+
+      if (timeMode === "today") {
+        return orderYMD === todayAlgeria;
+      }
+      if (timeMode === "yesterday") {
+        return orderYMD === yesterdayAlgeria;
+      }
+      if (timeMode === "week") {
+        return orderYMD >= weekAlgeria && orderYMD <= todayAlgeria;
+      }
+      if (timeMode === "month") {
+        return orderYMD >= monthAlgeria && orderYMD <= todayAlgeria;
+      }
+      if (timeMode === "custom") {
+        if (fromVal && toVal) {
+          return orderYMD >= fromVal && orderYMD <= toVal;
+        }
+        if (fromVal) {
+          return orderYMD >= fromVal;
+        }
+        if (toVal) {
+          return orderYMD <= toVal;
+        }
+        return true;
+      }
+      return true;
+    });
   }
 
   if (empty) empty.style.display = list.length ? "none" : "block";
@@ -1721,7 +1837,7 @@ function renderOrdersTable() {
         )
         .join("");
 
-      const dateStr = o.createdAt ? new Date(o.createdAt).toLocaleString("ar-DZ") : "—";
+      const dateStr = formatAlgerianDateTime(o.createdAt);
 
       return `<tr>
         <td><b>#${esc(o.id.slice(-6).toUpperCase())}</b></td>
@@ -1734,15 +1850,6 @@ function renderOrdersTable() {
         <td>${esc(o.wilaya)} — ${esc(o.commune || "")}<br><small style="color:var(--muted)">${esc(o.address || "")}</small></td>
         <td><div class="order-items-list">${itemsHTML || "—"}</div></td>
         <td><b style="color:var(--gold-dark)">${o.total} دج</b></td>
-        <td>
-          <select class="order-status-select" onchange="changeOrderStatus('${o.id}', this.value)">
-            <option value="جديد" ${o.status === "جديد" ? "selected" : ""}>جديد</option>
-            <option value="قيد المعالجة" ${o.status === "قيد المعالجة" ? "selected" : ""}>قيد المعالجة</option>
-            <option value="مؤكد" ${o.status === "مؤكد" ? "selected" : ""}>مؤكد</option>
-            <option value="تم التوصيل" ${o.status === "تم التوصيل" ? "selected" : ""}>تم التوصيل</option>
-            <option value="ملغي" ${o.status === "ملغي" ? "selected" : ""}>ملغي</option>
-          </select>
-        </td>
         <td><span class="order-date-time">${dateStr}</span></td>
         <td>
           <button class="icon-btn del" title="حذف الطلب" onclick="askDeleteOrder('${o.id}')">
@@ -1754,19 +1861,6 @@ function renderOrdersTable() {
       </tr>`;
     })
     .join("");
-}
-
-async function changeOrderStatus(orderId, newStatus) {
-  try {
-    await updateDoc(doc(db, "orders", orderId), {
-      status: newStatus,
-      updatedAt: new Date().toISOString()
-    });
-    toast(`تم تحديث حالة الطلب إلى "${newStatus}" ✓`);
-  } catch (err) {
-    console.error("Update order status error:", err);
-    toast("تعذر تحديث حالة الطلب في السحابة", false);
-  }
 }
 
 function askDeleteOrder(orderId) {
@@ -2386,7 +2480,7 @@ window.askDeleteCat = askDeleteCat;
 window.cancelCatEdit = cancelCatEdit;
 window.renderProductsTable = renderProductsTable;
 window.renderOrdersTable = renderOrdersTable;
-window.changeOrderStatus = changeOrderStatus;
+window.handleOrderTimeFilterChange = handleOrderTimeFilterChange;
 window.askDeleteOrder = askDeleteOrder;
 window.refreshOrders = refreshOrders;
 window.handleLogout = handleLogout;

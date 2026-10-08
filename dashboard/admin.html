@@ -454,16 +454,28 @@
           <div class="toolbar">
             <div class="search-box">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-              <input type="text" id="orderSearch" placeholder="ابحث باسم الزبون، رقم الهاتف، أو الولاية..." oninput="renderOrdersTable()">
+              <input type="text" id="orderSearch" placeholder="ابحث برقم الطلب (#)، اسم الزبون، الهاتف، أو اسم المنتج..." oninput="renderOrdersTable()">
             </div>
-            <select class="filter-sel" id="orderFilterStatus" onchange="renderOrdersTable()">
-              <option value="">كل الحالات</option>
-              <option value="جديد">جديد</option>
-              <option value="قيد المعالجة">قيد المعالجة</option>
-              <option value="مؤكد">مؤكد</option>
-              <option value="تم التوصيل">تم التوصيل</option>
-              <option value="ملغي">ملغي</option>
-            </select>
+            <div class="filter-time-group">
+              <select class="filter-sel" id="orderFilterTime" onchange="handleOrderTimeFilterChange()">
+                <option value="all">كل الأوقات</option>
+                <option value="today">اليوم</option>
+                <option value="yesterday">البارحة (قبل يوم)</option>
+                <option value="week">الأسبوع الماضي</option>
+                <option value="month">الشهر الماضي</option>
+                <option value="custom">فترة مخصصة (من - إلى)</option>
+              </select>
+              <div class="custom-date-range" id="orderCustomDateRange" style="display:none">
+                <div class="date-field">
+                  <label for="orderDateFrom">من:</label>
+                  <input type="date" id="orderDateFrom" class="filter-date-input" onchange="renderOrdersTable()">
+                </div>
+                <div class="date-field">
+                  <label for="orderDateTo">إلى:</label>
+                  <input type="date" id="orderDateTo" class="filter-date-input" onchange="renderOrdersTable()">
+                </div>
+              </div>
+            </div>
           </div>
           <div class="table-wrap">
             <table>
@@ -475,7 +487,6 @@
                   <th>الولاية والبلدية</th>
                   <th>تفاصيل المنتجات</th>
                   <th>الإجمالي</th>
-                  <th>حالة الطلب</th>
                   <th>التاريخ</th>
                   <th>إجراءات</th>
                 </tr>
