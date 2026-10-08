@@ -4,23 +4,23 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/frontend/index.html"
+      "destination": "/frontend/index"
     },
     {
       "source": "/product",
-      "destination": "/frontend/product.html"
+      "destination": "/frontend/product"
     },
     {
       "source": "/admin",
-      "destination": "/dashboard/admin.html"
+      "destination": "/dashboard/admin"
     },
     {
       "source": "/login",
-      "destination": "/dashboard/login.html"
+      "destination": "/dashboard/login"
     },
     {
       "source": "/dashboard",
-      "destination": "/dashboard/admin.html"
+      "destination": "/dashboard/admin"
     },
     {
       "source": "/dashboard/img/:path*",
