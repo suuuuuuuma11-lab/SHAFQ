@@ -373,73 +373,41 @@ if (orderForm) {
         if (apiRes.ok) {
           const apiData = await apiRes.json();
           if (apiData && apiData.success) {
-            if (apiData.firestoreSaved && apiData.orderId) {
-              createdOrderId = apiData.orderId;
-              verifiedTotal = apiData.order.total;
-              verifiedShipping = apiData.order.shippingPrice;
-              verifiedSubtotal = apiData.order.subtotal;
-              telegramAlreadySent = Boolean(apiData.telegramSent);
-            } else if (apiData.order) {
-              // Backend verified the calculations, but did not write to Firestore directly
-              verifiedTotal = apiData.order.total;
-              verifiedShipping = apiData.order.shippingPrice;
-              verifiedSubtotal = apiData.order.subtotal;
-            }
+            createdOrderId = apiData.orderId;
+            verifiedTotal = apiData.order.total;
+            verifiedShipping = apiData.order.shippingPrice;
+            verifiedSubtotal = apiData.order.subtotal;
+            telegramAlreadySent = Boolean(apiData.telegramSent);
           }
         }
       } catch (apiErr) {
         console.warn("Backend /api/order unreachable, executing direct client creation:", apiErr);
       }
 
-      // 2. Direct client fallback if backend was unavailable or could not write to Firestore
+      // 2. Direct client fallback if backend was unavailable
       if (!createdOrderId) {
-        const shippingRate = verifiedShipping || getShippingPrice((activeShippingSettings && activeShippingSettings.rates), wilaya, deliveryMethod);
+        const shippingRate = getShippingPrice((activeShippingSettings && activeShippingSettings.rates), wilaya, deliveryMethod);
         verifiedShipping = shippingRate;
         verifiedTotal = verifiedSubtotal + shippingRate;
 
-        // Ensure strictly valid keys conforming to firestore.rules (allowedKeys)
-        const cleanOrderPayload = {
-          customer: name,
-          phone: phone,
-          wilaya: wilayaInfo ? wilayaInfo.name : wilaya,
-          commune: commune,
-          address: address || "",
-          deliveryMethod: deliveryMethod,
-          shippingPrice: Number(verifiedShipping),
-          subtotal: Number(verifiedSubtotal),
-          total: Number(verifiedTotal),
+        const docRef = await addDoc(collection(db, "orders"), {
+          ...orderPayload,
+          shippingPrice: verifiedShipping,
+          subtotal: verifiedSubtotal,
+          total: verifiedTotal,
           shipping: {
             method: deliveryMethod,
-            wilayaCode: String(wilayaCode || ""),
-            communeCode: "",
-            price: Number(verifiedShipping)
+            wilayaCode: wilayaCode,
+            price: verifiedShipping
           },
-          items: [
-            {
-              productId: String(currentProduct.id || ""),
-              name: currentProduct.name,
-              price: Number(currentProduct.price),
-              quantity: Number(qty),
-              size: selectedSize,
-              color: colorName,
-              colorHex: colorHex,
-              image: currentProduct.img || currentProduct.mainImage || ""
-            }
-          ],
           paymentMethod: "الدفع عند الاستلام",
           status: "جديد",
           createdAt: new Date().toISOString()
-        };
-
-        const docRef = await addDoc(collection(db, "orders"), cleanOrderPayload);
+        });
         createdOrderId = docRef.id;
       }
 
-      if (!createdOrderId) {
-        throw new Error("فشل حفظ الطلب في قاعدة البيانات");
-      }
-
-      // 3. Guarantee Telegram notification is always dispatched with the verified order ID
+      // 3. Guarantee Telegram notification is always dispatched
       if (!telegramAlreadySent) {
         try {
           await sendTelegramOrder({

@@ -225,8 +225,7 @@ export default async function handler(req, res) {
     };
 
     // 6. Write Order to Cloud Firestore via REST API
-    let createdOrderId = null;
-    let firestoreSaved = false;
+    let createdOrderId = `ord-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     try {
       const fsUrl = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/orders`;
       const fsRes = await fetch(fsUrl, {
@@ -237,69 +236,65 @@ export default async function handler(req, res) {
 
       if (fsRes.ok) {
         const docResult = await fsRes.json();
-        if (docResult && docResult.name) {
+        if (docResult.name) {
           createdOrderId = docResult.name.split("/").pop();
-          firestoreSaved = true;
         }
       } else {
         const errBody = await fsRes.text();
-        console.warn("[BACKEND ORDER WRITE] Firestore REST returned non-200:", fsRes.status, errBody);
+        console.warn("[BACKEND ORDER WRITE FALLBACK] Firestore REST response:", errBody);
       }
     } catch (fsErr) {
       console.warn("[BACKEND ORDER WRITE ERROR]:", fsErr.message);
     }
 
-    // 7. Dispatch Telegram Notification ONLY if order persistence was confirmed
+    // 7. Dispatch Telegram Notification
     let telegramSent = false;
-    if (firestoreSaved && createdOrderId) {
-      try {
-        const token = process.env.TELEGRAM_BOT_TOKEN;
-        const chatId = process.env.TELEGRAM_CHAT_ID;
-        if (token && chatId) {
-          const methodDesc = method === "home" ? "توصيل للمنزل" : "استلام من المكتب";
-          const itemsText = sanitizedItems.map(it => 
-            `• ${it.name}\n   - المقاس: ${it.size} | اللون: ${it.color} | الكمية: ${it.quantity} | السعر: ${it.price.toLocaleString("ar-DZ")} دج`
-          ).join("\n");
+    try {
+      const token = process.env.TELEGRAM_BOT_TOKEN;
+      const chatId = process.env.TELEGRAM_CHAT_ID;
+      if (token && chatId) {
+        const methodDesc = method === "home" ? "توصيل للمنزل" : "استلام من المكتب";
+        const itemsText = sanitizedItems.map(it => 
+          `• ${it.name}\n   - المقاس: ${it.size} | اللون: ${it.color} | الكمية: ${it.quantity} | السعر: ${it.price.toLocaleString("ar-DZ")} دج`
+        ).join("\n");
 
-          const msg = [
-            "🛍️ طلب جديد من متجر حجاج",
-            "==========================",
-            `🔖 رقم الطلب: #${createdOrderId.slice(-6).toUpperCase()}`,
-            "",
-            `📦 تفاصيل المنتجات (${sanitizedItems.length}):`,
-            itemsText,
-            "",
-            `🚚 طريقة التوصيل: ${methodDesc}`,
-            `💵 سعر المنتجات: ${verifiedSubtotal.toLocaleString("ar-DZ")} دج`,
-            `🚚 سعر التوصيل: ${verifiedShippingPrice.toLocaleString("ar-DZ")} دج`,
-            `💰 الإجمالي الكلي: ${verifiedTotal.toLocaleString("ar-DZ")} دج (الدفع عند التسليم)`,
-            "",
-            "👤 بيانات الزبون:",
-            `• الاسم: ${cleanName}`,
-            `• رقم الهاتف: ${cleanPhone}`,
-            `• الولاية: ${wilayaInfo.code} — ${wilayaInfo.name}`,
-            `• البلدية: ${cleanCommune}`,
-            `• العنوان: ${cleanAddress || "غير محدد"}`,
-            "",
-            `📅 التاريخ: ${new Date().toLocaleString("ar-DZ")}`
-          ].join("\n");
+        const msg = [
+          "🛍️ طلب جديد من متجر حجاج",
+          "==========================",
+          `🔖 رقم الطلب: #${createdOrderId.slice(-6).toUpperCase()}`,
+          "",
+          `📦 تفاصيل المنتجات (${sanitizedItems.length}):`,
+          itemsText,
+          "",
+          `🚚 طريقة التوصيل: ${methodDesc}`,
+          `💵 سعر المنتجات: ${verifiedSubtotal.toLocaleString("ar-DZ")} دج`,
+          `🚚 سعر التوصيل: ${verifiedShippingPrice.toLocaleString("ar-DZ")} دج`,
+          `💰 الإجمالي الكلي: ${verifiedTotal.toLocaleString("ar-DZ")} دج (الدفع عند التسليم)`,
+          "",
+          "👤 بيانات الزبون:",
+          `• الاسم: ${cleanName}`,
+          `• رقم الهاتف: ${cleanPhone}`,
+          `• الولاية: ${wilayaInfo.code} — ${wilayaInfo.name}`,
+          `• البلدية: ${cleanCommune}`,
+          `• العنوان: ${cleanAddress || "غير محدد"}`,
+          "",
+          `📅 التاريخ: ${new Date().toLocaleString("ar-DZ")}`
+        ].join("\n");
 
-          const tgRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ chat_id: chatId, text: msg })
-          });
-          const tgData = await tgRes.json().catch(() => ({}));
-          telegramSent = Boolean(tgData && tgData.ok);
-        }
-      } catch (tgErr) {
-        console.warn("[TELEGRAM DISPATCH WARNING]:", tgErr.message);
+        const tgRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: chatId, text: msg })
+        });
+        const tgData = await tgRes.json().catch(() => ({}));
+        telegramSent = Boolean(tgData && tgData.ok);
       }
+    } catch (tgErr) {
+      console.warn("[TELEGRAM DISPATCH WARNING]:", tgErr.message);
     }
 
     return res.status(200).json({
       success: true,
-      firestoreSaved,
       orderId: createdOrderId,
       order: orderPayload,
       telegramSent
