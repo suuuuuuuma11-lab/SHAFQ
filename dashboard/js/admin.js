@@ -469,9 +469,30 @@ function initRealtimeFirestore() {
 
   // 3. Orders Real-Time Listener
   const ordersCol = collection(db, "orders");
+  const subStartTime = new Date().toISOString();
+  console.log(`[DIAG-ORDERS] ⏱️ بدء اشتراك onSnapshot في: ${subStartTime}`);
+
   onSnapshot(
     ordersCol,
     (snapshot) => {
+      const t0 = performance.now();
+      const isoReceived = new Date().toISOString();
+      const changes = snapshot.docChanges();
+
+      // إحصاء أنواع التغييرات فقط (بدون معرّفات وبدون أي بيانات شخصية)
+      const changeTypes = { added: 0, modified: 0, removed: 0 };
+      changes.forEach((ch) => {
+        if (changeTypes[ch.type] !== undefined) changeTypes[ch.type]++;
+      });
+
+      console.log(`[DIAG-ORDERS] 📥 وصول حدث onSnapshot في: ${isoReceived}`, {
+        fromCache: snapshot.metadata.fromCache,
+        hasPendingWrites: snapshot.metadata.hasPendingWrites,
+        totalDocsInSnapshot: snapshot.size,
+        totalChanges: changes.length,
+        changeTypes: changeTypes
+      });
+
       const list = [];
       snapshot.forEach((docSnap) => {
         const d = docSnap.data();
@@ -498,13 +519,20 @@ function initRealtimeFirestore() {
       // Sort newest first
       list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+      const tState = performance.now();
       state.orders = list;
       state.isOrdersLoaded = true;
       renderOrdersTable();
       refreshStats();
+      const tRender = performance.now();
+
+      console.log(`[DIAG-ORDERS] ⚡ اكتمال التحديث والرسم: إجمالي المعالجة = ${(tRender - t0).toFixed(2)}ms (معالجة البيانات: ${(tState - t0).toFixed(2)}ms | رسم الجدول: ${(tRender - tState).toFixed(2)}ms)`);
     },
     (err) => {
-      console.error("Orders Firestore onSnapshot error:", err);
+      console.error(`[DIAG-ORDERS] ❌ خطأ في المستمع في: ${new Date().toISOString()}`, {
+        code: err?.code || "unknown",
+        message: err?.message || String(err)
+      });
     }
   );
 
@@ -3245,3 +3273,17 @@ onAuthStateChanged(auth, async (user) => {
     initRealtimeFirestore();
   }
 });
+
+// --- مراقبة دورة حياة التبويب (تسجيل فقط - دون أي تأثير على تهيئة الصفحة) ---
+if (!window._hasDiagTabListeners) {
+  window._hasDiagTabListeners = true;
+  document.addEventListener("visibilitychange", () => {
+    console.log(`[DIAG-TAB] تغيرت حالة ظهور الصفحة إلى (${document.visibilityState}) في: ${new Date().toISOString()}`);
+  });
+  window.addEventListener("focus", () => {
+    console.log(`[DIAG-TAB] استعادة تركيز النافذة (Window Focus) في: ${new Date().toISOString()}`);
+  });
+  window.addEventListener("blur", () => {
+    console.log(`[DIAG-TAB] خروج النافذة للوراء (Window Blur) في: ${new Date().toISOString()}`);
+  });
+}
