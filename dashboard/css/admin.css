@@ -2635,8 +2635,9 @@ tbody tr:hover {
 .card-modal{max-width:600px}
 .card-preview-stage{background:#ece7dd;border:1px solid var(--line);border-radius:10px;padding:12px;margin:12px 0;overflow-y:auto;overflow-x:hidden;max-height:56vh;display:flex;flex-direction:column;align-items:center}
 .card-preview-stage .a5-card{transform:scale(0.5);transform-origin:top center;margin:0 auto -101mm;flex:none}
-.card-modal-actions{display:flex;gap:8px;margin-top:4px}
-.card-hint{font-size:11px;color:var(--muted);margin-top:10px;text-align:center}
+.card-modal-actions{display:flex;gap:10px;justify-content:flex-start;margin-top:12px}
+.card-modal-actions .btn-primary{padding:10px 28px;font-size:14px;font-weight:800}
+.card-modal-actions .btn-cancel{padding:10px 22px;font-size:13px}
 
 .a5-card{width:148mm;height:210mm;background:#fff;color:#1d1a16;font-family:'Tajawal',sans-serif;display:flex;flex-direction:column;overflow:hidden;border:0.4mm solid #e7e1d7;box-shadow:var(--shadow-lg);-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .oc-head{background:#1d1a16;color:#fff;padding:5mm 6mm 4mm;display:flex;align-items:center;justify-content:space-between;gap:4mm}

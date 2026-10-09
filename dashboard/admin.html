@@ -728,14 +728,11 @@
 <div class="modal-bg" id="cardModal" onclick="if(event.target===this)closeCardModal()">
   <div class="modal card-modal">
     <h3>بطاقة الطلب — مقاس A5 <span class="tag gold" id="cardModalOrderNo"></span></h3>
-    <p>معاينة حية للبطاقة بحجمها الحقيقي، جاهزة للطباعة المباشرة أو الحفظ كملف PDF.</p>
     <div class="card-preview-stage" id="cardPreviewStage"></div>
     <div class="card-modal-actions">
       <button class="btn-cancel" onclick="closeCardModal()">إغلاق</button>
-      <button class="btn-ghost" onclick="downloadCardPDF()">⬇️ تحميل PDF</button>
-      <button class="btn-primary gold" onclick="printCurrentCards()">🖨️ طباعة مباشرة</button>
+      <button class="btn-primary gold" onclick="printCurrentCards()">طباعة</button>
     </div>
-    <p class="card-hint">لتحويلها إلى ملف PDF: اضغط «تحميل PDF» ثم اختر <b>Save as PDF / حفظ كـ PDF</b> من نافذة الطباعة.</p>
   </div>
 </div>
 
