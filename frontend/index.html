@@ -66,6 +66,11 @@
           var params = new URLSearchParams(window.location.search);
           var catId = params.get('cat') || params.get('category');
           var viewParam = params.get('view');
+          var hero = document.querySelector('.hero');
+          if (viewParam === 'sale' || viewParam === 'fav') {
+            if (hero) hero.style.display = 'none';
+            return;
+          }
           var cachedCats = JSON.parse(localStorage.getItem('clothstore_categories_cache') || 'null');
           var b = null;
           if (catId && Array.isArray(cachedCats)) {

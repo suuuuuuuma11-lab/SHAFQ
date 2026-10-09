@@ -442,12 +442,32 @@ import { db } from "./firebase-config.js";
     const applyBannerImage = applyBanner;
 
     function updateHeroAndHeaders() {
+      const heroSec = document.querySelector('.hero');
       const heroTitle = document.getElementById('heroTitle');
       const heroSub = document.getElementById('heroSub');
       const heroDesc = document.getElementById('heroDesc');
       const crumbTitle = document.getElementById('crumbTitle');
       const pageHeading = document.getElementById('pageHeading');
       const pageDesc = document.getElementById('pageDesc');
+
+      if (view === 'sale') {
+        if (heroSec) heroSec.style.display = 'none';
+        if (crumbTitle) crumbTitle.textContent = 'الخصومات';
+        if (pageHeading) pageHeading.textContent = 'الخصومات';
+        if (pageDesc) pageDesc.textContent = 'استمتع بأقوى العروض والخصومات على تشكيلة فاخرة من منتجاتنا.';
+        return;
+      }
+
+      if (view === 'fav') {
+        if (heroSec) heroSec.style.display = 'none';
+        if (crumbTitle) crumbTitle.textContent = 'المفضلة';
+        if (pageHeading) pageHeading.textContent = 'المفضلة';
+        if (pageDesc) pageDesc.textContent = 'المنتجات التي قمت بحفظها في قائمتك المفضلة لسهولة الوصول إليها لاحقاً.';
+        return;
+      }
+
+      // Ensure hero section is visible for other views
+      if (heroSec) heroSec.style.display = '';
 
       if (searchQuery) {
         if (heroTitle) heroTitle.textContent = 'نتائج البحث';
@@ -456,30 +476,6 @@ import { db } from "./firebase-config.js";
         if (crumbTitle) crumbTitle.textContent = 'البحث';
         if (pageHeading) pageHeading.textContent = `نتائج البحث: "${searchQuery}"`;
         if (pageDesc) pageDesc.textContent = `عرض كافة المنتجات المطابقة لكلمة "${searchQuery}" في كافة أقسام المتجر.`;
-        return;
-      }
-
-      if (view === 'sale') {
-        if (heroTitle) heroTitle.textContent = 'الخصومات والعروض';
-        if (heroSub) heroSub.textContent = 'تخفيضات استثنائية';
-        if (heroDesc) heroDesc.textContent = 'أفضل العروض والأسعار الخاصة على تشكيلاتنا الفاخرة';
-        if (crumbTitle) crumbTitle.textContent = 'الخصومات';
-        if (pageHeading) pageHeading.textContent = 'الخصومات';
-        if (pageDesc) pageDesc.textContent = 'استمتع بأقوى العروض والخصومات على تشكيلة فاخرة من منتجاتنا.';
-        const firstBannerCat = categories.find(c => c.banner && c.banner.type === 'image' && c.banner.img);
-        if (firstBannerCat) applyBanner(firstBannerCat.banner);
-        return;
-      }
-
-      if (view === 'fav') {
-        if (heroTitle) heroTitle.textContent = 'قائمتي المفضلة';
-        if (heroSub) heroSub.textContent = 'قطعك المختارة بعناية';
-        if (heroDesc) heroDesc.textContent = 'تصفح وأدر جميع المنتجات التي نالت إعجابك';
-        if (crumbTitle) crumbTitle.textContent = 'المفضلة';
-        if (pageHeading) pageHeading.textContent = 'المفضلة';
-        if (pageDesc) pageDesc.textContent = 'المنتجات التي قمت بحفظها في قائمتك المفضلة لسهولة الوصول إليها لاحقاً.';
-        const firstBannerCat = categories.find(c => c.banner && c.banner.type === 'image' && c.banner.img);
-        if (firstBannerCat) applyBanner(firstBannerCat.banner);
         return;
       }
 

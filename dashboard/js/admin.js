@@ -358,11 +358,9 @@ function initRealtimeFirestore() {
         });
       });
 
-      // Migration: If completely empty in Firestore, seed automatically
+      // If empty, mark as loaded without auto-seeding dummy data
       if (list.length === 0 && !state.isCategoriesLoaded) {
         state.isCategoriesLoaded = true;
-        await seedCategoriesIfEmpty();
-        return;
       }
 
       state.categories = list;
@@ -433,11 +431,9 @@ function initRealtimeFirestore() {
         });
       });
 
-      // Migration: If completely empty in Firestore, seed automatically
+      // If empty, mark as loaded without auto-seeding dummy data
       if (list.length === 0 && !state.isProductsLoaded) {
         state.isProductsLoaded = true;
-        await seedProductsIfEmpty();
-        return;
       }
 
       state.products = list;
