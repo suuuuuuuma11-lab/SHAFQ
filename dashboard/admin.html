@@ -236,6 +236,9 @@
         </div>
         <div class="panel-body">
           <form id="categoryForm" novalidate>
+            <div id="catSystemNotice" style="display:none;background:#fffdf9;border:1.5px solid var(--gold);color:#8a6e43;padding:12px 16px;border-radius:10px;font-size:13.5px;margin-bottom:18px;line-height:1.6;">
+              🔒 <strong>تصنيف نظام أساسي دائم (الكل):</strong> هذا هو التصنيف الرئيسي لمتجرك، لا يمكن تغيير اسمه أو حذفه. يمكنك فقط تخصيص ورفع صورة بنر العرض الخاصة به (للكمبيوتر والجوال).
+            </div>
             <div class="form-grid">
 
               <div class="field">
@@ -370,9 +373,9 @@
             </div>
 
             <div class="submit-bar">
-              <button type="submit" class="btn-primary gold">
+              <button type="submit" class="btn-primary gold" id="cSubmitBtn">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
-                إضافة التصنيف
+                <span id="cSubmitBtnText">إضافة التصنيف</span>
               </button>
               <button type="button" class="btn-ghost" id="cCancelEdit" style="display:none" onclick="cancelCatEdit()">إلغاء التعديل</button>
               <span class="form-note">بعدها تقدر تربط المنتجات بهذا التصنيف من نموذج المنتج</span>
