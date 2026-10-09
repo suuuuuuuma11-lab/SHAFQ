@@ -1304,8 +1304,14 @@ import { db } from "./firebase-config.js";
     parseInitialUrlState();
     renderCategoriesNav();
     updateHeroAndHeaders();
-    render();
-    initFirestoreSync();
+    // Defer Firestore realtime listener until after page load to prevent infinite browser tab spinner
+    if (document.readyState === 'complete') {
+      setTimeout(initFirestoreSync, 50);
+    } else {
+      window.addEventListener('load', () => {
+        setTimeout(initFirestoreSync, 50);
+      });
+    }
 
     // Browser back/forward navigation support
     window.addEventListener('popstate', () => {

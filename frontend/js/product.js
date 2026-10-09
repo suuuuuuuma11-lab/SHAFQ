@@ -812,8 +812,19 @@ async function loadProductFromFirestore() {
 }
 
 renderProductHeaderCategories();
-initCategoriesSync();
-loadProductFromFirestore();
+if (document.readyState === 'complete') {
+  setTimeout(() => {
+    initCategoriesSync();
+    loadProductFromFirestore();
+  }, 50);
+} else {
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      initCategoriesSync();
+      loadProductFromFirestore();
+    }, 50);
+  });
+}
 
 // Quantity buttons event listeners
 const qtyPlus = document.getElementById("qtyPlusBtn");

@@ -4,7 +4,6 @@
    ========================================================================== */
 
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 import { 
   getFirestore, 
   initializeFirestore, 
@@ -23,7 +22,6 @@ export const FIREBASE_CONFIG = {
 };
 
 export const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
-export const auth = getAuth(app);
 
 let dbInstance;
 try {

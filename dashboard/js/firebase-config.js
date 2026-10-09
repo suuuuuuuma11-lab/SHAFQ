@@ -4,7 +4,11 @@
    ========================================================================== */
 
 // --- Central Firebase Instance (Unified across App & Dashboard) ---
-export { app, auth, db, FIREBASE_CONFIG } from "/frontend/js/firebase-config.js";
+import { app, db, FIREBASE_CONFIG } from "/frontend/js/firebase-config.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+
+export const auth = getAuth(app);
+export { app, db, FIREBASE_CONFIG };
 
 // --- Cloudinary Configuration ---
 // Unsigned upload preset for browser direct uploads
