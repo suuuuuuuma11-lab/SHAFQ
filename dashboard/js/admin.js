@@ -318,10 +318,11 @@ function refreshStats() {
 function fillCatSelects() {
   const pCat = $("pCategory");
   const fCat = $("prodFilterCat");
+  const normalCats = state.categories.filter((c) => !c.isSystem && c.id !== "system_all");
 
   const opts =
     '<option value="">— اختر التصنيف —</option>' +
-    state.categories
+    normalCats
       .map((c) => `<option value="${esc(c.id)}">${esc(c.name)}</option>`)
       .join("");
 
@@ -330,7 +331,7 @@ function fillCatSelects() {
   if (fCat) {
     fCat.innerHTML =
       '<option value="">كل التصنيفات</option>' +
-      state.categories
+      normalCats
         .map((c) => `<option value="${esc(c.id)}">${esc(c.name)}</option>`)
         .join("");
   }
@@ -344,22 +345,40 @@ function initRealtimeFirestore() {
     catsCol,
     async (snapshot) => {
       const list = [];
+      let foundSystemAll = false;
       snapshot.forEach((docSnap) => {
         const d = docSnap.data();
+        const isSys = Boolean(d.isSystem || docSnap.id === "system_all");
+        if (isSys) foundSystemAll = true;
         list.push({
           id: docSnap.id,
-          name: d.name || "",
-          msg: d.msg || "",
+          name: isSys ? "الكل" : (d.name || ""),
+          msg: d.msg || (isSys ? "أناقة تُرتدى بثقة" : ""),
           banner: d.banner || { type: "color", c1: "#1d1a16", c2: "#b99a6b", img: "" },
-          desc: d.desc || "",
+          desc: d.desc || (isSys ? "تشكيلة حصرية من أرقى التصاميم الرجالية بتفاصيل دقيقة وجودة استثنائية" : ""),
           active: d.active !== false,
+          isSystem: isSys,
           createdAt: d.createdAt || "",
           updatedAt: d.updatedAt || ""
         });
       });
 
-      // If empty, mark as loaded without auto-seeding dummy data
-      if (list.length === 0 && !state.isCategoriesLoaded) {
+      if (!foundSystemAll) {
+        list.unshift({
+          id: "system_all",
+          name: "الكل",
+          msg: "أناقة تُرتدى بثقة",
+          desc: "تشكيلة حصرية من أرقى التصاميم الرجالية بتفاصيل دقيقة وجودة استثنائية",
+          banner: { type: "color", c1: "#1d1a16", c2: "#b99a6b", img: "" },
+          isSystem: true,
+          active: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+      }
+
+      // If empty (besides system_all), mark as loaded without auto-seeding dummy data
+      if (list.length <= 1 && !state.isCategoriesLoaded) {
         state.isCategoriesLoaded = true;
       }
 
@@ -1530,8 +1549,17 @@ function resetCatForm() {
   }
 
   state.editingCatId = null;
+  if ($("cName")) $("cName").disabled = false;
+  if ($("cMsg")) $("cMsg").disabled = false;
+  if ($("cDesc")) $("cDesc").disabled = false;
+  if ($("catSystemNotice")) $("catSystemNotice").style.display = "none";
+  if ($("cSubmitBtnText")) $("cSubmitBtnText").textContent = "إضافة التصنيف";
+
   const modeTag = $("catFormMode");
-  if (modeTag) modeTag.textContent = "نموذج إضافة";
+  if (modeTag) {
+    modeTag.textContent = "نموذج إضافة";
+    modeTag.className = "tag blue";
+  }
 
   const cancelBtn = $("cCancelEdit");
   if (cancelBtn) cancelBtn.style.display = "none";
@@ -1544,9 +1572,35 @@ function editCat(id) {
   if (!c) return;
 
   state.editingCatId = id;
+  const isSystem = Boolean(c.isSystem || c.id === "system_all");
+
   $("cName").value = c.name;
   $("cMsg").value = c.msg;
   $("cDesc").value = c.desc || "";
+
+  if (isSystem) {
+    $("cName").disabled = true;
+    $("cMsg").disabled = true;
+    $("cDesc").disabled = true;
+    if ($("catSystemNotice")) $("catSystemNotice").style.display = "block";
+    if ($("cSubmitBtnText")) $("cSubmitBtnText").textContent = "حفظ بنر الكل";
+    const modeTag = $("catFormMode");
+    if (modeTag) {
+      modeTag.textContent = "🔒 تصنيف أساسي (البنر فقط)";
+      modeTag.className = "tag gold";
+    }
+  } else {
+    $("cName").disabled = false;
+    $("cMsg").disabled = false;
+    $("cDesc").disabled = false;
+    if ($("catSystemNotice")) $("catSystemNotice").style.display = "none";
+    if ($("cSubmitBtnText")) $("cSubmitBtnText").textContent = "حفظ التعديلات";
+    const modeTag = $("catFormMode");
+    if (modeTag) {
+      modeTag.textContent = "وضع التعديل";
+      modeTag.className = "tag blue";
+    }
+  }
 
   state.bannerMode = (c.banner && c.banner.type) || "color";
   const bannerSeg = $("bannerSeg");
@@ -1644,6 +1698,11 @@ function countProductsInCategory(cat) {
 function askDeleteCat(id) {
   const c = state.categories.find((x) => x.id === id);
   if (!c) return;
+
+  if (c.isSystem || c.id === "system_all") {
+    toast("🔒 لا يمكن حذف تصنيف الكل — تصنيف نظام أساسي دائم", false);
+    return;
+  }
 
   const count = countProductsInCategory(c);
   const extra = count
@@ -2851,28 +2910,34 @@ function initEvents() {
   // Category Form Submit -> Firestore (addDoc or updateDoc)
   $("categoryForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const name = $("cName") ? $("cName").value.trim() : "";
-    const msg = $("cMsg") ? $("cMsg").value.trim() : "";
-    const desc = $("cDesc") ? $("cDesc").value.trim() : "";
+    const isSystem = state.editingCatId === "system_all" ||
+      Boolean(state.categories.find((c) => c.id === state.editingCatId)?.isSystem);
+
+    const name = isSystem ? "الكل" : ($("cName") ? $("cName").value.trim() : "");
+    const msg = isSystem ? "أناقة تُرتدى بثقة" : ($("cMsg") ? $("cMsg").value.trim() : "");
+    const desc = isSystem ? "تشكيلة حصرية من أرقى التصاميم الرجالية بتفاصيل دقيقة وجودة استثنائية" : ($("cDesc") ? $("cDesc").value.trim() : "");
 
     let ok = true;
-    if (name.length < 2) {
-      markErr("cName");
-      ok = false;
+    if (!isSystem) {
+      if (name.length < 2) {
+        markErr("cName");
+        ok = false;
+      }
+      if (
+        state.categories.some(
+          (c) => c.name.toLowerCase() === name.toLowerCase() && c.id !== state.editingCatId
+        )
+      ) {
+        markErr("cName");
+        toast("يوجد تصنيف بنفس الاسم مسبقاً", false);
+        ok = false;
+      }
+      if (msg.length < 5) {
+        markErr("cMsg");
+        ok = false;
+      }
     }
-    if (
-      state.categories.some(
-        (c) => c.name.toLowerCase() === name.toLowerCase() && c.id !== state.editingCatId
-      )
-    ) {
-      markErr("cName");
-      toast("يوجد تصنيف بنفس الاسم مسبقاً", false);
-      ok = false;
-    }
-    if (msg.length < 5) {
-      markErr("cMsg");
-      ok = false;
-    }
+
     if (state.bannerMode === "image" && !state.catDesktopImg && !state.catMobileImg) {
       setErr("cBanner");
       ok = false;
@@ -2909,11 +2974,15 @@ function initEvents() {
       banner,
       desc,
       active: true,
+      isSystem: Boolean(isSystem),
       updatedAt: new Date().toISOString()
     };
 
     try {
-      if (state.editingCatId) {
+      if (isSystem) {
+        await setDoc(doc(db, "categories", "system_all"), categoryPayload, { merge: true });
+        toast('تم تحديث بنر تصنيف "الكل" بنجاح ✓');
+      } else if (state.editingCatId) {
         await updateDoc(doc(db, "categories", state.editingCatId), categoryPayload);
         toast("تم تحديث التصنيف في السحابة بنجاح ✓");
       } else {

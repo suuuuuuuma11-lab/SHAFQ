@@ -507,9 +507,14 @@ import { db } from "./firebase-config.js";
       if (pageHeading) pageHeading.textContent = 'جميع المنتجات';
       if (pageDesc) pageDesc.textContent = 'مجموعة مختارة من أرقى التصاميم الرجالية الفاخرة، بتصاميم كلاسيكية وعصرية تناسب كل إطلالاتك.';
 
-      const firstBannerCat = categories.find(c => c.banner && c.banner.type === 'image' && c.banner.img);
-      if (firstBannerCat) {
-        applyBanner(firstBannerCat.banner);
+      const allCat = categories.find(c => c.id === 'system_all' || c.isSystem);
+      if (allCat && allCat.banner && allCat.banner.type === 'image' && allCat.banner.img) {
+        applyBanner(allCat.banner);
+      } else {
+        const firstBannerCat = categories.find(c => c.banner && c.banner.type === 'image' && c.banner.img && c.id !== 'system_all' && !c.isSystem);
+        if (firstBannerCat) {
+          applyBanner(firstBannerCat.banner);
+        }
       }
     }
 
@@ -569,9 +574,10 @@ import { db } from "./firebase-config.js";
       }
 
       // Check if navigation elements already exist with matching categories
+      const visibleCats = categories.filter(c => c.id !== 'system_all' && !c.isSystem);
       const existingPills = mobileScroller ? mobileScroller.querySelectorAll('[data-view="cat"]') : [];
-      const isMatchingCats = existingPills.length === categories.length &&
-        Array.from(existingPills).every((el, idx) => el.dataset.catId === categories[idx]?.id);
+      const isMatchingCats = existingPills.length === visibleCats.length &&
+        Array.from(existingPills).every((el, idx) => el.dataset.catId === visibleCats[idx]?.id);
 
       if (isMatchingCats && mainNav && mainNav.querySelector('[data-view]')) {
         updateActiveCategoryNav();
@@ -588,7 +594,7 @@ import { db } from "./firebase-config.js";
       let mobileHtml = `<button type="button" class="mobile-cat-pill ${isAllActive ? 'active' : ''}" data-view="all">الكل</button>`;
 
       // Render ONLY categories from Cloud Firestore categories collection
-      categories.forEach(cat => {
+      visibleCats.forEach(cat => {
         const isCatActive = view === 'cat' && selectedCatId === cat.id;
         desktopHtml += `<a href="/?cat=${encodeURIComponent(cat.id)}" data-view="cat" data-cat-id="${esc(cat.id)}" style="--i:${idx++}" class="${isCatActive ? 'active' : ''}">${esc(cat.name)}</a>`;
         mobileHtml += `<button type="button" class="mobile-cat-pill ${isCatActive ? 'active' : ''}" data-view="cat" data-cat-id="${esc(cat.id)}">${esc(cat.name)}</button>`;
