@@ -570,9 +570,8 @@ function populateWilayasDropdown() {
   }
 }
 
-// Telegram Order Dispatcher (Multi-item support with local fallback)
+// Telegram Order Dispatcher (Securely routed through serverless endpoint /api/telegram)
 export async function sendTelegramOrderNotification(orderData, orderId) {
-  // 1. Try serverless endpoint (/api/telegram)
   try {
     const res = await fetch("/api/telegram", {
       method: "POST",
@@ -583,52 +582,10 @@ export async function sendTelegramOrderNotification(orderData, orderId) {
       const data = await res.json();
       if (data && data.success) return data;
     }
-  } catch (_) {}
-
-  // 2. Direct fallback
-  const BOT_TOKEN = "8916406368:AAFIJTPkAykiL54hn_mmbv6AqGax6lvq08U";
-  const CHAT_ID = "6609345622";
-
-  let itemsText = "";
-  if (Array.isArray(orderData.items) && orderData.items.length > 0) {
-    itemsText = orderData.items.map((it, idx) => 
-      `• ${it.name}\n   - المقاس: ${it.size} | اللون: ${it.color} | الكمية: ${it.quantity} | السعر: ${it.price} دج`
-    ).join("\n");
-  } else {
-    itemsText = `• ${orderData.productName}\n   - المقاس: ${orderData.size} | اللون: ${orderData.color} | الكمية: ${orderData.qty} | السعر: ${orderData.price} دج`;
-  }
-
-  const messageText = [
-    "🛍️ طلب جديد من متجر حجاج ",
-    "==========================",
-    `🔖 رقم الطلب: #${orderId.slice(-6).toUpperCase()}`,
-    "",
-    `📦 تفاصيل المنتجات (${Array.isArray(orderData.items) ? orderData.items.length : 1} عنصر):`,
-    itemsText,
-    "",
-    `💰 الإجمالي الكلي: ${orderData.total} دج (الدفع عند التسليم)`,
-    "",
-    "👤 بيانات الزبون:",
-    `• الاسم: ${orderData.name}`,
-    `• رقم الهاتف: ${orderData.phone}`,
-    `• الولاية: ${orderData.wilaya}`,
-    `• البلدية: ${orderData.commune}`,
-    `• العنوان: ${orderData.address || "لم يُحدد"}`,
-    "",
-    `📅 التاريخ: ${new Date().toLocaleString("ar-DZ")}`
-  ].join("\n");
-
-  try {
-    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: CHAT_ID, text: messageText })
-    });
-    return await response.json();
   } catch (err) {
-    console.warn("Direct Telegram fallback error:", err);
-    return { ok: false };
+    console.warn("Telegram notification dispatch error:", err);
   }
+  return { ok: false };
 }
 
 // Handle Checkout Form Submission

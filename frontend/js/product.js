@@ -270,9 +270,8 @@ function renderProductDetails(p) {
   }
 }
 
-// Telegram notification dispatcher (Serverless with local direct fallback)
+// Telegram notification dispatcher (Securely routed through serverless endpoint /api/telegram)
 async function sendTelegramOrder(orderData, orderId) {
-  // 1. Try serverless backend first (/api/telegram)
   try {
     const res = await fetch("/api/telegram", {
       method: "POST",
@@ -283,52 +282,10 @@ async function sendTelegramOrder(orderData, orderId) {
       const data = await res.json();
       if (data && data.success) return data;
     }
-  } catch (_) {
-    // Backend serverless endpoint not running locally
-  }
-
-  // 2. Direct fallback (works locally, in Live Server, and offline)
-  const BOT_TOKEN = "8916406368:AAFIJTPkAykiL54hn_mmbv6AqGax6lvq08U";
-  const CHAT_ID = "6609345622";
-
-  const messageText = [
-    "🛍️ طلب جديد من متجر حجاج (HADJAJ)!",
-    "==========================",
-    `🔖 رقم الطلب: #${orderId.slice(-6).toUpperCase()}`,
-    "",
-    "📦 تفاصيل المنتج:",
-    `• ${orderData.productName}`,
-    `  - اللون: ${orderData.color}`,
-    `  - المقاس: ${orderData.size}`,
-    `  - الكمية: ${orderData.qty}`,
-    `  - السعر الفردي: ${orderData.price} دج`,
-    "",
-    `💰 الإجمالي الكلي: ${orderData.total} دج (الدفع عند التسليم)`,
-    "",
-    "👤 بيانات الزبون:",
-    `• الاسم: ${orderData.name}`,
-    `• رقم الهاتف: ${orderData.phone}`,
-    `• الولاية: ${orderData.wilaya}`,
-    `• البلدية: ${orderData.commune}`,
-    `• العنوان: ${orderData.address || "لم يُحدد"}`,
-    "",
-    `📅 التاريخ: ${new Date().toLocaleString("ar-DZ")}`
-  ].join("\n");
-
-  try {
-    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        text: messageText
-      })
-    });
-    return await response.json();
   } catch (err) {
-    console.error("Direct Telegram dispatch error:", err);
-    return { ok: false };
+    console.warn("Telegram notification dispatch error:", err);
   }
+  return { ok: false };
 }
 
 /* Validation + order submission to Firestore */

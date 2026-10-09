@@ -250,8 +250,8 @@ export default async function handler(req, res) {
     // 7. Dispatch Telegram Notification
     let telegramSent = false;
     try {
-      const token = process.env.TELEGRAM_BOT_TOKEN || "8916406368:AAFIJTPkAykiL54hn_mmbv6AqGax6lvq08U";
-      const chatId = process.env.TELEGRAM_CHAT_ID || "6609345622";
+      const token = process.env.TELEGRAM_BOT_TOKEN;
+      const chatId = process.env.TELEGRAM_CHAT_ID;
       if (token && chatId) {
         const methodDesc = method === "home" ? "توصيل للمنزل" : "استلام من المكتب";
         const itemsText = sanitizedItems.map(it => 
