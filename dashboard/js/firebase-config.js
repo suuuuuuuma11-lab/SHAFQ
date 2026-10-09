@@ -9,8 +9,8 @@ export { app, auth, db, FIREBASE_CONFIG } from "/frontend/js/firebase-config.js"
 // --- Cloudinary Configuration ---
 // Unsigned upload preset for browser direct uploads
 export const CLOUDINARY_CONFIG = {
-  cloudName: "prwmj9gk",
-  uploadPreset: "clothstore_products",
+  cloudName: "y72rtubk",
+  uploadPreset: "Hadjaj.shop",
   folder: "products"
 };
 
