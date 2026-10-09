@@ -5,20 +5,20 @@
    ========================================================================== */
 
 import { auth, db, uploadImageToCloudinary } from "./firebase-config.js";
-import { 
-  onAuthStateChanged, 
-  signOut 
+import {
+  onAuthStateChanged,
+  signOut
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-import { 
-  collection, 
-  doc, 
+import {
+  collection,
+  doc,
   getDoc,
-  getDocs, 
+  getDocs,
   setDoc,
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  onSnapshot 
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
 import { DEFAULT_SHIPPING_RATES } from "/frontend/data/default-shipping-rates.js";
@@ -390,9 +390,9 @@ function initRealtimeFirestore() {
         if (d.stock !== undefined) {
           updateDoc(doc(db, "products", docSnap.id), {
             stock: deleteField()
-          }).catch(() => {});
+          }).catch(() => { });
         }
-        
+
         // Normalize colors to array of { name, value }
         let colors = [];
         if (Array.isArray(d.colors)) {
@@ -924,11 +924,10 @@ function renderProductsTable() {
         </td>
         <td>
           <b>${p.price} دج</b>
-          ${
-            p.oldPrice
-              ? `<br><span style="font-size:11px;color:var(--muted);text-decoration:line-through">${p.oldPrice} دج</span> <span class="tag red">-${disc}%</span>`
-              : ""
-          }
+          ${p.oldPrice
+          ? `<br><span style="font-size:11px;color:var(--muted);text-decoration:line-through">${p.oldPrice} دج</span> <span class="tag red">-${disc}%</span>`
+          : ""
+        }
         </td>
         <td>
           <div class="t-colors">
@@ -1885,8 +1884,8 @@ function renderOrdersTable() {
       const shippingBadge = (o.shipping && o.shipping.method)
         ? `<div class="order-shipping-chip">${o.shipping.method === 'stopDesk' ? '🏢 استلام من المكتب' : '🏠 توصيل للمنزل'}: <b>${o.shipping.price || 0} دج</b></div>`
         : (o.deliveryMethod
-            ? `<div class="order-shipping-chip">${o.deliveryMethod === 'stopDesk' ? '🏢 استلام من المكتب' : '🏠 توصيل للمنزل'}: <b>${o.shippingPrice || 0} دج</b></div>`
-            : '');
+          ? `<div class="order-shipping-chip">${o.deliveryMethod === 'stopDesk' ? '🏢 استلام من المكتب' : '🏠 توصيل للمنزل'}: <b>${o.shippingPrice || 0} دج</b></div>`
+          : '');
 
       const totalBreakdown = (typeof o.subtotal === 'number' && o.subtotal > 0)
         ? `<small style="display:block;font-size:11px;color:var(--muted)">المنتجات: ${o.subtotal} دج + التوصيل: ${o.shippingPrice || (o.shipping && o.shipping.price) || 0} دج</small>`
@@ -2144,8 +2143,8 @@ async function saveShippingSettings() {
 // بطاقة طلب احترافية مع حقل كتابة رقم التتبع يدوياً
 // ============================================================
 
-function orderShortId(o) { 
-  return String(o.id || "").slice(-6).toUpperCase(); 
+function orderShortId(o) {
+  return String(o.id || "").slice(-6).toUpperCase();
 }
 
 function getFilteredOrders() {
@@ -2231,23 +2230,91 @@ function getFilteredOrders() {
   return list;
 }
 
-const CARD_STATUS_CLASS = { 
-  "جديد": "st-new", 
-  "قيد المعالجة": "st-proc", 
-  "مؤكد": "st-conf", 
-  "تم التوصيل": "st-done", 
-  "ملغي": "st-canc" 
+const CARD_STATUS_CLASS = {
+  "جديد": "st-new",
+  "قيد المعالجة": "st-proc",
+  "مؤكد": "st-conf",
+  "تم التوصيل": "st-done",
+  "ملغي": "st-canc"
 };
+
+function resolveCardItemPrice(it, o) {
+  let p = Number(it.price);
+  if (!isNaN(p) && p > 0) return p;
+
+  p = Number(it.unitPrice);
+  if (!isNaN(p) && p > 0) return p;
+
+  // Catalog match fallback
+  if (Array.isArray(state.products)) {
+    if (it.productId) {
+      const match = state.products.find((x) => String(x.id) === String(it.productId));
+      if (match && Number(match.price) > 0) return Number(match.price);
+    }
+    if (it.name) {
+      const cleanName = String(it.name).trim().toLowerCase();
+      const match = state.products.find((x) => {
+        const xName = String(x.name || "").trim().toLowerCase();
+        return xName === cleanName || xName.includes(cleanName) || cleanName.includes(xName);
+      });
+      if (match && Number(match.price) > 0) return Number(match.price);
+    }
+  }
+
+  // Single item subtotal / total fallback
+  if (Array.isArray(o.items) && o.items.length === 1) {
+    const q = Math.max(1, Number(it.quantity || it.qty || 1));
+    if (o.subtotal && Number(o.subtotal) > 0) {
+      return Math.round(Number(o.subtotal) / q);
+    }
+    if (o.total && Number(o.total) > 0) {
+      const ship = Number(o.shippingPrice || (o.shipping && o.shipping.price) || 0);
+      const diff = Number(o.total) - ship;
+      if (diff > 0) return Math.round(diff / q);
+    }
+  }
+
+  return 0;
+}
 
 function buildOrderCardHTML(o) {
   const shortId = orderShortId(o);
-  const dateStr = o.createdAt ? formatAlgerianDateTime(o.createdAt) : "—";
-  const rows = (o.items || []).map((it, i) => {
-    const qty = it.quantity || 1, price = it.price || 0;
-    return `<tr><td class="oc-c">${i+1}</td><td class="oc-pname">${esc(it.name||"منتج")}</td>
-      <td class="oc-c">${esc(it.size||"—")}</td><td>${esc(it.color||"—")}</td>
-      <td class="oc-c">${qty}</td><td class="oc-c">${price}</td><td class="oc-c oc-bold">${qty*price}</td></tr>`;
+  const resolvedItems = (o.items || []).map((it) => {
+    const qty = Math.max(1, Number(it.quantity || it.qty || 1));
+    const price = resolveCardItemPrice(it, o);
+    return {
+      ...it,
+      qty,
+      price,
+      total: qty * price
+    };
+  });
+
+  const rows = resolvedItems.map((it, i) => {
+    const priceDisplay = it.price > 0
+      ? `<b>${it.price.toLocaleString("ar-DZ")}</b> <span class="oc-curr">دج</span>`
+      : `<b>0</b> <span class="oc-curr">دج</span>`;
+    const totalDisplay = it.total > 0
+      ? `<b>${it.total.toLocaleString("ar-DZ")}</b> <span class="oc-curr">دج</span>`
+      : `<b>0</b> <span class="oc-curr">دج</span>`;
+
+    return `<tr>
+      <td class="oc-c">${i + 1}</td>
+      <td class="oc-pname">${esc(it.name || "منتج")}</td>
+      <td class="oc-c">${esc(it.size || "—")}</td>
+      <td class="oc-c">${esc(it.color || "—")}</td>
+      <td class="oc-c oc-bold">${it.qty}</td>
+      <td class="oc-c oc-price">${priceDisplay}</td>
+      <td class="oc-c oc-price oc-bold">${totalDisplay}</td>
+    </tr>`;
   }).join("");
+
+  let orderTotal = Number(o.total);
+  if (isNaN(orderTotal) || orderTotal <= 0) {
+    const itemsSum = resolvedItems.reduce((acc, it) => acc + it.total, 0);
+    const ship = Number(o.shippingPrice || (o.shipping && o.shipping.price) || 0);
+    orderTotal = itemsSum + ship;
+  }
 
   return `
   <div class="a5-card" dir="rtl">
@@ -2262,33 +2329,47 @@ function buildOrderCardHTML(o) {
         <div class="oc-tr-line"></div>
       </div>
     </div>
-    <div class="oc-statusstrip">
-      <span class="oc-status ${CARD_STATUS_CLASS[o.status]||"st-new"}">${esc(o.status||"جديد")}</span>
-      <span class="oc-date">${dateStr}</span>
-    </div>
     <div class="oc-body">
       <div class="oc-sec">
         <div class="oc-sec-title">معلومات الزبون</div>
         <div class="oc-cust-grid">
-          <div class="oc-cell"><label>الاسم الكامل</label><b>${esc(o.customer||"—")}</b></div>
-          <div class="oc-cell"><label>رقم الهاتف</label><b class="oc-ltr">${esc(o.phone||"—")}</b></div>
-          <div class="oc-cell"><label>الولاية</label><b>${esc(o.wilaya||"—")}</b></div>
-          <div class="oc-cell"><label>البلدية</label><b>${esc(o.commune||"—")}</b></div>
-          <div class="oc-cell oc-wide"><label>العنوان الكامل</label><b>${esc(o.address||"—")}</b></div>
+          <div class="oc-cell"><label>الاسم الكامل</label><b>${esc(o.customer || "—")}</b></div>
+          <div class="oc-cell"><label>رقم الهاتف</label><b class="oc-ltr">${esc(o.phone || "—")}</b></div>
+          <div class="oc-cell"><label>الولاية</label><b>${esc(o.wilaya || "—")}</b></div>
+          <div class="oc-cell"><label>البلدية</label><b>${esc(o.commune || "—")}</b></div>
+          <div class="oc-cell oc-wide"><label>العنوان الكامل</label><b>${esc(o.address || "—")}</b></div>
         </div>
       </div>
       <div class="oc-sec">
         <div class="oc-sec-title">تفاصيل المنتجات</div>
         <table class="oc-items">
-          <thead><tr><th>#</th><th>المنتج</th><th>المقاس</th><th>اللون</th><th>الكمية</th><th>سعر الوحدة</th><th>المجموع</th></tr></thead>
-          <tbody>${rows||'<tr><td colspan="7" class="oc-c">لا توجد منتجات</td></tr>'}</tbody>
+          <colgroup>
+            <col style="width:6%">
+            <col style="width:34%">
+            <col style="width:11%">
+            <col style="width:15%">
+            <col style="width:8%">
+            <col style="width:13%">
+            <col style="width:13%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>المنتج</th>
+              <th>المقاس</th>
+              <th>اللون</th>
+              <th>الكمية</th>
+              <th>سعر الوحدة</th>
+              <th>المجموع</th>
+            </tr>
+          </thead>
+          <tbody>${rows || '<tr><td colspan="7" class="oc-c">لا توجد منتجات</td></tr>'}</tbody>
         </table>
       </div>
     </div>
-    <div class="oc-total"><span>الإجمالي — يُدفع عند الاستلام (COD)</span><b>${o.total||0} دج</b></div>
+    <div class="oc-total"><span>الإجمالي — يُدفع عند الاستلام (COD)</span><b>${orderTotal.toLocaleString("ar-DZ")} دج</b></div>
     <div class="oc-foot">
       <div class="oc-thanks">شكرًا لثقتكم بحجاج ✦ نتمنى لكم إطلالة تليق بكم</div>
-      <div class="oc-receive"><span class="oc-check">استلمت الطلب بحالة جيدة ✓</span><span class="oc-sign">توقيع الزبون :</span></div>
     </div>
   </div>`;
 }
@@ -2317,13 +2398,13 @@ function printAllFiltered() {
   toast(`تم تجهيز ${list.length} بطاقة A5 للطباعة ✓`);
 }
 
-function closeCardModal() { 
-  $("cardModal")?.classList.remove("open"); 
+function closeCardModal() {
+  $("cardModal")?.classList.remove("open");
 }
 
-function printCurrentCards() { 
-  document.body.classList.add("printing"); 
-  setTimeout(() => window.print(), 60); 
+function printCurrentCards() {
+  document.body.classList.add("printing");
+  setTimeout(() => window.print(), 60);
 }
 
 function downloadCardPDF() {
@@ -2737,19 +2818,19 @@ function initEvents() {
     const banner =
       state.bannerMode === "color"
         ? {
-            type: "color",
-            c1: $("cColor1") ? $("cColor1").value : "#1d1a16",
-            c2: $("cColor2") ? $("cColor2").value : "#b99a6b",
-            img: ""
-          }
+          type: "color",
+          c1: $("cColor1") ? $("cColor1").value : "#1d1a16",
+          c2: $("cColor2") ? $("cColor2").value : "#b99a6b",
+          img: ""
+        }
         : {
-            type: "image",
-            c1: "#1d1a16",
-            c2: "#1d1a16",
-            img: primaryImg,
-            mobileImg: mobileImg,
-            isFinal: true
-          };
+          type: "image",
+          c1: "#1d1a16",
+          c2: "#1d1a16",
+          img: primaryImg,
+          mobileImg: mobileImg,
+          isFinal: true
+        };
 
     const categoryPayload = {
       name,
@@ -2814,7 +2895,7 @@ function initCropEditorEvents() {
     if (canvas.setPointerCapture) {
       try {
         canvas.setPointerCapture(e.pointerId);
-      } catch (_) {}
+      } catch (_) { }
     }
   });
 
@@ -2846,7 +2927,7 @@ function initCropEditorEvents() {
     if (e && e.pointerId && canvas.hasPointerCapture && canvas.hasPointerCapture(e.pointerId)) {
       try {
         canvas.releasePointerCapture(e.pointerId);
-      } catch (_) {}
+      } catch (_) { }
     }
   };
 
@@ -2965,7 +3046,7 @@ async function verifyIsAdmin(user) {
         createdAt: new Date().toISOString()
       }, { merge: true });
     }
-  } catch (_) {}
+  } catch (_) { }
   return true;
 }
 
