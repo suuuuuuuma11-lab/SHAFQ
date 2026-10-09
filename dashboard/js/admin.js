@@ -465,11 +465,17 @@ function initRealtimeFirestore() {
           customer: d.customer || d.name || "عميل",
           phone: d.phone || "",
           wilaya: d.wilaya || "",
+          wilayaCode: d.wilayaCode || (d.shipping && d.shipping.wilayaCode) || "",
           commune: d.commune || "",
           address: d.address || "",
+          deliveryMethod: d.deliveryMethod || (d.shipping && d.shipping.method) || "home",
+          shippingPrice: typeof d.shippingPrice !== "undefined" ? d.shippingPrice : ((d.shipping && d.shipping.price) || 0),
+          shipping: d.shipping || null,
+          subtotal: d.subtotal || 0,
           items: Array.isArray(d.items) ? d.items : [],
           total: d.total || 0,
           paymentMethod: d.paymentMethod || "الدفع عند الاستلام",
+          status: d.status || "جديد",
           createdAt: d.createdAt || new Date().toISOString()
         });
       });
@@ -2277,6 +2283,52 @@ function resolveCardItemPrice(it, o) {
   return 0;
 }
 
+function resolveShippingPrice(o) {
+  // 1. Direct saved price on order
+  let s = Number(o.shippingPrice);
+  if (!isNaN(s) && s > 0) return s;
+
+  if (o.shipping && typeof o.shipping.price !== "undefined") {
+    s = Number(o.shipping.price);
+    if (!isNaN(s) && s > 0) return s;
+  }
+
+  // 2. Lookup by wilaya in state.shippingSettings.rates
+  const isStop = o.deliveryMethod === "stopDesk" || (o.shipping && o.shipping.method === "stopDesk");
+  const methodKey = isStop ? "stopDesk" : "home";
+
+  if (state.shippingSettings && state.shippingSettings.rates) {
+    const rates = state.shippingSettings.rates;
+    const wilayaStr = String(o.wilaya || "").trim().toLowerCase();
+    const wilayaCode = String(o.wilayaCode || (o.shipping && o.shipping.wilayaCode) || "").trim();
+
+    for (const [code, rate] of Object.entries(rates)) {
+      if (
+        (wilayaCode && code === wilayaCode) ||
+        (rate.wilayaName && rate.wilayaName.toLowerCase() === wilayaStr) ||
+        (rate.wilayaNameLatin && rate.wilayaNameLatin.toLowerCase() === wilayaStr)
+      ) {
+        const val = Number(rate[methodKey]);
+        if (!isNaN(val) && val > 0) return val;
+      }
+    }
+  }
+
+  // 3. Difference between order.total and items subtotal if available
+  if (o.total && Number(o.total) > 0) {
+    const itemsSum = (o.items || []).reduce((sum, it) => {
+      const p = resolveCardItemPrice(it, o);
+      const q = Math.max(1, Number(it.quantity || it.qty || 1));
+      return sum + p * q;
+    }, 0);
+    const diff = Number(o.total) - itemsSum;
+    if (diff > 0) return diff;
+  }
+
+  // 4. Default Algeria rate fallback based on method
+  return isStop ? 400 : 600;
+}
+
 function buildOrderCardHTML(o) {
   const shortId = orderShortId(o);
   const resolvedItems = (o.items || []).map((it) => {
@@ -2290,7 +2342,7 @@ function buildOrderCardHTML(o) {
     };
   });
 
-  const rows = resolvedItems.map((it, i) => {
+  const productRows = resolvedItems.map((it, i) => {
     const priceDisplay = it.price > 0
       ? `<b>${it.price.toLocaleString("ar-DZ")}</b> <span class="oc-curr">دج</span>`
       : `<b>0</b> <span class="oc-curr">دج</span>`;
@@ -2309,11 +2361,34 @@ function buildOrderCardHTML(o) {
     </tr>`;
   }).join("");
 
+  // Delivery (توصيل) as the last item with its price
+  const shippingPrice = resolveShippingPrice(o);
+  const isStop = o.deliveryMethod === "stopDesk" || (o.shipping && o.shipping.method === "stopDesk");
+  const deliveryLabel = isStop ? "توصيل (استلام من المكتب)" : "توصيل";
+  const deliveryIndex = resolvedItems.length + 1;
+
+  const deliveryPriceDisplay = shippingPrice > 0
+    ? `<b>${shippingPrice.toLocaleString("ar-DZ")}</b> <span class="oc-curr">دج</span>`
+    : `<b>0</b> <span class="oc-curr">دج</span>`;
+
+  const deliveryRow = `<tr>
+    <td class="oc-c">${deliveryIndex}</td>
+    <td class="oc-pname"><b>${deliveryLabel}</b></td>
+    <td class="oc-c">—</td>
+    <td class="oc-c">—</td>
+    <td class="oc-c oc-bold">1</td>
+    <td class="oc-c oc-price">${deliveryPriceDisplay}</td>
+    <td class="oc-c oc-price oc-bold">${deliveryPriceDisplay}</td>
+  </tr>`;
+
+  const allRows = productRows + deliveryRow;
+
   let orderTotal = Number(o.total);
-  if (isNaN(orderTotal) || orderTotal <= 0) {
-    const itemsSum = resolvedItems.reduce((acc, it) => acc + it.total, 0);
-    const ship = Number(o.shippingPrice || (o.shipping && o.shipping.price) || 0);
-    orderTotal = itemsSum + ship;
+  const itemsSum = resolvedItems.reduce((acc, it) => acc + it.total, 0);
+  const expectedTotal = itemsSum + shippingPrice;
+
+  if (isNaN(orderTotal) || orderTotal <= 0 || orderTotal < expectedTotal) {
+    orderTotal = expectedTotal;
   }
 
   return `
@@ -2363,7 +2438,7 @@ function buildOrderCardHTML(o) {
               <th>المجموع</th>
             </tr>
           </thead>
-          <tbody>${rows || '<tr><td colspan="7" class="oc-c">لا توجد منتجات</td></tr>'}</tbody>
+          <tbody>${allRows}</tbody>
         </table>
       </div>
     </div>
