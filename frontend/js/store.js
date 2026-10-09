@@ -500,7 +500,7 @@ import { db } from "./firebase-config.js";
       }
 
       // Default: "all" view
-      if (heroTitle) heroTitle.textContent = 'متجر حجاج';
+      if (heroTitle) heroTitle.textContent = 'محل حجاج';
       if (heroSub) heroSub.textContent = 'أناقة تُرتدى بثقة';
       if (heroDesc) heroDesc.textContent = 'تشكيلة حصرية من أرقى التصاميم الرجالية بتفاصيل دقيقة وجودة استثنائية';
       if (crumbTitle) crumbTitle.textContent = 'جميع المنتجات';
