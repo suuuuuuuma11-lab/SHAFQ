@@ -677,10 +677,15 @@ export async function handleCheckoutSubmit(e) {
 
     if (backendRes.ok) {
       const backendData = await backendRes.json();
-      if (backendData.success && backendData.orderId) {
-        createdOrderId = backendData.orderId;
-        savedOrderData = backendData.order;
-        telegramAlreadySent = Boolean(backendData.telegramSent);
+      if (backendData.success) {
+        if (backendData.firestoreSaved && backendData.orderId) {
+          createdOrderId = backendData.orderId;
+          savedOrderData = backendData.order;
+          telegramAlreadySent = Boolean(backendData.telegramSent);
+        } else if (backendData.order) {
+          // Backend verified the math, but did not write to Firestore directly
+          savedOrderData = backendData.order;
+        }
       }
     }
   } catch (apiErr) {
@@ -688,9 +693,9 @@ export async function handleCheckoutSubmit(e) {
   }
 
   try {
-    // 2. Direct Firestore Fallback if backend was unavailable
+    // 2. Direct Firestore Persistence if not already saved by backend
     if (!createdOrderId) {
-      const orderPayload = {
+      const basePayload = savedOrderData || {
         customer: name,
         phone,
         wilaya,
@@ -702,8 +707,8 @@ export async function handleCheckoutSubmit(e) {
         total: calculatedTotal,
         shipping: {
           method: deliveryMethod,
-          wilayaCode: wilayaCode,
-          communeCode: communeCode,
+          wilayaCode: String(wilayaCode || ""),
+          communeCode: String(communeCode || ""),
           price: shippingPrice
         },
         items: orderItems,
@@ -712,25 +717,61 @@ export async function handleCheckoutSubmit(e) {
         createdAt: new Date().toISOString()
       };
 
-      const docRef = await addDoc(collection(db, "orders"), orderPayload);
+      // Ensure strictly valid keys conforming to firestore.rules (allowedKeys)
+      const cleanOrderPayload = {
+        customer: basePayload.customer,
+        phone: basePayload.phone,
+        wilaya: basePayload.wilaya,
+        commune: basePayload.commune,
+        address: basePayload.address || "",
+        deliveryMethod: basePayload.deliveryMethod,
+        shippingPrice: Number(basePayload.shippingPrice),
+        subtotal: Number(basePayload.subtotal),
+        total: Number(basePayload.total),
+        shipping: {
+          method: basePayload.deliveryMethod,
+          wilayaCode: String(basePayload.shipping?.wilayaCode || wilayaCode || ""),
+          communeCode: String(basePayload.shipping?.communeCode || communeCode || ""),
+          price: Number(basePayload.shippingPrice)
+        },
+        items: basePayload.items.map(it => ({
+          productId: String(it.productId || it.id || "p1"),
+          name: it.name,
+          price: Number(it.price),
+          quantity: Number(it.quantity || it.qty || 1),
+          size: it.size || "M",
+          color: it.color || "افتراضي",
+          colorHex: it.colorHex || "#1d1a16",
+          image: it.image || ""
+        })),
+        paymentMethod: "الدفع عند الاستلام",
+        status: "جديد",
+        createdAt: basePayload.createdAt || new Date().toISOString()
+      };
+
+      const docRef = await addDoc(collection(db, "orders"), cleanOrderPayload);
       createdOrderId = docRef.id;
-      savedOrderData = orderPayload;
+      savedOrderData = cleanOrderPayload;
     }
 
-    // Always guarantee Telegram notification is dispatched
+    if (!createdOrderId) {
+      throw new Error("فشل حفظ الطلب في قاعدة البيانات");
+    }
+
+    // Always guarantee Telegram notification is dispatched with the real order ID
     if (!telegramAlreadySent) {
       try {
         await sendTelegramOrderNotification({
-          name,
-          phone,
-          wilaya,
-          commune,
-          address,
-          items: orderItems,
-          deliveryMethod,
-          shippingPrice,
-          subtotal,
-          total: calculatedTotal.toLocaleString("ar-DZ")
+          name: savedOrderData.customer,
+          phone: savedOrderData.phone,
+          wilaya: savedOrderData.wilaya,
+          commune: savedOrderData.commune,
+          address: savedOrderData.address,
+          items: savedOrderData.items,
+          deliveryMethod: savedOrderData.deliveryMethod,
+          shippingPrice: savedOrderData.shippingPrice,
+          subtotal: savedOrderData.subtotal,
+          total: Number(savedOrderData.total).toLocaleString("ar-DZ")
         }, createdOrderId);
       } catch (tgErr) {
         console.warn("Direct Telegram notification warning:", tgErr);
@@ -744,17 +785,7 @@ export async function handleCheckoutSubmit(e) {
     closeCheckoutModal();
 
     // 5. Show Success Screen
-    showOrderSuccessReceipt(createdOrderId, savedOrderData || {
-      customer: name,
-      phone,
-      wilaya,
-      commune,
-      deliveryMethod,
-      shippingPrice,
-      subtotal,
-      total: calculatedTotal,
-      items: orderItems
-    });
+    showOrderSuccessReceipt(createdOrderId, savedOrderData);
 
   } catch (err) {
     console.error("Order submission exception:", err);

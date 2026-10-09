@@ -282,6 +282,10 @@ function switchView(viewName, btn) {
     renderCatsGrid();
   } else if (viewName === "prods") {
     renderProductsTable();
+  } else if (viewName === "orders") {
+    renderOrdersTable();
+  } else if (viewName === "shipping") {
+    renderShippingTable();
   } else if (viewName === "dash") {
     renderProductsTable();
     refreshStats();
@@ -491,12 +495,12 @@ function initRealtimeFirestore() {
           total: d.total || 0,
           paymentMethod: d.paymentMethod || "الدفع عند الاستلام",
           status: d.status || "جديد",
-          createdAt: d.createdAt || new Date().toISOString()
+          createdAt: d.createdAt ? (typeof d.createdAt.toDate === "function" ? d.createdAt.toDate().toISOString() : (d.createdAt instanceof Date ? d.createdAt.toISOString() : String(d.createdAt))) : new Date().toISOString()
         });
       });
 
       // Sort newest first
-      list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
       state.orders = list;
       state.isOrdersLoaded = true;
@@ -2000,9 +2004,42 @@ function askDeleteOrder(orderId) {
   });
 }
 
-function refreshOrders() {
+async function refreshOrders() {
   toast("جاري تحديث الطلبات من السحابة...");
-  renderOrdersTable();
+  try {
+    const snap = await getDocs(collection(db, "orders"));
+    const list = [];
+    snap.forEach((docSnap) => {
+      const d = docSnap.data();
+      list.push({
+        id: docSnap.id,
+        customer: d.customer || d.name || "عميل",
+        phone: d.phone || "",
+        wilaya: d.wilaya || "",
+        wilayaCode: d.wilayaCode || (d.shipping && d.shipping.wilayaCode) || "",
+        commune: d.commune || "",
+        address: d.address || "",
+        deliveryMethod: d.deliveryMethod || (d.shipping && d.shipping.method) || "home",
+        shippingPrice: typeof d.shippingPrice !== "undefined" ? d.shippingPrice : ((d.shipping && d.shipping.price) || 0),
+        shipping: d.shipping || null,
+        subtotal: d.subtotal || 0,
+        items: Array.isArray(d.items) ? d.items : [],
+        total: d.total || 0,
+        paymentMethod: d.paymentMethod || "الدفع عند الاستلام",
+        status: d.status || "جديد",
+        createdAt: d.createdAt ? (typeof d.createdAt.toDate === "function" ? d.createdAt.toDate().toISOString() : (d.createdAt instanceof Date ? d.createdAt.toISOString() : String(d.createdAt))) : new Date().toISOString()
+      });
+    });
+    list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    state.orders = list;
+    state.isOrdersLoaded = true;
+    renderOrdersTable();
+    refreshStats();
+    toast("تم تحديث قائمة الطلبات بنجاح");
+  } catch (err) {
+    console.warn("Manual refresh orders warning:", err);
+    renderOrdersTable();
+  }
 }
 
 // ==========================================================================
