@@ -14,7 +14,7 @@
 import { DEFAULT_SHIPPING_RATES } from "../frontend/data/default-shipping-rates.js";
 import { ALGERIA_LOCATIONS } from "../frontend/data/algeria-locations.js";
 
-const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || "hadjadj-store";
+const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || "hadjaj-store-c8148";
 
 // Simple in-memory rate limiter per IP
 const rateLimitMap = new Map();

@@ -12,13 +12,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
 export const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyAdWBA6gVpvaFYJKCcrp7eVx7sR90SWMHA",
-  authDomain: "hadjadj-store.firebaseapp.com",
-  projectId: "hadjadj-store",
-  storageBucket: "hadjadj-store.firebasestorage.app",
-  messagingSenderId: "974835742070",
-  appId: "1:974835742070:web:286f2e7a188303a8993657",
-  measurementId: "G-CVN1S422JS"
+  apiKey: "AIzaSyDPuikSEpqgNdbZU9QjKk3xKx5s-pofGoA",
+  authDomain: "hadjaj-store-c8148.firebaseapp.com",
+  projectId: "hadjaj-store-c8148",
+  storageBucket: "hadjaj-store-c8148.firebasestorage.app",
+  messagingSenderId: "150316198302",
+  appId: "1:150316198302:web:59097cea1b6090d1bece8f",
+  measurementId: "G-MTZLNR69JP"
 };
 
 export const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
