@@ -48,6 +48,7 @@
 
     /* ---------- Header ---------- */
     header {
+      width: 100%;
       position: sticky;
       top: 0;
       z-index: 80;
@@ -340,9 +341,10 @@
 
     /* ---------- Page title ---------- */
     .section {
+      width: 100%;
       max-width: 1280px;
       margin: 0 auto;
-      padding: 48px 24px 24px
+      padding: 48px 24px 24px;
     }
 
     .breadcrumb {
@@ -368,6 +370,7 @@
 
     /* ---------- Toolbar ---------- */
     .toolbar {
+      width: 100%;
       max-width: 1280px;
       margin: 20px auto 0;
       padding: 0 24px;
@@ -594,6 +597,7 @@
 
     /* ---------- Footer ---------- */
     footer {
+      width: 100%;
       margin-top: auto;
       border-top: 1px solid var(--line);
       background: #fff;
