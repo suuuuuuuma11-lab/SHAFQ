@@ -22,10 +22,18 @@
       outline: none;
     }
 
+    html {
+      background: var(--bg);
+    }
+
     body {
       font-family: 'Tajawal', sans-serif;
       background: var(--bg);
-      color: var(--ink)
+      color: var(--ink);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
     }
 
     a {
@@ -403,11 +411,13 @@
     /* ---------- Grid ---------- */
     .grid {
       max-width: 1280px;
-      margin: 26px auto 60px;
+      width: 100%;
+      margin: 26px auto 40px;
       padding: 0 24px;
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 22px;
+      flex: 1;
     }
 
     /* Virtual Grid Spacer & Progressive Loading Sentinel */
@@ -584,8 +594,9 @@
 
     /* ---------- Footer ---------- */
     footer {
+      margin-top: auto;
       border-top: 1px solid var(--line);
-      background: #fff
+      background: #fff;
     }
 
     .footer-inner {
@@ -1019,12 +1030,13 @@
       grid-column: 1/-1;
       text-align: center;
       color: var(--muted);
-      padding: 60px 20px;
+      padding: 60px 24px;
       font-size: 15px;
       line-height: 2.2;
       background: #fff;
       border: 1px solid var(--line);
-      border-radius: var(--radius)
+      border-radius: var(--radius);
+      box-shadow: 0 2px 12px rgba(29, 26, 22, 0.03);
     }
 
     .price-old {
