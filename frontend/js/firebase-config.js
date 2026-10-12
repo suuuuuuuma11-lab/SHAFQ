@@ -12,13 +12,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
 export const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyDPuikSEpqgNdbZU9QjKk3xKx5s-pofGoA",
-  authDomain: "hadjaj-store-c8148.firebaseapp.com",
-  projectId: "hadjaj-store-c8148",
-  storageBucket: "hadjaj-store-c8148.firebasestorage.app",
-  messagingSenderId: "150316198302",
-  appId: "1:150316198302:web:59097cea1b6090d1bece8f",
-  measurementId: "G-MTZLNR69JP"
+  apiKey: "AIzaSyBRdA4z-1aiZ91CGXkvqgMw_MuSK8WpG94",
+  authDomain: "clothstore-a9b2c.firebaseapp.com",
+  projectId: "clothstore-a9b2c",
+  storageBucket: "clothstore-a9b2c.firebasestorage.app",
+  messagingSenderId: "1053402231825",
+  appId: "1:1053402231825:web:04a1eeafdb355f01f0adb0",
+  measurementId: "G-QW1T59Y9WN"
 };
 
 export const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
@@ -35,3 +35,14 @@ try {
 }
 
 export const db = dbInstance;
+
+import { getAnalytics, isSupported } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-analytics.js";
+
+let analyticsInstance = null;
+if (typeof window !== "undefined") {
+  isSupported().then((supported) => {
+    if (supported) analyticsInstance = getAnalytics(app);
+  }).catch(() => {});
+}
+
+export const analytics = analyticsInstance;
