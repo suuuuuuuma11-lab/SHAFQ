@@ -35,14 +35,3 @@ try {
 }
 
 export const db = dbInstance;
-
-import { getAnalytics, isSupported } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-analytics.js";
-
-let analyticsInstance = null;
-if (typeof window !== "undefined") {
-  isSupported().then((supported) => {
-    if (supported) analyticsInstance = getAnalytics(app);
-  }).catch(() => {});
-}
-
-export const analytics = analyticsInstance;
