@@ -13,8 +13,8 @@ export { app, db, FIREBASE_CONFIG };
 // --- Cloudinary Configuration ---
 // Unsigned upload preset for browser direct uploads
 export const CLOUDINARY_CONFIG = {
-  cloudName: "y72rtubk",
-  uploadPreset: "Hadjaj.shop",
+  cloudName: "prwmj9gk",
+  uploadPreset: "clothstore_products",
   folder: "products"
 };
 
