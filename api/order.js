@@ -192,9 +192,9 @@ export default async function handler(req, res) {
         name: sanitizeText(it.name || "منتج"),
         price: p,
         quantity: q,
-        size: sanitizeText(it.size || "M"),
-        color: sanitizeText(it.color || "افتراضي"),
-        colorHex: sanitizeText(it.colorHex || "#1d1a16"),
+        size: sanitizeText(it.size || ""),
+        color: sanitizeText(it.color || ""),
+        colorHex: sanitizeText(it.colorHex || ""),
         image: sanitizeText(it.image || '')
       };
     });

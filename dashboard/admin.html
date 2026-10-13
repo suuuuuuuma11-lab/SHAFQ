@@ -178,7 +178,10 @@
               </div>
 
               <div class="field">
-                <label>المقاسات المتوفرة <span class="hint">— اختر ما يتوفر منه المنتج</span></label>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                  <label style="margin-bottom:0">المقاسات المتوفرة <span class="hint">— اختياري</span></label>
+                  <button type="button" id="toggleAllSizesBtn" onclick="toggleAllSizes()" style="background:none;border:none;color:var(--gold,#b99a6b);font-size:12px;font-weight:600;cursor:pointer;padding:0;text-decoration:underline">إلغاء تحديد الكل</button>
+                </div>
                 <div class="sizes-row" id="sizesRow">
                   <label class="size-chip"><input type="checkbox" value="S" checked><span>S</span></label>
                   <label class="size-chip"><input type="checkbox" value="M" checked><span>M</span></label>
@@ -186,7 +189,7 @@
                   <label class="size-chip"><input type="checkbox" value="XL" checked><span>XL</span></label>
                   <label class="size-chip"><input type="checkbox" value="XXL"><span>XXL</span></label>
                 </div>
-                <span class="err-msg" id="e-sizes">اختر مقاساً واحداً على الأقل</span>
+                <span class="err-msg" id="e-sizes" style="display:none"></span>
               </div>
 
               <div class="field">
@@ -198,10 +201,13 @@
               </div>
 
               <div class="field full">
-                <label>الألوان المتوفرة <span class="req">*</span> <span class="hint">— لكل لون: الكود + الاسم كما يظهر للزائر (مثال: أبيض عاجي #f5f2ea)</span></label>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                  <label style="margin-bottom:0">الألوان المتوفرة <span class="hint">— اختياري (اتركه فارغاً إذا كان المنتج بدون ألوان)</span></label>
+                  <button type="button" id="clearAllColorsBtn" onclick="clearAllColors()" style="background:none;border:none;color:var(--gold,#b99a6b);font-size:12px;font-weight:600;cursor:pointer;padding:0;text-decoration:underline">حذف جميع الألوان</button>
+                </div>
                 <div class="colors-list" id="colorsList"></div>
-                <div style="margin-top:10px"><button type="button" class="add-line" onclick="addColorLine()">＋ إضافة لون آخر</button></div>
-                <span class="err-msg" id="e-colors">أضف لوناً واحداً على الأقل مع اسم واضح لكل لون</span>
+                <div style="margin-top:10px"><button type="button" class="add-line" onclick="addColorLine()">＋ إضافة لون</button></div>
+                <span class="err-msg" id="e-colors">يرجى كتابة اسم لكل لون تمت إضافته</span>
               </div>
 
               <div class="field full">

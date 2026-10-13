@@ -82,11 +82,16 @@ export default async function handler(req, res) {
       itemCountDesc = `${orderData.items.length} عنصر`;
       itemsBlock = orderData.items.map(it => {
         const sName = sanitizeText(it.name || it.productName || 'منتج');
-        const sColor = sanitizeText(it.color || 'افتراضي');
-        const sSize = sanitizeText(it.size || 'M');
+        const sColor = sanitizeText(it.color || '');
+        const sSize = sanitizeText(it.size || '');
         const sQty = Number(it.quantity || it.qty) || 1;
         const sPrice = Number(it.price) || 0;
-        return `• ${sName}\n   - المقاس: ${sSize} | اللون: ${sColor} | الكمية: ${sQty} | السعر: ${sPrice.toLocaleString('ar-DZ')} دج`;
+        const specs = [];
+        if (sSize) specs.push(`المقاس: ${sSize}`);
+        if (sColor) specs.push(`اللون: ${sColor}`);
+        specs.push(`الكمية: ${sQty}`);
+        specs.push(`السعر: ${sPrice.toLocaleString('ar-DZ')} دج`);
+        return `• ${sName}\n   - ${specs.join(' | ')}`;
       }).join('\n');
     } else {
       const safeProductName = sanitizeText(orderData.productName || 'منتج');

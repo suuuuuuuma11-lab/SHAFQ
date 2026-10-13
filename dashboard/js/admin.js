@@ -701,6 +701,21 @@ async function handleProductImageFile(file) {
 }
 
 // Colors Editor
+
+window.toggleAllSizes = function() {
+  const inputs = document.querySelectorAll("#sizesRow input");
+  const anyChecked = [...inputs].some(i => i.checked);
+  inputs.forEach(i => { i.checked = !anyChecked; });
+  const btn = $("toggleAllSizesBtn");
+  if (btn) btn.textContent = anyChecked ? "تحديد الكل" : "إلغاء تحديد الكل";
+};
+
+window.clearAllColors = function() {
+  const list = $("colorsList");
+  if (list) list.innerHTML = "";
+  clearErr("colors");
+};
+
 function addColorLine(hex = "#b99a6b", name = "") {
   const list = $("colorsList");
   if (!list) return;
@@ -722,11 +737,8 @@ function addColorLine(hex = "#b99a6b", name = "") {
   row.querySelector("input[type=text]").addEventListener("input", () => clearErr("colors"));
 
   row.querySelector(".color-del").addEventListener("click", () => {
-    if (document.querySelectorAll("#colorsList .color-item").length <= 1) {
-      toast("يجب أن يبقى لون واحد على الأقل", false);
-      return;
-    }
     row.remove();
+    clearErr("colors");
   });
 
   list.appendChild(row);
@@ -786,6 +798,8 @@ function resetProductForm() {
   document.querySelectorAll("#sizesRow input").forEach((c, i) => {
     c.checked = i < 4;
   });
+  const toggleSizesBtn = $("toggleAllSizesBtn");
+  if (toggleSizesBtn) toggleSizesBtn.textContent = "إلغاء تحديد الكل";
 
   clearProductImage();
 
@@ -862,6 +876,11 @@ function editProduct(id) {
   const statusRadio = document.querySelector(`input[name="pStatus"][value="${p.status || "active"}"]`);
   if (statusRadio) statusRadio.checked = true;
 
+  // Sizes toggle button state
+  const toggleSizesBtn = $("toggleAllSizesBtn");
+  const anyChecked = [...document.querySelectorAll("#sizesRow input")].some(i => i.checked);
+  if (toggleSizesBtn) toggleSizesBtn.textContent = anyChecked ? "إلغاء تحديد الكل" : "تحديد الكل";
+
   // Colors
   const colorsList = $("colorsList");
   if (colorsList) colorsList.innerHTML = "";
@@ -871,8 +890,6 @@ function editProduct(id) {
       const nm = typeof c === "object" ? c.name : "";
       addColorLine(val, nm);
     });
-  } else {
-    addColorLine("#1d1a16", "أسود");
   }
 
   const modeTag = $("prodFormMode");
@@ -981,7 +998,7 @@ function renderProductsTable() {
         <td>
           <div class="t-colors">
             ${colorsDots}
-            <span style="font-size:11px;color:var(--muted);margin-right:6px">${(p.colors || []).length} ألوان</span>
+            <span style="font-size:11px;color:var(--muted);margin-right:6px">${(p.colors && p.colors.length) ? (p.colors.length + ' ألوان') : 'بدون ألوان'}</span>
           </div>
         </td>
         <td>
@@ -1196,15 +1213,13 @@ function openCropModal(imgUrl, target = "desktop", rawFile = null) {
     const dotsContainer = $("cropPvDots");
     if (dotsContainer) {
       if (colors && colors.length) {
+        dotsContainer.style.display = "flex";
         dotsContainer.innerHTML = colors.map((c, i) => `
           <span class="dot ${i === 0 ? "active" : ""}" style="background:${c.value || "#1d1a16"};"></span>
         `).join("");
       } else {
-        dotsContainer.innerHTML = `
-          <span class="dot active" style="background:#1d1a16"></span>
-          <span class="dot" style="background:#b99a6b"></span>
-          <span class="dot" style="background:#f5f2ea;border:1.5px solid #d1cbbf"></span>
-        `;
+        dotsContainer.style.display = "none";
+        dotsContainer.innerHTML = "";
       }
     }
 
@@ -2779,15 +2794,15 @@ function initEvents() {
       markErr("pOldPrice");
       ok = false;
     }
-    if (!sizes.length) {
-      if ($("e-sizes")) $("e-sizes").style.display = "block";
-      ok = false;
-    } else {
-      if ($("e-sizes")) $("e-sizes").style.display = "none";
-    }
-    if (!colors.length || colors.some((c) => !c.name)) {
+    // Sizes are optional
+    if ($("e-sizes")) $("e-sizes").style.display = "none";
+
+    // Colors are optional; only require name if color rows exist
+    if (colors.some((c) => !c.name)) {
       setErr("colors");
       ok = false;
+    } else {
+      clearErr("colors");
     }
 
     if (!ok) {

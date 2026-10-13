@@ -1013,7 +1013,7 @@ import { db } from "./firebase-config.js";
         });
       } else if (sizesSec) {
         sizesSec.style.display = 'none';
-        qoSelectedSize = 'افتراضي';
+        qoSelectedSize = '';
       }
 
       // Render colors
@@ -1041,7 +1041,8 @@ import { db } from "./firebase-config.js";
         });
       } else if (colorsSec) {
         colorsSec.style.display = 'none';
-        qoSelectedColor = 'افتراضي';
+        qoSelectedColor = '';
+        qoSelectedColorHex = '';
       }
 
       modal?.classList.add('show');
@@ -1120,11 +1121,11 @@ import { db } from "./firebase-config.js";
         price: currentQoProduct.price,
         image: currentQoProduct.img || currentQoProduct.mainImage || '',
         quantity: qoQty,
-        size: qoSelectedSize || 'افتراضي',
-        color: qoSelectedColor || 'افتراضي',
-        colorHex: qoSelectedColorHex || '#1d1a16',
-        availableSizes: currentQoProduct.sizes,
-        availableColors: currentQoProduct.colors,
+        size: hasSizes ? qoSelectedSize : '',
+        color: hasColors ? qoSelectedColor : '',
+        colorHex: hasColors ? qoSelectedColorHex : '',
+        availableSizes: hasSizes ? currentQoProduct.sizes : [],
+        availableColors: hasColors ? currentQoProduct.colors : [],
         openDrawer: false
       });
 
@@ -1166,9 +1167,11 @@ import { db } from "./firebase-config.js";
           price: p.price,
           image: p.img || p.mainImage || '',
           quantity: 1,
-          size: 'افتراضي',
-          color: 'افتراضي',
-          colorHex: '#1d1a16',
+          size: '',
+          color: '',
+          colorHex: '',
+          availableSizes: [],
+          availableColors: [],
           openDrawer: false
         });
 

@@ -207,10 +207,14 @@ function renderProductDetails(p) {
     }
   }
 
-  // Render colors
-  const colorList = Array.isArray(p.colors) && p.colors.length > 0 ? p.colors : [{ name: "افتراضي", value: "#1d1a16" }];
+  // Render colors (optional)
+  const hasColors = Array.isArray(p.colors) && p.colors.length > 0;
+  const colorList = hasColors ? p.colors : [];
   selectedColorIndex = 0;
-  if (colorsEl) {
+  const colorOptLabel = document.getElementById("colorOptLabel");
+  if (hasColors && colorsEl) {
+    if (colorOptLabel) colorOptLabel.style.display = "block";
+    colorsEl.style.display = "flex";
     colorsEl.innerHTML = colorList.map((c, i) => {
       const val = typeof c === 'object' ? c.value : c;
       const nm = typeof c === 'object' ? c.name : (p.colorNames && p.colorNames[i] ? p.colorNames[i] : 'لون');
@@ -225,15 +229,22 @@ function renderProductDetails(p) {
         if (colorNameEl) colorNameEl.textContent = dot.dataset.name;
       });
     });
+    const initialColorName = typeof colorList[0] === 'object' ? colorList[0].name : (p.colorNames && p.colorNames[0] ? p.colorNames[0] : 'لون');
+    if (colorNameEl) colorNameEl.textContent = initialColorName;
+  } else {
+    if (colorOptLabel) colorOptLabel.style.display = "none";
+    if (colorsEl) { colorsEl.style.display = "none"; colorsEl.innerHTML = ""; }
+    if (colorNameEl) colorNameEl.textContent = "";
   }
 
-  const initialColorName = typeof colorList[0] === 'object' ? colorList[0].name : (p.colorNames && p.colorNames[0] ? p.colorNames[0] : 'لون');
-  if (colorNameEl) colorNameEl.textContent = initialColorName;
-
-  // Render sizes
-  const sizeList = Array.isArray(p.sizes) && p.sizes.length > 0 ? p.sizes : defaultSizes;
-  selectedSize = sizeList[0] || "M";
-  if (sizesEl) {
+  // Render sizes (optional)
+  const hasSizes = Array.isArray(p.sizes) && p.sizes.length > 0;
+  const sizeOptLabel = document.getElementById("sizeOptLabel");
+  if (hasSizes && sizesEl) {
+    if (sizeOptLabel) sizeOptLabel.style.display = "block";
+    sizesEl.style.display = "flex";
+    const sizeList = p.sizes;
+    selectedSize = sizeList[0] || "";
     sizesEl.innerHTML = sizeList.map((s, i) => `<span class="size ${i === 0 ? 'active' : ''}" data-val="${esc(s)}">${esc(s)}</span>`).join("");
     sizesEl.querySelectorAll('.size').forEach(sz => {
       sz.addEventListener('click', () => {
@@ -242,6 +253,10 @@ function renderProductDetails(p) {
         selectedSize = sz.dataset.val;
       });
     });
+  } else {
+    if (sizeOptLabel) sizeOptLabel.style.display = "none";
+    if (sizesEl) { sizesEl.style.display = "none"; sizesEl.innerHTML = ""; }
+    selectedSize = "";
   }
 
   changeQty(0);
@@ -328,10 +343,12 @@ if (orderForm) {
     const wilayaInfo = findWilaya(wilaya);
     const wilayaCode = wilayaInfo ? wilayaInfo.code : "";
 
-    const colorsList = Array.isArray(currentProduct.colors) && currentProduct.colors.length > 0 ? currentProduct.colors : [{ name: "افتراضي", value: "#1d1a16" }];
-    const chosenColor = colorsList[selectedColorIndex] || colorsList[0];
-    const colorName = typeof chosenColor === 'object' ? chosenColor.name : (currentProduct.colorNames && currentProduct.colorNames[selectedColorIndex] ? currentProduct.colorNames[selectedColorIndex] : 'لون');
-    const colorHex = typeof chosenColor === 'object' ? chosenColor.value : chosenColor;
+    const hasColors = Array.isArray(currentProduct.colors) && currentProduct.colors.length > 0;
+    const colorsList = hasColors ? currentProduct.colors : [];
+    const chosenColor = hasColors ? (colorsList[selectedColorIndex] || colorsList[0]) : null;
+    const colorName = chosenColor ? (typeof chosenColor === 'object' ? chosenColor.name : (currentProduct.colorNames && currentProduct.colorNames[selectedColorIndex] ? currentProduct.colorNames[selectedColorIndex] : '')) : '';
+    const colorHex = chosenColor ? (typeof chosenColor === 'object' ? chosenColor.value : chosenColor) : '';
+    const hasSizes = Array.isArray(currentProduct.sizes) && currentProduct.sizes.length > 0;
 
     const orderPayload = {
       customer: name,
@@ -348,7 +365,7 @@ if (orderForm) {
           name: currentProduct.name,
           price: currentProduct.price,
           quantity: qty,
-          size: selectedSize,
+          size: hasSizes ? selectedSize : '',
           color: colorName,
           colorHex: colorHex,
           image: currentProduct.img || currentProduct.mainImage || ""
@@ -524,10 +541,12 @@ if (addCartBtn) {
     addCartBtn._busy = true;
     setTimeout(() => { addCartBtn._busy = false; }, 250);
 
-    const colorsList = Array.isArray(currentProduct.colors) && currentProduct.colors.length > 0 ? currentProduct.colors : [{ name: "افتراضي", value: "#1d1a16" }];
-    const chosenColor = colorsList[selectedColorIndex] || colorsList[0];
-    const colorName = typeof chosenColor === 'object' ? chosenColor.name : (currentProduct.colorNames && currentProduct.colorNames[selectedColorIndex] ? currentProduct.colorNames[selectedColorIndex] : 'لون');
-    const colorHex = typeof chosenColor === 'object' ? chosenColor.value : chosenColor;
+    const hasColors = Array.isArray(currentProduct.colors) && currentProduct.colors.length > 0;
+    const colorsList = hasColors ? currentProduct.colors : [];
+    const chosenColor = hasColors ? (colorsList[selectedColorIndex] || colorsList[0]) : null;
+    const colorName = chosenColor ? (typeof chosenColor === 'object' ? chosenColor.name : (currentProduct.colorNames && currentProduct.colorNames[selectedColorIndex] ? currentProduct.colorNames[selectedColorIndex] : '')) : '';
+    const colorHex = chosenColor ? (typeof chosenColor === 'object' ? chosenColor.value : chosenColor) : '';
+    const hasSizes = Array.isArray(currentProduct.sizes) && currentProduct.sizes.length > 0;
 
     addToCart({
       productId: currentProduct.id,
@@ -535,10 +554,10 @@ if (addCartBtn) {
       price: currentProduct.price,
       image: currentProduct.img || currentProduct.mainImage || 'img/p1.png',
       quantity: qty,
-      size: selectedSize,
+      size: hasSizes ? selectedSize : '',
       color: colorName,
       colorHex: colorHex,
-      availableSizes: Array.isArray(currentProduct.sizes) && currentProduct.sizes.length ? currentProduct.sizes : defaultSizes,
+      availableSizes: hasSizes ? currentProduct.sizes : [],
       availableColors: colorsList,
       openDrawer: false
     });

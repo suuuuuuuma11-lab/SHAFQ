@@ -67,12 +67,12 @@ function loadCartFromStorage() {
       const name = item.name || "قميص فاخر";
       const price = typeof item.price === "number" ? item.price : Number(item.price) || 0;
       const qty = Math.max(1, parseInt(item.quantity || item.qty, 10) || 1);
-      const size = String(item.size || "M");
-      const color = String(item.color || "افتراضي");
-      const colorHex = String(item.colorHex || "#1d1a16");
+      const size = String(item.size || "");
+      const color = String(item.color || "");
+      const colorHex = String(item.colorHex || "");
       const image = item.image || item.img || '';
-      const availableSizes = Array.isArray(item.availableSizes) && item.availableSizes.length ? item.availableSizes : DEFAULT_SIZES;
-      const availableColors = Array.isArray(item.availableColors) && item.availableColors.length ? item.availableColors : [{ name: color, value: colorHex }];
+      const availableSizes = Array.isArray(item.availableSizes) ? item.availableSizes : [];
+      const availableColors = Array.isArray(item.availableColors) ? item.availableColors : (color ? [{ name: color, value: colorHex || "#1d1a16" }] : []);
 
       return {
         productId: String(pid),
@@ -146,21 +146,21 @@ export function addToCart({
   price,
   image,
   quantity = 1,
-  size = "M",
-  color = "افتراضي",
-  colorHex = "#1d1a16",
-  availableSizes = DEFAULT_SIZES,
+  size = "",
+  color = "",
+  colorHex = "",
+  availableSizes = [],
   availableColors = [],
   openDrawer = false
 }) {
   const pid = String(productId || "");
   const cleanPrice = typeof price === "number" ? price : Number(price) || 0;
   const cleanQty = Math.max(1, parseInt(quantity, 10) || 1);
-  const cleanSize = String(size || "M");
-  const cleanColor = String(color || "افتراضي");
+  const cleanSize = String(size || "");
+  const cleanColor = String(color || "");
 
   const existingIndex = cart.findIndex(
-    item => String(item.productId || item.id) === pid && item.size === cleanSize && item.color === cleanColor
+    item => String(item.productId || item.id) === pid && (item.size || "") === cleanSize && (item.color || "") === cleanColor
   );
 
   if (existingIndex > -1) {
@@ -172,15 +172,15 @@ export function addToCart({
     cart.push({
       productId: pid,
       id: pid,
-      name: name || "قميص فاخر",
+      name: name || "منتج",
       price: cleanPrice,
       image: image || '',
       quantity: cleanQty,
       size: cleanSize,
       color: cleanColor,
-      colorHex: colorHex || "#1d1a16",
-      availableSizes: Array.isArray(availableSizes) && availableSizes.length ? availableSizes : DEFAULT_SIZES,
-      availableColors: Array.isArray(availableColors) && availableColors.length ? availableColors : [{ name: cleanColor, value: colorHex || "#1d1a16" }]
+      colorHex: colorHex || "",
+      availableSizes: Array.isArray(availableSizes) ? availableSizes : [],
+      availableColors: Array.isArray(availableColors) ? availableColors : (cleanColor ? [{ name: cleanColor, value: colorHex || "#1d1a16" }] : [])
     });
   }
 
@@ -354,40 +354,48 @@ export function renderCartDrawer() {
   box.innerHTML = cart.map(item => {
     const k = cartKey(item);
     const itemTotal = (item.price * item.quantity).toLocaleString("ar-DZ");
-    const sizes = Array.isArray(item.availableSizes) && item.availableSizes.length ? item.availableSizes : DEFAULT_SIZES;
-    const colors = Array.isArray(item.availableColors) && item.availableColors.length 
-      ? item.availableColors 
-      : [{ name: item.color, value: item.colorHex || "#1d1a16" }];
+    const sizes = Array.isArray(item.availableSizes) ? item.availableSizes : [];
+    const colors = Array.isArray(item.availableColors) ? item.availableColors : [];
+    const hasSizes = sizes.length > 0;
+    const hasColors = colors.length > 0;
 
-    const sizeOptionsHTML = sizes.map(s => `
-      <option value="${esc(s)}" ${s === item.size ? "selected" : ""}>${esc(s)}</option>
-    `).join("");
+    let sizeOptionsHTML = "";
+    if (hasSizes) {
+      sizeOptionsHTML = `
+        <div class="ci-opt-group">
+          <label>المقاس:</label>
+          <select class="ci-select" onchange="window.hadjajCart.changeCartItemSize('${esc(k)}', this.value)">
+            ${sizes.map(s => `<option value="${esc(s)}" ${s === item.size ? "selected" : ""}>${esc(s)}</option>`).join("")}
+          </select>
+        </div>
+      `;
+    }
 
-    const colorOptionsHTML = colors.map(c => {
-      const cName = typeof c === "object" ? c.name : c;
-      return `<option value="${esc(cName)}" ${cName === item.color ? "selected" : ""}>${esc(cName)}</option>`;
-    }).join("");
+    let colorOptionsHTML = "";
+    if (hasColors) {
+      colorOptionsHTML = `
+        <div class="ci-opt-group">
+          <label>اللون:</label>
+          <select class="ci-select" onchange="window.hadjajCart.changeCartItemColor('${esc(k)}', this.value)">
+            ${colors.map(c => {
+              const cName = typeof c === "object" ? c.name : c;
+              return `<option value="${esc(cName)}" ${cName === item.color ? "selected" : ""}>${esc(cName)}</option>`;
+            }).join("")}
+          </select>
+        </div>
+      `;
+    }
+
+    const optionsContainerHTML = (hasSizes || hasColors)
+      ? `<div class="ci-options">${sizeOptionsHTML}${colorOptionsHTML}</div>`
+      : "";
 
     return `
       <div class="ci" data-key="${esc(k)}">
         <img src="${esc(item.image)}" alt="${esc(item.name)}" onerror="this.style.opacity='0'">
         <div class="ci-info">
           <div class="ci-name">${esc(item.name)}</div>
-          
-          <div class="ci-options">
-            <div class="ci-opt-group">
-              <label>المقاس:</label>
-              <select class="ci-select" onchange="window.hadjajCart.changeCartItemSize('${esc(k)}', this.value)">
-                ${sizeOptionsHTML}
-              </select>
-            </div>
-            <div class="ci-opt-group">
-              <label>اللون:</label>
-              <select class="ci-select" onchange="window.hadjajCart.changeCartItemColor('${esc(k)}', this.value)">
-                ${colorOptionsHTML}
-              </select>
-            </div>
-          </div>
+          ${optionsContainerHTML}
 
           <div class="ci-row">
             <div class="ci-qty">
@@ -468,7 +476,12 @@ function renderCheckoutModalReview() {
         <img src="${esc(item.image)}" alt="${esc(item.name)}" onerror="this.style.opacity='0'">
         <div class="cm-review-info">
           <div class="cm-review-name">${esc(item.name)}</div>
-          <div class="cm-review-meta">المقاس: <b>${esc(item.size)}</b> — اللون: <b>${esc(item.color)}</b></div>
+          ${(() => {
+            const metaParts = [];
+            if (item.size) metaParts.push('المقاس: <b>' + esc(item.size) + '</b>');
+            if (item.color) metaParts.push('اللون: <b>' + esc(item.color) + '</b>');
+            return metaParts.length ? '<div class="cm-review-meta">' + metaParts.join(' — ') + '</div>' : '';
+          })()}
         </div>
         <div class="cm-review-calc">
           <div>${item.quantity} × ${item.price.toLocaleString("ar-DZ")} دج</div>
