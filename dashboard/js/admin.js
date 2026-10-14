@@ -840,12 +840,14 @@ window.autoSortProductSizes = function() {
   state.currentProductSizes.sort((a, b) => {
     const na = parseFloat(a), nb = parseFloat(b);
     if (!isNaN(na) && !isNaN(nb)) return na - nb;
-    const ia = SIZE_ORDER.indexOf(String(a).toUpperCase());
-    const ib = SIZE_ORDER.indexOf(String(b).toUpperCase());
+    const cleanA = String(a).trim().toUpperCase();
+    const cleanB = String(b).trim().toUpperCase();
+    const ia = SIZE_ORDER.indexOf(cleanA);
+    const ib = SIZE_ORDER.indexOf(cleanB);
     if (ia !== -1 && ib !== -1) return ia - ib;
     if (ia !== -1) return -1;
     if (ib !== -1) return 1;
-    return String(a).localeCompare(String(b), undefined, { numeric: true });
+    return cleanA.localeCompare(cleanB, undefined, { numeric: true, sensitivity: "base" });
   });
 
   renderSizesChips(state.currentProductSizes);
