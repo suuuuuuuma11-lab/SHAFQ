@@ -695,16 +695,8 @@ header {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-}
-
-.size-chip {
-  position: relative;
-}
-
-.size-chip input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
+  min-height: 38px;
+  align-items: center;
 }
 
 .sizes-container {
@@ -714,6 +706,21 @@ header {
 .size-chip {
   position: relative;
   display: inline-flex;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.16s cubic-bezier(0.2, 0, 0, 1), opacity 0.16s ease;
+}
+
+.size-chip:active {
+  cursor: grabbing;
+}
+
+.size-chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .size-chip span {
@@ -730,10 +737,104 @@ header {
   user-select: none;
 }
 
-.size-chip input:checked + span {
+.size-chip .size-chip-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1.5px solid var(--line);
+  border-radius: 9px;
+  padding: 7px 12px 7px 15px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: grab;
+  transition: all 0.16s ease;
+  background: #fbfaf7;
+  color: var(--muted);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.size-chip:hover .size-chip-inner {
+  border-color: var(--gold, #b99a6b);
+  background: #fff;
+}
+
+.size-chip .size-drag-grip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+  opacity: 0.35;
+  cursor: grab;
+  transition: opacity 0.15s, transform 0.15s;
+  pointer-events: none;
+}
+
+.size-chip:hover .size-drag-grip {
+  opacity: 0.85;
+}
+
+.size-chip input:checked + span,
+.size-chip input:checked + .size-chip-inner {
   background: var(--ink);
   border-color: var(--ink);
   color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.size-chip input:checked:hover + .size-chip-inner {
+  border-color: var(--gold, #b99a6b);
+}
+
+/* Dragging state */
+.size-chip.is-dragging {
+  opacity: 0.35 !important;
+  transform: scale(0.95);
+  cursor: grabbing !important;
+  z-index: 5;
+}
+
+.size-chip.is-dragging .size-chip-inner {
+  border: 1.5px dashed var(--gold, #b99a6b) !important;
+  background: rgba(185, 154, 107, 0.08) !important;
+  cursor: grabbing !important;
+}
+
+/* Touch floating ghost */
+.size-touch-ghost {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 0.95;
+  transform: scale(1.08) translate(-50%, -50%);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+  border-radius: 9px;
+  background: var(--ink, #1d1a16);
+  border: 1.5px solid var(--gold, #b99a6b);
+  color: #fff;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: none;
+}
+
+.sizes-order-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--muted, #777);
+  margin-top: 8px;
+  padding: 2px 0;
+  user-select: none;
+}
+
+.sizes-order-hint svg {
+  flex-shrink: 0;
+  color: var(--gold, #b99a6b);
 }
 
 /* Size Delete Button (Visible in Management Mode only) */

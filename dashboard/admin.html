@@ -180,10 +180,22 @@
               <div class="field">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
                   <label style="margin-bottom:0">المقاسات المتوفرة <span class="hint">— اختياري (اتركه فارغاً إذا كان المنتج بدون مقاسات كالعطور)</span></label>
-                  <button type="button" id="clearAllSizesBtn" onclick="clearAllSizes()" style="background:none;border:none;color:var(--gold,#b99a6b);font-size:12px;font-weight:600;cursor:pointer;padding:0;text-decoration:underline;display:none">حذف جميع المقاسات</button>
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <button type="button" id="autoSortSizesBtn" onclick="autoSortProductSizes()" style="background:none;border:none;color:var(--gold,#b99a6b);font-size:12px;font-weight:600;cursor:pointer;padding:0;display:none;align-items:center;gap:4px" title="ترتيب المقاسات تصاعدياً/قياسياً بضغطة واحدة">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline-block;vertical-align:middle"><path d="M7 16V4m0 0L3 8m4-4l4 4m6 4v12m0 0l4-4m-4 4l-4-4"/></svg>
+                      ترتيب ذكي ⚡
+                    </button>
+                    <button type="button" id="clearAllSizesBtn" onclick="clearAllSizes()" style="background:none;border:none;color:var(--gold,#b99a6b);font-size:12px;font-weight:600;cursor:pointer;padding:0;text-decoration:underline;display:none">حذف جميع المقاسات</button>
+                  </div>
                 </div>
                 <div class="sizes-container" id="sizesContainer">
                   <div class="sizes-row" id="sizesRow"></div>
+                  <div class="sizes-order-hint" id="sizesOrderHint" style="display:none">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                      <path d="M7 16V4m0 0L3 8m4-4l4 4m6 4v12m0 0l4-4m-4 4l-4-4"/>
+                    </svg>
+                    <span>اسحب المقاسات يدوياً بالماوس أو اللمس لتحديد الترتيب المناسب لعرضها في المتجر</span>
+                  </div>
                 </div>
                 <div id="addSizeBox" style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                   <input type="text" id="newSizeInput" placeholder="أضف مقاساً أو عدة مقاسات مفصولة بفواصل (مثال: S, M, L, XL أو 40, 41, 42)" maxlength="250" style="border:1.5px solid var(--line,#e2ded4);border-radius:8px;padding:8px 12px;font-size:13px;min-width:280px;flex:1;max-width:440px;outline:none" onkeydown="if(event.key==='Enter'){event.preventDefault();addNewCustomSize();}">
