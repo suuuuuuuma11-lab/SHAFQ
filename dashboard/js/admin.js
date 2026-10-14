@@ -769,9 +769,19 @@ function renderSizesChips(sizesList = null) {
 }
 
 window.clearAllSizes = function() {
-  state.currentProductSizes = [];
-  renderSizesChips([]);
-  toast("تم تفريغ جميع المقاسات لهذا المنتج");
+  if (!Array.isArray(state.currentProductSizes) || state.currentProductSizes.length === 0) return;
+
+  const count = state.currentProductSizes.length;
+  confirmBox(
+    "تأكيد حذف المقاسات",
+    `هل أنت متأكد من رغبتك في حذف جميع المقاسات المحددة لهذا المنتج (${count} مقاسات)؟`,
+    () => {
+      state.currentProductSizes = [];
+      renderSizesChips([]);
+      toast("تم تفريغ جميع المقاسات لهذا المنتج بنجاح ✓");
+    },
+    "نعم، احذف الكل"
+  );
 };
 
 function updateToggleSizesBtnText() {
@@ -887,8 +897,18 @@ window.deleteSizeFromPool = function(event, sizeName) {
 
 window.clearAllColors = function() {
   const list = $("colorsList");
-  if (list) list.innerHTML = "";
-  clearErr("colors");
+  if (!list || !list.children.length) return;
+
+  confirmBox(
+    "تأكيد حذف الألوان",
+    "هل أنت متأكد من رغبتك في حذف جميع الألوان المحددة لهذا المنتج؟",
+    () => {
+      list.innerHTML = "";
+      clearErr("colors");
+      toast("تم تفريغ جميع الألوان لهذا المنتج بنجاح ✓");
+    },
+    "نعم، احذف الكل"
+  );
 };
 
 function addColorLine(hex = "#b99a6b", name = "") {
