@@ -806,30 +806,24 @@ function renderSizesChips(sizesList = null) {
   const sizes = state.currentProductSizes;
   const clearBtn = $("clearAllSizesBtn");
   const sortBtn = $("autoSortSizesBtn");
-  const hintEl = $("sizesOrderHint");
 
   if (sizes.length === 0) {
     row.innerHTML = `<span style="font-size:12.5px;color:var(--muted,#888);padding:6px 0;display:inline-block">لا توجد مقاسات محددة لهذا المنتج (اتركه فارغاً إذا كان المنتج بدون مقاسات كالعطور).</span>`;
     if (clearBtn) clearBtn.style.display = "none";
     if (sortBtn) sortBtn.style.display = "none";
-    if (hintEl) hintEl.style.display = "none";
     updateToggleSizesBtnText();
     return;
   }
 
   if (clearBtn) clearBtn.style.display = "inline";
-  if (sortBtn) sortBtn.style.display = sizes.length >= 2 ? "inline-flex" : "none";
-  if (hintEl) hintEl.style.display = "flex";
+  if (sortBtn) sortBtn.style.display = sizes.length >= 2 ? "inline" : "none";
 
   row.innerHTML = sizes
     .map((sz) => `
-      <label class="size-chip" data-size="${esc(sz)}" draggable="true" title="اسحب لإعادة الترتيب">
-        <input type="checkbox" value="${esc(sz)}" checked onchange="updateToggleSizesBtnText()">
-        <span class="size-chip-inner">
-          <span class="size-drag-grip" aria-hidden="true" title="اسحب لإعادة الترتيب">⠿</span>
-          <span class="size-label-text">${esc(sz)}</span>
-        </span>
-        <button type="button" class="size-del-btn" title="حذف المقاس" onclick="deleteSizeFromPool(event, '${esc(sz)}')">×</button>
+      <label class="size-chip" data-size="${esc(sz)}" draggable="true">
+        <input type="checkbox" value="${esc(sz)}" checked onchange="handleSizeCheckboxChange()">
+        <span>${esc(sz)}</span>
+        <button type="button" class="size-del-btn" title="حذف المقاس (${esc(sz)}) من هذا المنتج" onclick="deleteSizeFromPool(event, '${esc(sz)}')">×</button>
       </label>
     `)
     .join("");
