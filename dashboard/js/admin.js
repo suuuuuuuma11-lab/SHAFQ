@@ -206,6 +206,8 @@ const SEED_PRODUCTS = [
 // --- Live Cloud State ---
 const state = {
   products: [],
+  availableSizes: ["S", "M", "L", "XL", "XXL"],
+  isSizesManageMode: false,
   categories: [],
   orders: [],
   isProductsLoaded: false,
@@ -702,12 +704,199 @@ async function handleProductImageFile(file) {
 
 // Colors Editor
 
+const DEFAULT_SYSTEM_SIZES = ["S", "M", "L", "XL", "XXL"];
+
+function getStoredAvailableSizes() {
+  try {
+    const raw = localStorage.getItem("hadjaj_admin_available_sizes");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
+  return [...DEFAULT_SYSTEM_SIZES];
+}
+
+async function saveAvailableSizes(sizes, notifyCloud = true) {
+  state.availableSizes = sizes;
+  try {
+    localStorage.setItem("hadjaj_admin_available_sizes", JSON.stringify(sizes));
+  } catch (e) {}
+
+  if (notifyCloud) {
+    try {
+      const shippingDocRef = doc(db, "shippingSettings", "current");
+      await setDoc(shippingDocRef, { availableSizes: sizes }, { merge: true });
+    } catch (err) {
+      console.warn("Failed to persist sizes to cloud:", err.message);
+    }
+  }
+}
+
+function renderSizesChips(checkedSizes = null) {
+  const row = $("sizesRow");
+  if (!row) return;
+
+  if (!state.availableSizes || !state.availableSizes.length) {
+    state.availableSizes = getStoredAvailableSizes();
+  }
+
+  let currentlyChecked = [];
+  if (Array.isArray(checkedSizes)) {
+    currentlyChecked = checkedSizes;
+  } else {
+    currentlyChecked = [...row.querySelectorAll("input:checked")].map((i) => i.value);
+  }
+
+  // Ensure any checked size is shown even if not in standard available sizes
+  const allSizesToDisplay = [...state.availableSizes];
+  currentlyChecked.forEach((sz) => {
+    if (!allSizesToDisplay.includes(sz)) {
+      allSizesToDisplay.push(sz);
+    }
+  });
+
+  row.innerHTML = allSizesToDisplay
+    .map((sz) => {
+      const isChecked = currentlyChecked.includes(sz);
+      return `
+      <label class="size-chip" data-size="${esc(sz)}">
+        <input type="checkbox" value="${esc(sz)}" ${isChecked ? "checked" : ""} onchange="handleSizeCheckboxChange()">
+        <span>${esc(sz)}</span>
+        <button type="button" class="size-del-btn" title="حذف المقاس (${esc(sz)})" onclick="deleteSizeFromPool(event, '${esc(sz)}')">×</button>
+      </label>
+    `;
+    })
+    .join("");
+
+  updateToggleSizesBtnText();
+}
+
+function updateToggleSizesBtnText() {
+  const inputs = document.querySelectorAll("#sizesRow input");
+  const anyChecked = [...inputs].some((i) => i.checked);
+  const btn = $("toggleAllSizesBtn");
+  if (btn) btn.textContent = anyChecked ? "إلغاء تحديد الكل" : "تحديد الكل";
+}
+
+window.handleSizeCheckboxChange = function() {
+  updateToggleSizesBtnText();
+};
+
 window.toggleAllSizes = function() {
   const inputs = document.querySelectorAll("#sizesRow input");
-  const anyChecked = [...inputs].some(i => i.checked);
-  inputs.forEach(i => { i.checked = !anyChecked; });
-  const btn = $("toggleAllSizesBtn");
-  if (btn) btn.textContent = anyChecked ? "تحديد الكل" : "إلغاء تحديد الكل";
+  const anyChecked = [...inputs].some((i) => i.checked);
+  inputs.forEach((i) => {
+    i.checked = !anyChecked;
+  });
+  updateToggleSizesBtnText();
+};
+
+window.toggleManageSizesMode = function() {
+  state.isSizesManageMode = !state.isSizesManageMode;
+  const container = $("sizesContainer");
+  const btn = $("manageSizesBtn");
+  const btnText = $("manageSizesBtnText");
+
+  if (container) {
+    container.classList.toggle("manage-mode", state.isSizesManageMode);
+  }
+
+  if (state.isSizesManageMode) {
+    if (btnText) btnText.textContent = "✓ تم إنهاء التعديل";
+    if (btn) {
+      btn.style.background = "var(--ink, #1d1a16)";
+      btn.style.color = "#fff";
+      btn.style.borderColor = "var(--ink, #1d1a16)";
+    }
+  } else {
+    if (btnText) btnText.textContent = "إدارة المقاسات";
+    if (btn) {
+      btn.style.background = "var(--card-alt, #f8f6f0)";
+      btn.style.color = "var(--text, #1d1a16)";
+      btn.style.borderColor = "var(--line, #e2ded4)";
+    }
+  }
+};
+
+window.addNewCustomSize = async function() {
+  const input = $("newSizeInput");
+  if (!input) return;
+
+  const raw = input.value.trim();
+  if (!raw) {
+    toast("يرجى كتابة اسم أو رقم المقاس أولاً", false);
+    input.focus();
+    return;
+  }
+
+  const newSize = raw.slice(0, 15).trim();
+
+  if (!state.availableSizes) {
+    state.availableSizes = getStoredAvailableSizes();
+  }
+
+  const exists = state.availableSizes.some((s) => s.toLowerCase() === newSize.toLowerCase());
+  if (exists) {
+    toast(`المقاس "${newSize}" موجود بالفعل في القائمة`, false);
+    const existingInput = document.querySelector(`#sizesRow input[value="${newSize}"]`);
+    if (existingInput) {
+      existingInput.checked = true;
+      updateToggleSizesBtnText();
+    }
+    input.value = "";
+    return;
+  }
+
+  const updatedSizes = [...state.availableSizes, newSize];
+  const currentlyChecked = [...document.querySelectorAll("#sizesRow input:checked")].map((i) => i.value);
+  currentlyChecked.push(newSize);
+
+  input.value = "";
+
+  try {
+    await saveAvailableSizes(updatedSizes, true);
+    renderSizesChips(currentlyChecked);
+    toast(`تمت إضافة المقاس "${newSize}" بنجاح ✓`);
+  } catch (err) {
+    console.error("Add size error:", err);
+    toast("حدث خطأ أثناء حفظ المقاس: " + err.message, false);
+  }
+};
+
+window.deleteSizeFromPool = async function(event, sizeName) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  if (!sizeName) return;
+
+  const isUsed = state.products.some((p) => Array.isArray(p.sizes) && p.sizes.includes(sizeName));
+
+  let confirmMsg = "";
+  if (isUsed) {
+    confirmMsg = `تنبيه: المقاس (${sizeName}) مستخدم حالياً في منتجات معروضة بالمتجر.\n\nحذفه من هذه القائمة سيخفيه فقط من الخيارات السريعة للمنتجات الجديدة، ولن يفسد المنتجات القديمة التي تستخدمه.\n\nهل أنت متأكد من حذف المقاس (${sizeName})؟`;
+  } else {
+    confirmMsg = `هل أنت متأكد من حذف المقاس (${sizeName}) من قائمة المقاسات؟`;
+  }
+
+  const ok = window.confirm(confirmMsg);
+  if (!ok) return;
+
+  const updatedSizes = state.availableSizes.filter((s) => s !== sizeName);
+  const currentlyChecked = [...document.querySelectorAll("#sizesRow input:checked")]
+    .map((i) => i.value)
+    .filter((s) => s !== sizeName);
+
+  try {
+    await saveAvailableSizes(updatedSizes, true);
+    renderSizesChips(currentlyChecked);
+    toast(`تم حذف المقاس (${sizeName}) بنجاح ✓`);
+  } catch (err) {
+    console.error("Delete size error:", err);
+    toast("حدث خطأ أثناء حذف المقاس: " + err.message, false);
+  }
 };
 
 window.clearAllColors = function() {
@@ -795,11 +984,10 @@ function resetProductForm() {
     imgUrl.value = "";
   }
 
-  document.querySelectorAll("#sizesRow input").forEach((c, i) => {
-    c.checked = i < 4;
-  });
-  const toggleSizesBtn = $("toggleAllSizesBtn");
-  if (toggleSizesBtn) toggleSizesBtn.textContent = "إلغاء تحديد الكل";
+  renderSizesChips((state.availableSizes || getStoredAvailableSizes()).slice(0, 4));
+  if (state.isSizesManageMode) {
+    toggleManageSizesMode();
+  }
 
   clearProductImage();
 
@@ -867,19 +1055,18 @@ function editProduct(id) {
   }
 
   // Sizes
-  document.querySelectorAll("#sizesRow input").forEach((c) => {
-    c.checked = Array.isArray(p.sizes) && p.sizes.includes(c.value);
-  });
+  const productSizes = Array.isArray(p.sizes) ? p.sizes : [];
+  renderSizesChips(productSizes);
+  if (state.isSizesManageMode) {
+    toggleManageSizesMode();
+  }
 
   $("pDesc").value = p.desc || p.description || "";
 
   const statusRadio = document.querySelector(`input[name="pStatus"][value="${p.status || "active"}"]`);
   if (statusRadio) statusRadio.checked = true;
 
-  // Sizes toggle button state
-  const toggleSizesBtn = $("toggleAllSizesBtn");
-  const anyChecked = [...document.querySelectorAll("#sizesRow input")].some(i => i.checked);
-  if (toggleSizesBtn) toggleSizesBtn.textContent = anyChecked ? "إلغاء تحديد الكل" : "تحديد الكل";
+  // Sizes toggle button state handled by renderSizesChips
 
   // Colors
   const colorsList = $("colorsList");
@@ -2104,6 +2291,11 @@ function initShippingSettings() {
           renderShippingTable();
           updateShippingCounts();
         }
+        if (d && Array.isArray(d.availableSizes) && d.availableSizes.length) {
+          state.availableSizes = Array.from(new Set([...d.availableSizes]));
+          try { localStorage.setItem("hadjaj_admin_available_sizes", JSON.stringify(state.availableSizes)); } catch(e){}
+          renderSizesChips();
+        }
       }
     },
     (err) => {
@@ -3281,6 +3473,8 @@ onAuthStateChanged(auth, async (user) => {
 
   if (!isDashboardInitialized) {
     isDashboardInitialized = true;
+    state.availableSizes = getStoredAvailableSizes();
+    renderSizesChips(state.availableSizes.slice(0, 4));
     initEvents();
     addColorLine("#f5f2ea", "أبيض عاجي");
     addColorLine("#1d1a16", "أسود");

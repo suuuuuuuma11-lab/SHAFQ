@@ -707,6 +707,15 @@ header {
   pointer-events: none;
 }
 
+.sizes-container {
+  position: relative;
+}
+
+.size-chip {
+  position: relative;
+  display: inline-flex;
+}
+
 .size-chip span {
   display: inline-block;
   border: 1.5px solid var(--line);
@@ -718,12 +727,56 @@ header {
   transition: 0.15s;
   background: #fbfaf7;
   color: var(--muted);
+  user-select: none;
 }
 
 .size-chip input:checked + span {
   background: var(--ink);
   border-color: var(--ink);
   color: #fff;
+}
+
+/* Size Delete Button (Visible in Management Mode only) */
+.size-del-btn {
+  display: none;
+  position: absolute;
+  top: -7px;
+  left: -7px;
+  width: 20px;
+  height: 20px;
+  background: #e74c3c;
+  color: #fff;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 700;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+  z-index: 10;
+  padding: 0;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.size-del-btn:hover {
+  transform: scale(1.2);
+  background: #c0392b;
+}
+
+.sizes-container.manage-mode .size-chip .size-del-btn {
+  display: flex !important;
+  animation: popInChip 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.sizes-container.manage-mode #sizesManageHint {
+  display: inline-block !important;
+}
+
+@keyframes popInChip {
+  0% { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 .status-row {

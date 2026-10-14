@@ -178,16 +178,25 @@
               </div>
 
               <div class="field">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
                   <label style="margin-bottom:0">المقاسات المتوفرة <span class="hint">— اختياري</span></label>
-                  <button type="button" id="toggleAllSizesBtn" onclick="toggleAllSizes()" style="background:none;border:none;color:var(--gold,#b99a6b);font-size:12px;font-weight:600;cursor:pointer;padding:0;text-decoration:underline">إلغاء تحديد الكل</button>
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <button type="button" id="toggleAllSizesBtn" onclick="toggleAllSizes()" style="background:none;border:none;color:var(--gold,#b99a6b);font-size:12px;font-weight:600;cursor:pointer;padding:0;text-decoration:underline">إلغاء تحديد الكل</button>
+                    <button type="button" id="manageSizesBtn" onclick="toggleManageSizesMode()" style="background:var(--card-alt,#f8f6f0);border:1.5px solid var(--line,#e2ded4);color:var(--text,#1d1a16);font-size:12px;font-weight:600;cursor:pointer;padding:4px 10px;border-radius:6px;display:inline-flex;align-items:center;gap:5px;transition:0.18s">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                      <span id="manageSizesBtnText">إدارة المقاسات</span>
+                    </button>
+                  </div>
                 </div>
-                <div class="sizes-row" id="sizesRow">
-                  <label class="size-chip"><input type="checkbox" value="S" checked><span>S</span></label>
-                  <label class="size-chip"><input type="checkbox" value="M" checked><span>M</span></label>
-                  <label class="size-chip"><input type="checkbox" value="L" checked><span>L</span></label>
-                  <label class="size-chip"><input type="checkbox" value="XL" checked><span>XL</span></label>
-                  <label class="size-chip"><input type="checkbox" value="XXL"><span>XXL</span></label>
+                <div class="sizes-container" id="sizesContainer">
+                  <div class="sizes-row" id="sizesRow"></div>
+                </div>
+                <div id="addSizeBox" style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <input type="text" id="newSizeInput" placeholder="أضف مقاساً (مثال: 42 أو 3XL)" maxlength="15" style="border:1.5px solid var(--line,#e2ded4);border-radius:8px;padding:7px 12px;font-size:13px;width:190px;outline:none" onkeydown="if(event.key==='Enter'){event.preventDefault();addNewCustomSize();}">
+                  <button type="button" class="btn-text-link" onclick="addNewCustomSize()" style="background:var(--gold,#b99a6b);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px">
+                    ＋ إضافة مقاس
+                  </button>
+                  <span id="sizesManageHint" style="display:none;font-size:12px;color:var(--muted);margin-right:auto">اضغط على زر (×) الأحمر فوق أي مقاس لحذفه من القائمة</span>
                 </div>
                 <span class="err-msg" id="e-sizes" style="display:none"></span>
               </div>
