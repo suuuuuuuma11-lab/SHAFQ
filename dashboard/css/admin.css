@@ -800,26 +800,6 @@ header {
   cursor: grabbing !important;
 }
 
-/* Touch floating ghost */
-.size-touch-ghost {
-  position: fixed;
-  z-index: 10000;
-  pointer-events: none;
-  opacity: 0.95;
-  transform: scale(1.08) translate(-50%, -50%);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
-  border-radius: 9px;
-  background: var(--ink, #1d1a16);
-  border: 1.5px solid var(--gold, #b99a6b);
-  color: #fff;
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  transition: none;
-}
 
 .sizes-order-hint {
   display: flex;

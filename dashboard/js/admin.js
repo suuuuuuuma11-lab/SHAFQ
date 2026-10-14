@@ -733,235 +733,62 @@ async function saveAvailableSizes(sizes, notifyCloud = true) {
   }
 }
 
-// Sizes Drag-and-Drop Management (Mouse & Touch)
-let draggedSizeChip = null;
-let touchDraggedChip = null;
-let touchGhostEl = null;
-let touchStartX = 0;
-let touchStartY = 0;
-let isTouchDragging = false;
-let touchSuppressClick = false;
-let isContainerDragAttached = false;
-
+// --- Sizes Management (Drag & Drop, Touch & Sorting) ---
 function syncSizesOrderFromDOM() {
   const row = $("sizesRow");
   if (!row) return;
-  const chips = row.querySelectorAll(".size-chip");
-  const newSizes = [];
-  chips.forEach((c) => {
-    const s = c.dataset.size || c.querySelector("input")?.value;
-    if (s && !newSizes.includes(s)) {
-      newSizes.push(s);
-    }
-  });
-  state.currentProductSizes = newSizes;
+  state.currentProductSizes = [...row.querySelectorAll(".size-chip input")].map((i) => i.value);
 }
 
-function attachSizesDragEvents() {
+function initSizesDragAndDrop() {
   const row = $("sizesRow");
-  if (!row) return;
+  if (!row || row._dragBound) return;
+  row._dragBound = true;
 
-  initSizesContainerEvents();
+  let dragged = null;
+  let touchChip = null;
 
-  const chips = row.querySelectorAll(".size-chip");
-  chips.forEach((chip) => {
-    // 1. Desktop HTML5 Drag
-    chip.setAttribute("draggable", "true");
-
-    chip.ondragstart = (e) => {
-      if (e.target.closest(".size-del-btn")) {
-        e.preventDefault();
-        return;
-      }
-      draggedSizeChip = chip;
-      e.dataTransfer.effectAllowed = "move";
-      try {
-        e.dataTransfer.setData("text/plain", chip.dataset.size || "");
-      } catch (err) {}
-
-      setTimeout(() => {
-        if (draggedSizeChip === chip) {
-          chip.classList.add("is-dragging");
-        }
-      }, 0);
-    };
-
-    chip.ondragend = () => {
-      chip.classList.remove("is-dragging");
-      draggedSizeChip = null;
-      syncSizesOrderFromDOM();
-    };
-
-    // 2. Mobile / Tablet Touch Drag
-    chip.ontouchstart = (e) => {
-      if (e.target.closest(".size-del-btn")) return;
-      if (!e.touches || e.touches.length !== 1) return;
-
-      const touch = e.touches[0];
-      touchStartX = touch.clientX;
-      touchStartY = touch.clientY;
-      touchDraggedChip = chip;
-      isTouchDragging = false;
-      touchSuppressClick = false;
-    };
-
-    // Prevent accidental checkbox toggle after dragging finishes
-    chip.addEventListener(
-      "click",
-      (e) => {
-        if (touchSuppressClick) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      },
-      true
-    );
+  // Desktop Mouse Drag
+  row.addEventListener("dragstart", (e) => {
+    dragged = e.target.closest(".size-chip");
+    if (dragged) dragged.classList.add("is-dragging");
   });
-}
-
-function initSizesContainerEvents() {
-  const row = $("sizesRow");
-  if (!row || isContainerDragAttached) return;
-  isContainerDragAttached = true;
-
-  // Desktop Mouse Dragover: reorder live in DOM
+  row.addEventListener("dragend", () => {
+    if (dragged) dragged.classList.remove("is-dragging");
+    dragged = null;
+    syncSizesOrderFromDOM();
+  });
   row.addEventListener("dragover", (e) => {
     e.preventDefault();
-    if (!draggedSizeChip) return;
-    e.dataTransfer.dropEffect = "move";
+    const target = e.target.closest(".size-chip");
+    if (!target || target === dragged || target.parentElement !== row) return;
+    const rect = target.getBoundingClientRect();
+    const isAfter = (e.clientX - rect.left) / rect.width < 0.5; // In RTL, left half is 'after'
+    row.insertBefore(dragged, isAfter ? target.nextSibling : target);
+  });
 
-    const targetChip = e.target.closest(".size-chip");
-    if (!targetChip || targetChip === draggedSizeChip || targetChip.parentElement !== row) return;
+  // Mobile / Tablet Touch Drag
+  row.addEventListener("touchstart", (e) => {
+    if (e.target.closest(".size-del-btn")) return;
+    touchChip = e.target.closest(".size-chip");
+  }, { passive: true });
 
-    const rect = targetChip.getBoundingClientRect();
-    const midX = rect.left + rect.width / 2;
-    const isRTL = document.documentElement.dir === "rtl" || getComputedStyle(row).direction === "rtl";
-    const insertBefore = isRTL ? e.clientX > midX : e.clientX < midX;
-
-    if (insertBefore) {
-      row.insertBefore(draggedSizeChip, targetChip);
-    } else {
-      row.insertBefore(draggedSizeChip, targetChip.nextSibling);
+  row.addEventListener("touchmove", (e) => {
+    if (!touchChip) return;
+    const t = e.touches[0];
+    const target = document.elementFromPoint(t.clientX, t.clientY)?.closest(".size-chip");
+    if (target && target !== touchChip && target.parentElement === row) {
+      if (e.cancelable) e.preventDefault();
+      const rect = target.getBoundingClientRect();
+      const isAfter = (t.clientX - rect.left) / rect.width < 0.5;
+      row.insertBefore(touchChip, isAfter ? target.nextSibling : target);
     }
   });
 
-  row.addEventListener("drop", (e) => {
-    e.preventDefault();
-    if (draggedSizeChip) {
-      draggedSizeChip.classList.remove("is-dragging");
-      draggedSizeChip = null;
+  row.addEventListener("touchend", () => {
+    if (touchChip) {
       syncSizesOrderFromDOM();
-    }
-  });
-
-  // Mobile / Tablet Touchmove: move floating preview & reorder live
-  window.addEventListener(
-    "touchmove",
-    (e) => {
-      if (!touchDraggedChip || !e.touches || e.touches.length !== 1) return;
-
-      const touch = e.touches[0];
-      const deltaX = touch.clientX - touchStartX;
-      const deltaY = touch.clientY - touchStartY;
-      const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
-      if (!isTouchDragging) {
-        // Allow vertical page scrolling if mostly vertical movement
-        if (Math.abs(deltaY) > Math.abs(deltaX) * 1.4 && dist < 18) {
-          touchDraggedChip = null;
-          return;
-        }
-        if (dist > 7) {
-          isTouchDragging = true;
-          touchSuppressClick = true;
-          touchDraggedChip.classList.add("is-dragging");
-
-          if (!touchGhostEl) {
-            touchGhostEl = document.createElement("div");
-            touchGhostEl.className = "size-touch-ghost";
-            const label =
-              touchDraggedChip.querySelector(".size-label-text")?.textContent ||
-              touchDraggedChip.dataset.size ||
-              "";
-            touchGhostEl.innerHTML = `
-              <svg width="8" height="13" viewBox="0 0 8 13" fill="currentColor">
-                <circle cx="2" cy="2" r="1.2"/>
-                <circle cx="6" cy="2" r="1.2"/>
-                <circle cx="2" cy="6.5" r="1.2"/>
-                <circle cx="6" cy="6.5" r="1.2"/>
-                <circle cx="2" cy="11" r="1.2"/>
-                <circle cx="6" cy="11" r="1.2"/>
-              </svg>
-              <span>${esc(label)}</span>
-            `;
-            document.body.appendChild(touchGhostEl);
-          }
-        }
-      }
-
-      if (isTouchDragging) {
-        if (e.cancelable) e.preventDefault();
-
-        if (touchGhostEl) {
-          touchGhostEl.style.left = touch.clientX + "px";
-          touchGhostEl.style.top = touch.clientY - 35 + "px";
-        }
-
-        if (touchGhostEl) touchGhostEl.style.display = "none";
-        const elemUnder = document.elementFromPoint(touch.clientX, touch.clientY);
-        if (touchGhostEl) touchGhostEl.style.display = "inline-flex";
-
-        const targetChip = elemUnder ? elemUnder.closest(".size-chip") : null;
-        if (targetChip && targetChip !== touchDraggedChip && targetChip.parentElement === row) {
-          const rect = targetChip.getBoundingClientRect();
-          const midX = rect.left + rect.width / 2;
-          const isRTL = document.documentElement.dir === "rtl" || getComputedStyle(row).direction === "rtl";
-          const insertBefore = isRTL ? touch.clientX > midX : touch.clientX < midX;
-
-          if (insertBefore) {
-            row.insertBefore(touchDraggedChip, targetChip);
-          } else {
-            row.insertBefore(touchDraggedChip, targetChip.nextSibling);
-          }
-        }
-      }
-    },
-    { passive: false }
-  );
-
-  window.addEventListener("touchend", () => {
-    if (touchDraggedChip) {
-      touchDraggedChip.classList.remove("is-dragging");
-      if (isTouchDragging) {
-        syncSizesOrderFromDOM();
-        if (navigator.vibrate) {
-          try {
-            navigator.vibrate(20);
-          } catch (e) {}
-        }
-      }
-      if (touchGhostEl) {
-        touchGhostEl.remove();
-        touchGhostEl = null;
-      }
-      touchDraggedChip = null;
-      isTouchDragging = false;
-      setTimeout(() => {
-        touchSuppressClick = false;
-      }, 180);
-    }
-  });
-
-  window.addEventListener("touchcancel", () => {
-    if (touchDraggedChip) {
-      touchDraggedChip.classList.remove("is-dragging");
-      if (touchGhostEl) {
-        touchGhostEl.remove();
-        touchGhostEl = null;
-      }
-      touchDraggedChip = null;
-      isTouchDragging = false;
-      touchSuppressClick = false;
+      touchChip = null;
     }
   });
 }
@@ -996,134 +823,65 @@ function renderSizesChips(sizesList = null) {
 
   row.innerHTML = sizes
     .map((sz) => `
-      <label class="size-chip" data-size="${esc(sz)}" draggable="true" title="اسحب بالماوس أو اللمس لإعادة الترتيب، أو اضغط لتحديد/إلغاء المقاس">
-        <input type="checkbox" value="${esc(sz)}" checked onchange="handleSizeCheckboxChange()">
+      <label class="size-chip" data-size="${esc(sz)}" draggable="true" title="اسحب لإعادة الترتيب">
+        <input type="checkbox" value="${esc(sz)}" checked onchange="updateToggleSizesBtnText()">
         <span class="size-chip-inner">
-          <span class="size-drag-grip" aria-hidden="true" title="اسحب لإعادة الترتيب">
-            <svg width="8" height="13" viewBox="0 0 8 13" fill="currentColor">
-              <circle cx="2" cy="2" r="1.2"/>
-              <circle cx="6" cy="2" r="1.2"/>
-              <circle cx="2" cy="6.5" r="1.2"/>
-              <circle cx="6" cy="6.5" r="1.2"/>
-              <circle cx="2" cy="11" r="1.2"/>
-              <circle cx="6" cy="11" r="1.2"/>
-            </svg>
-          </span>
+          <span class="size-drag-grip" aria-hidden="true" title="اسحب لإعادة الترتيب">⠿</span>
           <span class="size-label-text">${esc(sz)}</span>
         </span>
-        <button type="button" class="size-del-btn" title="حذف المقاس (${esc(sz)}) من هذا المنتج" onclick="deleteSizeFromPool(event, '${esc(sz)}')">×</button>
+        <button type="button" class="size-del-btn" title="حذف المقاس" onclick="deleteSizeFromPool(event, '${esc(sz)}')">×</button>
       </label>
     `)
     .join("");
 
-  attachSizesDragEvents();
+  initSizesDragAndDrop();
   updateToggleSizesBtnText();
 }
 
-// Standard clothing ranks for Auto-Sort helper
-const STANDARD_SIZE_RANKS = {
-  "XXXXS": 1, "4XS": 1,
-  "XXXS": 2, "3XS": 2,
-  "XXS": 3, "2XS": 3,
-  "XS": 4,
-  "S": 5, "SMALL": 5, "سمول": 5,
-  "M": 6, "MED": 6, "MEDIUM": 6, "ميديم": 6,
-  "L": 7, "LARGE": 7, "لارج": 7,
-  "XL": 8, "إكس لارج": 8, "اكس لارج": 8,
-  "XXL": 9, "2XL": 9,
-  "XXXL": 10, "3XL": 10,
-  "XXXXL": 11, "4XL": 11,
-  "XXXXXL": 12, "5XL": 12,
-  "6XL": 13, "7XL": 14,
-  "FREE SIZE": 100, "مقاس موحد": 100
-};
-
+const SIZE_ORDER = ["4XS", "3XS", "2XS", "XS", "S", "M", "L", "XL", "2XL", "XXL", "3XL", "4XL", "5XL", "6XL"];
 window.autoSortProductSizes = function() {
   syncSizesOrderFromDOM();
-  if (!Array.isArray(state.currentProductSizes) || state.currentProductSizes.length < 2) return;
+  if (!state.currentProductSizes || state.currentProductSizes.length < 2) return;
 
-  const checkedMap = {};
-  document.querySelectorAll("#sizesRow input").forEach((input) => {
-    checkedMap[input.value] = input.checked;
+  state.currentProductSizes.sort((a, b) => {
+    const na = parseFloat(a), nb = parseFloat(b);
+    if (!isNaN(na) && !isNaN(nb)) return na - nb;
+    const ia = SIZE_ORDER.indexOf(String(a).toUpperCase());
+    const ib = SIZE_ORDER.indexOf(String(b).toUpperCase());
+    if (ia !== -1 && ib !== -1) return ia - ib;
+    if (ia !== -1) return -1;
+    if (ib !== -1) return 1;
+    return String(a).localeCompare(String(b), undefined, { numeric: true });
   });
 
-  const sorted = [...state.currentProductSizes].sort((a, b) => {
-    const cleanA = String(a).trim().toUpperCase();
-    const cleanB = String(b).trim().toUpperCase();
-
-    const numA = parseFloat(cleanA);
-    const numB = parseFloat(cleanB);
-    const isNumA = !isNaN(numA) && isFinite(cleanA);
-    const isNumB = !isNaN(numB) && isFinite(cleanB);
-
-    if (isNumA && isNumB) {
-      return numA - numB;
-    }
-
-    const rankA = STANDARD_SIZE_RANKS[cleanA] || STANDARD_SIZE_RANKS[cleanA.replace(/\s+/g, "")];
-    const rankB = STANDARD_SIZE_RANKS[cleanB] || STANDARD_SIZE_RANKS[cleanB.replace(/\s+/g, "")];
-
-    if (rankA && rankB) {
-      return rankA - rankB;
-    }
-    if (rankA) return -1;
-    if (rankB) return 1;
-
-    return cleanA.localeCompare(cleanB, undefined, { numeric: true, sensitivity: "base" });
-  });
-
-  state.currentProductSizes = sorted;
-  renderSizesChips(sorted);
-
-  document.querySelectorAll("#sizesRow input").forEach((input) => {
-    if (checkedMap[input.value] !== undefined) {
-      input.checked = checkedMap[input.value];
-    }
-  });
-  updateToggleSizesBtnText();
-
-  toast("تم الترتيب الذكي للمقاسات بنجاح ⚡ (يمكنك سحب أي مقاس لتعديل موضعه يدوياً)");
+  renderSizesChips(state.currentProductSizes);
+  toast("تم ترتيب المقاسات بنجاح ⚡");
 };
 
 window.clearAllSizes = function() {
   if (!Array.isArray(state.currentProductSizes) || state.currentProductSizes.length === 0) return;
-
-  const count = state.currentProductSizes.length;
-  confirmBox(
-    "تأكيد حذف المقاسات",
-    `هل أنت متأكد من رغبتك في حذف جميع المقاسات المحددة لهذا المنتج (${count} مقاسات)؟`,
-    () => {
-      state.currentProductSizes = [];
-      renderSizesChips([]);
-      toast("تم تفريغ جميع المقاسات لهذا المنتج بنجاح ✓");
-    },
-    "نعم، احذف الكل"
-  );
+  confirmBox("تأكيد حذف المقاسات", `هل أنت متأكد من حذف جميع المقاسات لهذا المنتج؟`, () => {
+    state.currentProductSizes = [];
+    renderSizesChips([]);
+    toast("تم تفريغ جميع المقاسات بنجاح ✓");
+  }, "نعم، احذف الكل");
 };
 
 function updateToggleSizesBtnText() {
   const inputs = document.querySelectorAll("#sizesRow input");
   const btn = $("toggleAllSizesBtn");
   if (!btn) return;
-  if (!inputs.length) {
-    btn.style.display = "none";
-    return;
-  }
-  btn.style.display = "inline";
+  btn.style.display = inputs.length ? "inline" : "none";
   const anyChecked = [...inputs].some((i) => i.checked);
   btn.textContent = anyChecked ? "إلغاء تحديد الكل" : "تحديد الكل";
 }
 
-window.handleSizeCheckboxChange = function() {
-  updateToggleSizesBtnText();
-};
+window.handleSizeCheckboxChange = updateToggleSizesBtnText;
 
 window.toggleAllSizes = function() {
   const inputs = document.querySelectorAll("#sizesRow input");
   const anyChecked = [...inputs].some((i) => i.checked);
-  inputs.forEach((i) => {
-    i.checked = !anyChecked;
-  });
+  inputs.forEach((i) => { i.checked = !anyChecked; });
   updateToggleSizesBtnText();
 };
 
@@ -1132,58 +890,33 @@ window.toggleManageSizesMode = function() {
   const container = $("sizesContainer");
   const btn = $("manageSizesBtn");
   const btnText = $("manageSizesBtnText");
-
-  if (container) {
-    container.classList.toggle("manage-mode", state.isSizesManageMode);
-  }
-
-  if (state.isSizesManageMode) {
-    if (btnText) btnText.textContent = "✓ تم إنهاء التعديل";
-    if (btn) {
-      btn.style.background = "var(--ink, #1d1a16)";
-      btn.style.color = "#fff";
-      btn.style.borderColor = "var(--ink, #1d1a16)";
-    }
-  } else {
-    if (btnText) btnText.textContent = "إدارة المقاسات";
-    if (btn) {
-      btn.style.background = "var(--card-alt, #f8f6f0)";
-      btn.style.color = "var(--text, #1d1a16)";
-      btn.style.borderColor = "var(--line, #e2ded4)";
-    }
+  if (container) container.classList.toggle("manage-mode", state.isSizesManageMode);
+  if (btnText) btnText.textContent = state.isSizesManageMode ? "✓ تم إنهاء التعديل" : "إدارة المقاسات";
+  if (btn) {
+    btn.style.background = state.isSizesManageMode ? "var(--ink, #1d1a16)" : "var(--card-alt, #f8f6f0)";
+    btn.style.color = state.isSizesManageMode ? "#fff" : "var(--text, #1d1a16)";
+    btn.style.borderColor = state.isSizesManageMode ? "var(--ink, #1d1a16)" : "var(--line, #e2ded4)";
   }
 };
 
 window.addNewCustomSize = function() {
   const input = $("newSizeInput");
   if (!input) return;
-
   const raw = input.value.trim();
   if (!raw) {
     toast("يرجى كتابة اسم أو رقم المقاس أولاً", false);
     input.focus();
     return;
   }
-
-  // Parse multi-size input separated by commas (Latin , or Arabic ،) or newlines
   const rawTokens = raw.split(/[,،\n]+/).map((s) => s.trim().slice(0, 15)).filter(Boolean);
-  if (rawTokens.length === 0) {
-    toast("يرجى كتابة اسم أو رقم المقاس أولاً", false);
-    input.focus();
-    return;
-  }
+  if (!rawTokens.length) return;
 
-  // Preserve existing drag reordering before appending new sizes
   syncSizesOrderFromDOM();
-
-  if (!Array.isArray(state.currentProductSizes)) {
-    state.currentProductSizes = [];
-  }
+  if (!Array.isArray(state.currentProductSizes)) state.currentProductSizes = [];
 
   const newlyAdded = [];
   rawTokens.forEach((token) => {
-    const exists = state.currentProductSizes.some((s) => s.toLowerCase() === token.toLowerCase());
-    if (!exists) {
+    if (!state.currentProductSizes.some((s) => s.toLowerCase() === token.toLowerCase())) {
       state.currentProductSizes.push(token);
       newlyAdded.push(token);
     }
@@ -1191,36 +924,24 @@ window.addNewCustomSize = function() {
 
   input.value = "";
   renderSizesChips(state.currentProductSizes);
-
-  if (newlyAdded.length > 1) {
-    toast(`تمت إضافة (${newlyAdded.length}) مقاسات لهذا المنتج بنجاح ✓ [${newlyAdded.join(", ")}]`);
-  } else if (newlyAdded.length === 1) {
-    toast(`تمت إضافة المقاس "${newlyAdded[0]}" لهذا المنتج بنجاح ✓ (يمكنك سحبه للموضع المناسب)`);
+  if (newlyAdded.length) {
+    toast(`تمت إضافة (${newlyAdded.join(", ")}) بنجاح ✓`);
   } else {
-    toast(`المقاسات محددة بالفعل لهذا المنتج`);
+    toast(`المقاسات محددة بالفعل`);
   }
 };
 
 window.deleteSizeFromPool = function(event, sizeName) {
-  if (event) {
-    event.preventDefault();
-    event.stopPropagation();
-  }
+  if (event) { event.preventDefault(); event.stopPropagation(); }
   if (!sizeName) return;
-
-  confirmBox(
-    "تأكيد حذف المقاس",
-    `هل أنت متأكد من إزالة المقاس (<b>${esc(sizeName)}</b>) من هذا المنتج؟`,
-    () => {
-      syncSizesOrderFromDOM();
-      state.currentProductSizes = (state.currentProductSizes || []).filter(
-        (s) => s.toLowerCase() !== sizeName.toLowerCase()
-      );
-      renderSizesChips(state.currentProductSizes);
-      toast(`تمت إزالة المقاس (${sizeName}) بنجاح ✓`);
-    },
-    "نعم، احذف"
-  );
+  confirmBox("تأكيد حذف المقاس", `هل أنت متأكد من إزالة المقاس (<b>${esc(sizeName)}</b>)؟`, () => {
+    syncSizesOrderFromDOM();
+    state.currentProductSizes = (state.currentProductSizes || []).filter(
+      (s) => s.toLowerCase() !== sizeName.toLowerCase()
+    );
+    renderSizesChips(state.currentProductSizes);
+    toast(`تمت إزالة المقاس (${sizeName}) بنجاح ✓`);
+  }, "نعم، احذف");
 };
 
 function updateClearColorsBtn() {
