@@ -468,7 +468,7 @@ if (orderForm) {
           <b>تفاصيل الطلب:</b><br>
           رقم الطلب: <b>#${createdOrderId.slice(-6).toUpperCase()}</b><br>
           المنتج: ${esc(currentProduct.name)}<br>
-          اللون: ${esc(colorName)} — المقاس: ${esc(selectedSize)} — الكمية: ${qty}<br>
+          ${colorName ? `اللون: ${esc(colorName)} — ` : ""}${hasSizes && selectedSize ? `المقاس: ${esc(selectedSize)} — ` : ""}الكمية: ${qty}<br>
           سعر المنتجات: <b>${verifiedSubtotal.toLocaleString('ar-DZ')} دج</b><br>
           طريقة التوصيل: <b>${deliveryMethod === 'stopDesk' ? '🏢 استلام من المكتب' : '🏠 توصيل للمنزل'} (${verifiedShipping.toLocaleString('ar-DZ')} دج)</b><br>
           الإجمالي الكلي: <b>${verifiedTotal.toLocaleString('ar-DZ')} دج</b> (يدفع عند التسليم)<br>

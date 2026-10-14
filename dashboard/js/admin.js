@@ -733,50 +733,58 @@ async function saveAvailableSizes(sizes, notifyCloud = true) {
   }
 }
 
-function renderSizesChips(checkedSizes = null) {
+function renderSizesChips(sizesList = null) {
   const row = $("sizesRow");
   if (!row) return;
 
-  if (!state.availableSizes || !state.availableSizes.length) {
-    state.availableSizes = getStoredAvailableSizes();
+  if (Array.isArray(sizesList)) {
+    state.currentProductSizes = [...sizesList];
+  } else if (!Array.isArray(state.currentProductSizes)) {
+    state.currentProductSizes = [];
   }
 
-  let currentlyChecked = [];
-  if (Array.isArray(checkedSizes)) {
-    currentlyChecked = checkedSizes;
-  } else {
-    currentlyChecked = [...row.querySelectorAll("input:checked")].map((i) => i.value);
+  const sizes = state.currentProductSizes;
+  const clearBtn = $("clearAllSizesBtn");
+
+  if (sizes.length === 0) {
+    row.innerHTML = `<span style="font-size:12.5px;color:var(--muted,#888);padding:6px 0;display:inline-block">لا توجد مقاسات محددة لهذا المنتج (اتركه فارغاً إذا كان المنتج بدون مقاسات كالعطور).</span>`;
+    if (clearBtn) clearBtn.style.display = "none";
+    updateToggleSizesBtnText();
+    return;
   }
 
-  // Ensure any checked size is shown even if not in standard available sizes
-  const allSizesToDisplay = [...state.availableSizes];
-  currentlyChecked.forEach((sz) => {
-    if (!allSizesToDisplay.includes(sz)) {
-      allSizesToDisplay.push(sz);
-    }
-  });
+  if (clearBtn) clearBtn.style.display = "inline";
 
-  row.innerHTML = allSizesToDisplay
-    .map((sz) => {
-      const isChecked = currentlyChecked.includes(sz);
-      return `
+  row.innerHTML = sizes
+    .map((sz) => `
       <label class="size-chip" data-size="${esc(sz)}">
-        <input type="checkbox" value="${esc(sz)}" ${isChecked ? "checked" : ""} onchange="handleSizeCheckboxChange()">
+        <input type="checkbox" value="${esc(sz)}" checked onchange="handleSizeCheckboxChange()">
         <span>${esc(sz)}</span>
-        <button type="button" class="size-del-btn" title="حذف المقاس (${esc(sz)})" onclick="deleteSizeFromPool(event, '${esc(sz)}')">×</button>
+        <button type="button" class="size-del-btn" title="حذف المقاس (${esc(sz)}) من هذا المنتج" onclick="deleteSizeFromPool(event, '${esc(sz)}')">×</button>
       </label>
-    `;
-    })
+    `)
     .join("");
 
   updateToggleSizesBtnText();
 }
 
+window.clearAllSizes = function() {
+  state.currentProductSizes = [];
+  renderSizesChips([]);
+  toast("تم تفريغ جميع المقاسات لهذا المنتج");
+};
+
 function updateToggleSizesBtnText() {
   const inputs = document.querySelectorAll("#sizesRow input");
-  const anyChecked = [...inputs].some((i) => i.checked);
   const btn = $("toggleAllSizesBtn");
-  if (btn) btn.textContent = anyChecked ? "إلغاء تحديد الكل" : "تحديد الكل";
+  if (!btn) return;
+  if (!inputs.length) {
+    btn.style.display = "none";
+    return;
+  }
+  btn.style.display = "inline";
+  const anyChecked = [...inputs].some((i) => i.checked);
+  btn.textContent = anyChecked ? "إلغاء تحديد الكل" : "تحديد الكل";
 }
 
 window.handleSizeCheckboxChange = function() {
@@ -819,7 +827,7 @@ window.toggleManageSizesMode = function() {
   }
 };
 
-window.addNewCustomSize = async function() {
+window.addNewCustomSize = function() {
   const input = $("newSizeInput");
   if (!input) return;
 
@@ -831,7 +839,6 @@ window.addNewCustomSize = async function() {
   }
 
   // Parse multi-size input separated by commas (Latin , or Arabic ،) or newlines
-  // Example: "S, M, L, XL, XXL" or "40, 41, 42" or "S,L,XL,XXL"
   const rawTokens = raw.split(/[,،\n]+/).map((s) => s.trim().slice(0, 15)).filter(Boolean);
   if (rawTokens.length === 0) {
     toast("يرجى كتابة اسم أو رقم المقاس أولاً", false);
@@ -839,77 +846,43 @@ window.addNewCustomSize = async function() {
     return;
   }
 
-  if (!state.availableSizes) {
-    state.availableSizes = getStoredAvailableSizes();
+  if (!Array.isArray(state.currentProductSizes)) {
+    state.currentProductSizes = [];
   }
 
-  const currentlyChecked = [...document.querySelectorAll("#sizesRow input:checked")].map((i) => i.value);
-  const newlyAddedList = [];
-
+  const newlyAdded = [];
   rawTokens.forEach((token) => {
-    const existing = state.availableSizes.find((s) => s.toLowerCase() === token.toLowerCase());
-    const actualSizeName = existing || token;
-
-    if (!existing) {
-      state.availableSizes.push(token);
-      newlyAddedList.push(token);
-    }
-    if (!currentlyChecked.includes(actualSizeName)) {
-      currentlyChecked.push(actualSizeName);
+    const exists = state.currentProductSizes.some((s) => s.toLowerCase() === token.toLowerCase());
+    if (!exists) {
+      state.currentProductSizes.push(token);
+      newlyAdded.push(token);
     }
   });
 
   input.value = "";
+  renderSizesChips(state.currentProductSizes);
 
-  try {
-    await saveAvailableSizes(state.availableSizes, true);
-    renderSizesChips(currentlyChecked);
-    if (newlyAddedList.length > 1) {
-      toast(`تمت إضافة وتفعيل (${newlyAddedList.length}) مقاسات بنجاح ✓ [${newlyAddedList.join(", ")}]`);
-    } else if (newlyAddedList.length === 1) {
-      toast(`تمت إضافة وتفعيل المقاس "${newlyAddedList[0]}" بنجاح ✓`);
-    } else {
-      toast(`تم تفعيل المقاسات المحددة للمنتج ✓`);
-    }
-  } catch (err) {
-    console.error("Add size error:", err);
-    toast("حدث خطأ أثناء حفظ المقاس: " + err.message, false);
+  if (newlyAdded.length > 1) {
+    toast(`تمت إضافة (${newlyAdded.length}) مقاسات لهذا المنتج بنجاح ✓ [${newlyAdded.join(", ")}]`);
+  } else if (newlyAdded.length === 1) {
+    toast(`تمت إضافة المقاس "${newlyAdded[0]}" لهذا المنتج بنجاح ✓`);
+  } else {
+    toast(`المقاسات محددة بالفعل لهذا المنتج`);
   }
 };
 
-window.deleteSizeFromPool = async function(event, sizeName) {
+window.deleteSizeFromPool = function(event, sizeName) {
   if (event) {
     event.preventDefault();
     event.stopPropagation();
   }
-
   if (!sizeName) return;
 
-  const isUsed = state.products.some((p) => Array.isArray(p.sizes) && p.sizes.includes(sizeName));
-
-  let confirmMsg = "";
-  if (isUsed) {
-    confirmMsg = `تنبيه: المقاس (${sizeName}) مستخدم حالياً في منتجات معروضة بالمتجر.\n\nحذفه من هذه القائمة سيخفيه فقط من الخيارات السريعة للمنتجات الجديدة، ولن يفسد المنتجات القديمة التي تستخدمه.\n\nهل أنت متأكد من حذف المقاس (${sizeName})؟`;
-  } else {
-    confirmMsg = `هل أنت متأكد من حذف المقاس (${sizeName}) من قائمة المقاسات؟`;
-  }
-
-  const ok = window.confirm(confirmMsg);
-  if (!ok) return;
-
-  const updatedSizes = state.availableSizes.filter((s) => s !== sizeName);
-  const currentlyChecked = [...document.querySelectorAll("#sizesRow input:checked")]
-    .map((i) => i.value)
-    .filter((s) => s !== sizeName);
-
-  try {
-    await saveAvailableSizes(updatedSizes, true);
-    renderSizesChips(currentlyChecked);
-    toast(`تم حذف المقاس (${sizeName}) بنجاح ✓`);
-  } catch (err) {
-    console.error("Delete size error:", err);
-    toast("حدث خطأ أثناء حذف المقاس: " + err.message, false);
-  }
+  state.currentProductSizes = (state.currentProductSizes || []).filter(
+    (s) => s.toLowerCase() !== sizeName.toLowerCase()
+  );
+  renderSizesChips(state.currentProductSizes);
+  toast(`تمت إزالة المقاس (${sizeName}) من هذا المنتج`);
 };
 
 window.clearAllColors = function() {
@@ -2307,7 +2280,6 @@ function initShippingSettings() {
         if (d && Array.isArray(d.availableSizes) && d.availableSizes.length) {
           state.availableSizes = Array.from(new Set([...d.availableSizes]));
           try { localStorage.setItem("hadjaj_admin_available_sizes", JSON.stringify(state.availableSizes)); } catch(e){}
-          renderSizesChips();
         }
       }
     },
