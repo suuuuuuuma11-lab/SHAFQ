@@ -888,11 +888,18 @@ window.deleteSizeFromPool = function(event, sizeName) {
   }
   if (!sizeName) return;
 
-  state.currentProductSizes = (state.currentProductSizes || []).filter(
-    (s) => s.toLowerCase() !== sizeName.toLowerCase()
+  confirmBox(
+    "تأكيد حذف المقاس",
+    `هل أنت متأكد من إزالة المقاس (<b>${esc(sizeName)}</b>) من هذا المنتج؟`,
+    () => {
+      state.currentProductSizes = (state.currentProductSizes || []).filter(
+        (s) => s.toLowerCase() !== sizeName.toLowerCase()
+      );
+      renderSizesChips(state.currentProductSizes);
+      toast(`تمت إزالة المقاس (${sizeName}) بنجاح ✓`);
+    },
+    "نعم، احذف"
   );
-  renderSizesChips(state.currentProductSizes);
-  toast(`تمت إزالة المقاس (${sizeName}) من هذا المنتج`);
 };
 
 function updateClearColorsBtn() {
@@ -964,10 +971,27 @@ function addColorLine(hex = "#b99a6b", name = "") {
   row.querySelector("input[type=text]").addEventListener("input", () => clearErr("colors"));
 
   row.querySelector(".color-del").addEventListener("click", () => {
-    row.remove();
-    clearErr("colors");
-    renderColorsPlaceholder();
-    updateClearColorsBtn();
+    const colorName = row.querySelector("input[type=text]").value.trim();
+    if (!colorName) {
+      row.remove();
+      clearErr("colors");
+      renderColorsPlaceholder();
+      updateClearColorsBtn();
+      return;
+    }
+
+    confirmBox(
+      "تأكيد حذف اللون",
+      `هل أنت متأكد من حذف اللون (<b>${esc(colorName)}</b>) من هذا المنتج؟`,
+      () => {
+        row.remove();
+        clearErr("colors");
+        renderColorsPlaceholder();
+        updateClearColorsBtn();
+        toast(`تم حذف اللون (${colorName}) بنجاح ✓`);
+      },
+      "نعم، احذف"
+    );
   });
 
   list.appendChild(row);
