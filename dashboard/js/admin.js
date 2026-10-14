@@ -895,16 +895,45 @@ window.deleteSizeFromPool = function(event, sizeName) {
   toast(`تمت إزالة المقاس (${sizeName}) من هذا المنتج`);
 };
 
+function updateClearColorsBtn() {
+  const btn = $("clearAllColorsBtn");
+  const list = $("colorsList");
+  if (!btn) return;
+  const count = list ? list.querySelectorAll(".color-item").length : 0;
+  btn.style.display = count > 0 ? "inline" : "none";
+}
+
+function renderColorsPlaceholder() {
+  const list = $("colorsList");
+  if (!list) return;
+  const items = list.querySelectorAll(".color-item");
+  let emptyNote = $("colorsEmptyNote");
+  if (items.length === 0) {
+    if (!emptyNote) {
+      emptyNote = document.createElement("div");
+      emptyNote.id = "colorsEmptyNote";
+      emptyNote.style.cssText = "font-size:12.5px;color:var(--muted,#888);padding:6px 0;";
+      emptyNote.textContent = "لا توجد ألوان محددة لهذا المنتج (اتركه فارغاً إذا كان المنتج بدون ألوان كالعطور).";
+      list.appendChild(emptyNote);
+    }
+  } else {
+    if (emptyNote) emptyNote.remove();
+  }
+}
+
 window.clearAllColors = function() {
   const list = $("colorsList");
-  if (!list || !list.children.length) return;
+  const items = list ? list.querySelectorAll(".color-item") : [];
+  if (!items.length) return;
 
   confirmBox(
     "تأكيد حذف الألوان",
-    "هل أنت متأكد من رغبتك في حذف جميع الألوان المحددة لهذا المنتج؟",
+    `هل أنت متأكد من رغبتك في حذف جميع الألوان المحددة لهذا المنتج (${items.length} ألوان)؟`,
     () => {
       list.innerHTML = "";
       clearErr("colors");
+      renderColorsPlaceholder();
+      updateClearColorsBtn();
       toast("تم تفريغ جميع الألوان لهذا المنتج بنجاح ✓");
     },
     "نعم، احذف الكل"
@@ -914,6 +943,9 @@ window.clearAllColors = function() {
 function addColorLine(hex = "#b99a6b", name = "") {
   const list = $("colorsList");
   if (!list) return;
+
+  const emptyNote = $("colorsEmptyNote");
+  if (emptyNote) emptyNote.remove();
 
   const row = document.createElement("div");
   row.className = "color-item";
@@ -934,9 +966,13 @@ function addColorLine(hex = "#b99a6b", name = "") {
   row.querySelector(".color-del").addEventListener("click", () => {
     row.remove();
     clearErr("colors");
+    renderColorsPlaceholder();
+    updateClearColorsBtn();
   });
 
   list.appendChild(row);
+  renderColorsPlaceholder();
+  updateClearColorsBtn();
 }
 
 function getColors() {
@@ -999,8 +1035,8 @@ function resetProductForm() {
 
   const colorsList = $("colorsList");
   if (colorsList) colorsList.innerHTML = "";
-  addColorLine("#f5f2ea", "أبيض عاجي");
-  addColorLine("#1d1a16", "أسود");
+  renderColorsPlaceholder();
+  updateClearColorsBtn();
 
   const disc = $("discPreview");
   if (disc) disc.classList.remove("show");
@@ -1084,6 +1120,8 @@ function editProduct(id) {
       addColorLine(val, nm);
     });
   }
+  renderColorsPlaceholder();
+  updateClearColorsBtn();
 
   const modeTag = $("prodFormMode");
   if (modeTag) modeTag.textContent = "وضع التعديل";
@@ -3452,9 +3490,10 @@ onAuthStateChanged(auth, async (user) => {
   if (!user && isLocalTest) {
     if (!isDashboardInitialized) {
       isDashboardInitialized = true;
+      renderSizesChips([]);
       initEvents();
-      addColorLine("#f5f2ea", "أبيض عاجي");
-      addColorLine("#1d1a16", "أسود");
+      renderColorsPlaceholder();
+      updateClearColorsBtn();
       updateBannerPreview();
       initRealtimeFirestore();
     }
@@ -3481,8 +3520,8 @@ onAuthStateChanged(auth, async (user) => {
     state.availableSizes = getStoredAvailableSizes();
     renderSizesChips([]);
     initEvents();
-    addColorLine("#f5f2ea", "أبيض عاجي");
-    addColorLine("#1d1a16", "أسود");
+    renderColorsPlaceholder();
+    updateClearColorsBtn();
     updateBannerPreview();
     initRealtimeFirestore();
   }
