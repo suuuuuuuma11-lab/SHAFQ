@@ -192,9 +192,9 @@
                   <div class="sizes-row" id="sizesRow"></div>
                 </div>
                 <div id="addSizeBox" style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                  <input type="text" id="newSizeInput" placeholder="أضف مقاساً (مثال: 42 أو 3XL)" maxlength="15" style="border:1.5px solid var(--line,#e2ded4);border-radius:8px;padding:7px 12px;font-size:13px;width:190px;outline:none" onkeydown="if(event.key==='Enter'){event.preventDefault();addNewCustomSize();}">
-                  <button type="button" class="btn-text-link" onclick="addNewCustomSize()" style="background:var(--gold,#b99a6b);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px">
-                    ＋ إضافة مقاس
+                  <input type="text" id="newSizeInput" placeholder="أضف مقاساً أو عدة مقاسات مفصولة بفواصل (مثال: S, M, L, XL أو 40, 41, 42)" maxlength="250" style="border:1.5px solid var(--line,#e2ded4);border-radius:8px;padding:8px 12px;font-size:13px;min-width:280px;flex:1;max-width:440px;outline:none" onkeydown="if(event.key==='Enter'){event.preventDefault();addNewCustomSize();}">
+                  <button type="button" class="btn-text-link" onclick="addNewCustomSize()" style="background:var(--gold,#b99a6b);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;white-space:nowrap">
+                    ＋ إضافة المقاسات
                   </button>
                   <span id="sizesManageHint" style="display:none;font-size:12px;color:var(--muted);margin-right:auto">اضغط على زر (×) الأحمر فوق أي مقاس لحذفه من القائمة</span>
                 </div>

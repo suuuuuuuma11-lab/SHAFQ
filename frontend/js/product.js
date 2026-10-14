@@ -24,6 +24,19 @@ function getOptimizedImageUrl(url, width = 800) {
 
 const defaultSizes = ["S","M","L","XL","XXL"];
 
+// Resolve authoritative product sizes (empty array [] means no sizes, do not force defaultSizes)
+function resolveProductSizes(d) {
+  if (!d) return [];
+  if (Array.isArray(d.sizes)) return d.sizes;
+  if (d.sizes === undefined || d.sizes === null) {
+    const cat = String(d.category || d.categoryId || "").toLowerCase();
+    const name = String(d.name || d.title || "").toLowerCase();
+    const isApparel = /قميص|أقمصة|shirt|كلاسيك|كاجوال|ملابس|بناطيل|أحذية/.test(cat + " " + name);
+    return isApparel ? [...defaultSizes] : [];
+  }
+  return [];
+}
+
 // Safe HTML Escape
 function esc(s){ return String(s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
@@ -430,7 +443,7 @@ if (orderForm) {
           await sendTelegramOrder({
             productName: currentProduct.name,
             color: colorName,
-            size: selectedSize,
+            size: hasSizes ? selectedSize : '',
             qty: qty,
             price: currentProduct.price,
             deliveryMethod: deliveryMethod === "stopDesk" ? "استلام من المكتب" : "توصيل للمنزل",
@@ -746,7 +759,7 @@ async function loadProductFromFirestore() {
             badge: d.badge || '',
             colors: colors,
             colorNames: colors.map(c => c.name),
-            sizes: Array.isArray(d.sizes) && d.sizes.length ? d.sizes : defaultSizes,
+            sizes: resolveProductSizes(d),
             status: d.status || 'active',
             desc: d.description || d.desc || '',
             category: d.category || '',
@@ -791,7 +804,7 @@ async function loadProductFromFirestore() {
         badge: d.badge || '',
         colors: colors,
         colorNames: colors.map(c => c.name),
-        sizes: Array.isArray(d.sizes) && d.sizes.length ? d.sizes : defaultSizes,
+        sizes: resolveProductSizes(d),
         status: d.status || 'active',
         desc: d.description || d.desc || '',
         category: d.category || '',

@@ -830,34 +830,47 @@ window.addNewCustomSize = async function() {
     return;
   }
 
-  const newSize = raw.slice(0, 15).trim();
+  // Parse multi-size input separated by commas (Latin , or Arabic ،) or newlines
+  // Example: "S, M, L, XL, XXL" or "40, 41, 42" or "S,L,XL,XXL"
+  const rawTokens = raw.split(/[,،\n]+/).map((s) => s.trim().slice(0, 15)).filter(Boolean);
+  if (rawTokens.length === 0) {
+    toast("يرجى كتابة اسم أو رقم المقاس أولاً", false);
+    input.focus();
+    return;
+  }
 
   if (!state.availableSizes) {
     state.availableSizes = getStoredAvailableSizes();
   }
 
-  const exists = state.availableSizes.some((s) => s.toLowerCase() === newSize.toLowerCase());
-  if (exists) {
-    toast(`المقاس "${newSize}" موجود بالفعل في القائمة`, false);
-    const existingInput = document.querySelector(`#sizesRow input[value="${newSize}"]`);
-    if (existingInput) {
-      existingInput.checked = true;
-      updateToggleSizesBtnText();
-    }
-    input.value = "";
-    return;
-  }
-
-  const updatedSizes = [...state.availableSizes, newSize];
   const currentlyChecked = [...document.querySelectorAll("#sizesRow input:checked")].map((i) => i.value);
-  currentlyChecked.push(newSize);
+  const newlyAddedList = [];
+
+  rawTokens.forEach((token) => {
+    const existing = state.availableSizes.find((s) => s.toLowerCase() === token.toLowerCase());
+    const actualSizeName = existing || token;
+
+    if (!existing) {
+      state.availableSizes.push(token);
+      newlyAddedList.push(token);
+    }
+    if (!currentlyChecked.includes(actualSizeName)) {
+      currentlyChecked.push(actualSizeName);
+    }
+  });
 
   input.value = "";
 
   try {
-    await saveAvailableSizes(updatedSizes, true);
+    await saveAvailableSizes(state.availableSizes, true);
     renderSizesChips(currentlyChecked);
-    toast(`تمت إضافة المقاس "${newSize}" بنجاح ✓`);
+    if (newlyAddedList.length > 1) {
+      toast(`تمت إضافة وتفعيل (${newlyAddedList.length}) مقاسات بنجاح ✓ [${newlyAddedList.join(", ")}]`);
+    } else if (newlyAddedList.length === 1) {
+      toast(`تمت إضافة وتفعيل المقاس "${newlyAddedList[0]}" بنجاح ✓`);
+    } else {
+      toast(`تم تفعيل المقاسات المحددة للمنتج ✓`);
+    }
   } catch (err) {
     console.error("Add size error:", err);
     toast("حدث خطأ أثناء حفظ المقاس: " + err.message, false);
@@ -984,7 +997,7 @@ function resetProductForm() {
     imgUrl.value = "";
   }
 
-  renderSizesChips((state.availableSizes || getStoredAvailableSizes()).slice(0, 4));
+  renderSizesChips([]);
   if (state.isSizesManageMode) {
     toggleManageSizesMode();
   }
@@ -3474,7 +3487,7 @@ onAuthStateChanged(auth, async (user) => {
   if (!isDashboardInitialized) {
     isDashboardInitialized = true;
     state.availableSizes = getStoredAvailableSizes();
-    renderSizesChips(state.availableSizes.slice(0, 4));
+    renderSizesChips([]);
     initEvents();
     addColorLine("#f5f2ea", "أبيض عاجي");
     addColorLine("#1d1a16", "أسود");

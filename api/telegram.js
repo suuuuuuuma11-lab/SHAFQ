@@ -95,11 +95,16 @@ export default async function handler(req, res) {
       }).join('\n');
     } else {
       const safeProductName = sanitizeText(orderData.productName || 'منتج');
-      const safeColor = sanitizeText(orderData.color || 'افتراضي');
-      const safeSize = sanitizeText(orderData.size || 'M');
+      const safeColor = sanitizeText(orderData.color || '');
+      const safeSize = sanitizeText(orderData.size || '');
       const safeQty = Number(orderData.qty) || 1;
       const safePrice = Number(orderData.price) || 0;
-      itemsBlock = `• ${safeProductName}\n   - المقاس: ${safeSize} | اللون: ${safeColor} | الكمية: ${safeQty} | السعر: ${safePrice.toLocaleString('ar-DZ')} دج`;
+      const singleSpecs = [];
+      if (safeSize) singleSpecs.push(`المقاس: ${safeSize}`);
+      if (safeColor) singleSpecs.push(`اللون: ${safeColor}`);
+      singleSpecs.push(`الكمية: ${safeQty}`);
+      singleSpecs.push(`السعر: ${safePrice.toLocaleString('ar-DZ')} دج`);
+      itemsBlock = `• ${safeProductName}\n   - ${singleSpecs.join(' | ')}`;
     }
 
     const safeTotal = sanitizeText(orderData.total || '0');

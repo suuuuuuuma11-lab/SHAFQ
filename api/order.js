@@ -254,9 +254,14 @@ export default async function handler(req, res) {
       const chatId = process.env.TELEGRAM_CHAT_ID;
       if (token && chatId) {
         const methodDesc = method === "home" ? "توصيل للمنزل" : "استلام من المكتب";
-        const itemsText = sanitizedItems.map(it => 
-          `• ${it.name}\n   - المقاس: ${it.size} | اللون: ${it.color} | الكمية: ${it.quantity} | السعر: ${it.price.toLocaleString("ar-DZ")} دج`
-        ).join("\n");
+        const itemsText = sanitizedItems.map(it => {
+          const details = [];
+          if (it.size) details.push(`المقاس: ${it.size}`);
+          if (it.color) details.push(`اللون: ${it.color}`);
+          details.push(`الكمية: ${it.quantity}`);
+          details.push(`السعر: ${it.price.toLocaleString("ar-DZ")} دج`);
+          return `• ${it.name}\n   - ${details.join(" | ")}`;
+        }).join("\n");
 
         const msg = [
           "🛍️ طلب جديد من متجر حجاج",
