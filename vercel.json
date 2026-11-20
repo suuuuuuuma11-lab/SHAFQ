@@ -62,11 +62,5 @@
       "source": "/img/:path*",
       "destination": "/frontend/img/:path*"
     }
-  ],
-  "crons": [
-    {
-      "path": "/api/queue-worker",
-      "schedule": "*/10 * * * *"
-    }
   ]
 }
