@@ -13,6 +13,7 @@
 
 import { DEFAULT_SHIPPING_RATES } from "../frontend/data/default-shipping-rates.js";
 import { ALGERIA_LOCATIONS } from "../frontend/data/algeria-locations.js";
+import { enqueueTelegramNotification, processTelegramQueue } from "./queue-worker.js";
 
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || "clothstore-a9b2c";
 
@@ -247,62 +248,85 @@ export default async function handler(req, res) {
       console.warn("[BACKEND ORDER WRITE ERROR]:", fsErr.message);
     }
 
-    // 7. Dispatch Telegram Notification
-    let telegramSent = false;
+    // 7. Enqueue Telegram Notification & Trigger Safe Queue Worker
+    let telegramQueued = false;
     try {
-      const token = process.env.TELEGRAM_BOT_TOKEN;
-      const chatId = process.env.TELEGRAM_CHAT_ID;
-      if (token && chatId) {
-        const methodDesc = method === "home" ? "توصيل للمنزل" : "استلام من المكتب";
-        const itemsText = sanitizedItems.map(it => {
-          const details = [];
-          if (it.size) details.push(`المقاس: ${it.size}`);
-          if (it.color) details.push(`اللون: ${it.color}`);
-          details.push(`الكمية: ${it.quantity}`);
-          details.push(`السعر: ${it.price.toLocaleString("ar-DZ")} دج`);
-          return `• ${it.name}\n   - ${details.join(" | ")}`;
-        }).join("\n");
+      const methodDesc = method === "home" ? "توصيل للمنزل" : "استلام من المكتب";
+      const itemsText = sanitizedItems.map(it => {
+        const details = [];
+        if (it.size) details.push(`المقاس: ${it.size}`);
+        if (it.color) details.push(`اللون: ${it.color}`);
+        details.push(`الكمية: ${it.quantity}`);
+        details.push(`السعر: ${it.price.toLocaleString("ar-DZ")} دج`);
+        return `• ${it.name}\n   - ${details.join(" | ")}`;
+      }).join("\n");
 
-        const msg = [
-          "🛍️ طلب جديد من متجر حجاج",
-          "==========================",
-          `🔖 رقم الطلب: #${createdOrderId.slice(-6).toUpperCase()}`,
-          "",
-          `📦 تفاصيل المنتجات (${sanitizedItems.length}):`,
-          itemsText,
-          "",
-          `🚚 طريقة التوصيل: ${methodDesc}`,
-          `💵 سعر المنتجات: ${verifiedSubtotal.toLocaleString("ar-DZ")} دج`,
-          `🚚 سعر التوصيل: ${verifiedShippingPrice.toLocaleString("ar-DZ")} دج`,
-          `💰 الإجمالي الكلي: ${verifiedTotal.toLocaleString("ar-DZ")} دج (الدفع عند التسليم)`,
-          "",
-          "👤 بيانات الزبون:",
-          `• الاسم: ${cleanName}`,
-          `• رقم الهاتف: ${cleanPhone}`,
-          `• الولاية: ${wilayaInfo.code} — ${wilayaInfo.name}`,
-          `• البلدية: ${cleanCommune}`,
-          `• العنوان: ${cleanAddress || "غير محدد"}`,
-          "",
-          `📅 التاريخ: ${new Date().toLocaleString("ar-DZ")}`
-        ].join("\n");
+      const msg = [
+        "🛍️ طلب جديد من متجر حجاج",
+        "==========================",
+        `🔖 رقم الطلب: #${createdOrderId.slice(-6).toUpperCase()}`,
+        "",
+        `📦 تفاصيل المنتجات (${sanitizedItems.length}):`,
+        itemsText,
+        "",
+        `🚚 طريقة التوصيل: ${methodDesc}`,
+        `💵 سعر المنتجات: ${verifiedSubtotal.toLocaleString("ar-DZ")} دج`,
+        `🚚 سعر التوصيل: ${verifiedShippingPrice.toLocaleString("ar-DZ")} دج`,
+        `💰 الإجمالي الكلي: ${verifiedTotal.toLocaleString("ar-DZ")} دج (الدفع عند التسليم)`,
+        "",
+        "👤 بيانات الزبون:",
+        `• الاسم: ${cleanName}`,
+        `• رقم الهاتف: ${cleanPhone}`,
+        `• الولاية: ${wilayaInfo.code} — ${wilayaInfo.name}`,
+        `• البلدية: ${cleanCommune}`,
+        `• العنوان: ${cleanAddress || "غير محدد"}`,
+        "",
+        `📅 التاريخ: ${new Date().toLocaleString("ar-DZ")}`
+      ].join("\n");
 
-        const tgRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chat_id: chatId, text: msg })
-        });
-        const tgData = await tgRes.json().catch(() => ({}));
-        telegramSent = Boolean(tgData && tgData.ok);
-      }
+      const queuePayload = {
+        orderId: createdOrderId,
+        messageText: msg,
+        orderSummary: {
+          customer: cleanName,
+          phone: cleanPhone,
+          wilaya: `${wilayaInfo.code} — ${wilayaInfo.name}`,
+          commune: cleanCommune,
+          deliveryMethod: methodDesc,
+          itemsCount: sanitizedItems.length,
+          itemsText: sanitizedItems.map(it => `${it.name}${it.size ? ` (${it.size})` : ""}${it.color ? ` - ${it.color}` : ""} x${it.quantity}`).join("، "),
+          total: verifiedTotal
+        },
+        status: "pending",
+        attempts: 0,
+        createdAt: new Date().toISOString()
+      };
+
+      const qRes = await enqueueTelegramNotification(queuePayload);
+      telegramQueued = Boolean(qRes && qRes.success);
+
+      // Trigger the queue processor in the background / inline budget (max 3.5s)
+      const host = req.headers?.host || "localhost";
+      const proto = req.headers?.["x-forwarded-proto"] || "https";
+      const triggerNextUrl = `${proto}://${host}/api/queue-worker`;
+
+      processTelegramQueue({
+        maxDurationMs: 3500,
+        triggerNextUrl
+      }).catch(workerErr => {
+        console.warn("[QUEUE WORKER INLINE WARNING]:", workerErr.message);
+      });
+
     } catch (tgErr) {
-      console.warn("[TELEGRAM DISPATCH WARNING]:", tgErr.message);
+      console.warn("[TELEGRAM ENQUEUE WARNING]:", tgErr.message);
     }
 
     return res.status(200).json({
       success: true,
       orderId: createdOrderId,
       order: orderPayload,
-      telegramSent
+      telegramSent: telegramQueued,
+      queued: telegramQueued
     });
 
   } catch (err) {

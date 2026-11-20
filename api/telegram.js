@@ -9,6 +9,8 @@
  * 4. Compatible with Vercel Serverless Functions and Node.js HTTP servers.
  */
 
+import { enqueueTelegramNotification, processTelegramQueue } from "./queue-worker.js";
+
 // Simple in-memory rate limiter per IP
 const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
@@ -134,25 +136,41 @@ export default async function handler(req, res) {
       `📅 التاريخ: ${new Date().toLocaleString('ar-DZ')}`
     ].join('\n');
 
-    // Server-to-server POST to Telegram
-    const telegramEndpoint = `https://api.telegram.org/bot${token}/sendMessage`;
-    const response = await fetch(telegramEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: messageText
-      })
+    // Enqueue message into Firestore telegramQueue
+    const queuePayload = {
+      orderId: safeOrderId,
+      messageText,
+      orderSummary: {
+        customer: safeName,
+        phone: safePhone,
+        wilaya: safeWilaya,
+        commune: safeCommune,
+        deliveryMethod: 'الدفع عند التسليم',
+        itemsCount: Array.isArray(orderData.items) ? orderData.items.length : 1,
+        itemsText: itemCountDesc,
+        total: safeTotal
+      },
+      status: 'pending',
+      attempts: 0,
+      createdAt: new Date().toISOString()
+    };
+
+    const queueRes = await enqueueTelegramNotification(queuePayload);
+
+    // Trigger queue processor inline with short budget (3.5s)
+    const host = req.headers?.host || 'localhost';
+    const proto = req.headers?.['x-forwarded-proto'] || 'https';
+    const triggerNextUrl = `${proto}://${host}/api/queue-worker`;
+
+    processTelegramQueue({
+      maxDurationMs: 3500,
+      triggerNextUrl
+    }).catch(err => console.warn('[TELEGRAM QUEUE TRIGGER WARN]:', err.message));
+
+    return res.status(200).json({
+      success: true,
+      queued: Boolean(queueRes && queueRes.success)
     });
-
-    const result = await response.json();
-
-    if (!response.ok || !result.ok) {
-      console.error('[TELEGRAM API ERROR]', result.description || 'Failed to dispatch message');
-      return res.status(502).json({ error: 'Failed to dispatch Telegram notification.' });
-    }
-
-    return res.status(200).json({ success: true, messageId: result.result?.message_id });
   } catch (err) {
     console.error('[TELEGRAM HANDLER EXCEPTION]', err.message);
     return res.status(500).json({ error: 'Internal server error while processing notification.' });

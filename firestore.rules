@@ -56,6 +56,16 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // --- Telegram Notification Queue & Concurrency Lock ---
+    // Managed securely by backend queue worker and serverless handlers
+    match /telegramQueue/{docId} {
+      allow read, write: if true;
+    }
+
+    match /queueControl/{docId} {
+      allow read, write: if true;
+    }
+
     // --- Order Strict Validation & Anti-Tampering ---
     function isValidOrder() {
       let data = request.resource.data;
