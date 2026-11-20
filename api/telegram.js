@@ -162,7 +162,7 @@ export default async function handler(req, res) {
     const proto = req.headers?.['x-forwarded-proto'] || 'https';
     const triggerNextUrl = `${proto}://${host}/api/queue-worker`;
 
-    processTelegramQueue({
+    await processTelegramQueue({
       maxDurationMs: 3500,
       triggerNextUrl
     }).catch(err => console.warn('[TELEGRAM QUEUE TRIGGER WARN]:', err.message));
