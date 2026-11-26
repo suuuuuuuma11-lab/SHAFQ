@@ -896,7 +896,14 @@ header {
   color: #695744;
 }
 
+.bdc-upload-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
 .bdc-dropzone {
+  flex: 1;
   border: 2px dashed #d8cfc0;
   border-radius: 10px;
   padding: 22px 14px;
@@ -905,6 +912,7 @@ header {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   background: #fff;
   transition: all 0.18s ease;
@@ -932,9 +940,10 @@ header {
 }
 
 .bdc-final-box {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 10px;
 }
 
 .bdc-preview-wrap {
@@ -944,6 +953,7 @@ header {
   border: 1px solid var(--line);
   background: #1d1a16;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  margin-block: auto;
 }
 
 .bdc-preview-wrap.desktop-ratio {
@@ -955,7 +965,7 @@ header {
   aspect-ratio: 4 / 3;
   width: 220px;
   max-width: 100%;
-  margin: 0 auto;
+  margin: auto;
 }
 
 .bdc-preview-wrap img {

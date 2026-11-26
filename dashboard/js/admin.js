@@ -1837,7 +1837,7 @@ async function processAndExportFinalWebP() {
       state.catDesktopImg = secureUrl;
       state.catDesktopIsFinal = true;
       if ($("desktopUploadBox")) $("desktopUploadBox").style.display = "none";
-      if ($("desktopFinalBox")) $("desktopFinalBox").style.display = "block";
+      if ($("desktopFinalBox")) $("desktopFinalBox").style.display = "flex";
       if ($("desktopFinalImg")) $("desktopFinalImg").src = secureUrl;
       if ($("desktopSizeInfo")) $("desktopSizeInfo").textContent = `${sizeKB} KB • WebP (${spec.width}×${spec.height})`;
       clearErr("cBanner");
@@ -1845,7 +1845,7 @@ async function processAndExportFinalWebP() {
       state.catMobileImg = secureUrl;
       state.catMobileIsFinal = true;
       if ($("mobileUploadBox")) $("mobileUploadBox").style.display = "none";
-      if ($("mobileFinalBox")) $("mobileFinalBox").style.display = "block";
+      if ($("mobileFinalBox")) $("mobileFinalBox").style.display = "flex";
       if ($("mobileFinalImg")) $("mobileFinalImg").src = secureUrl;
       if ($("mobileSizeInfo")) $("mobileSizeInfo").textContent = `${sizeKB} KB • WebP (${spec.width}×${spec.height})`;
     }
@@ -1889,9 +1889,9 @@ function resetCatForm() {
   if ($("desktopImgFileInput")) $("desktopImgFileInput").value = "";
   if ($("mobileImgFileInput")) $("mobileImgFileInput").value = "";
 
-  if ($("desktopUploadBox")) $("desktopUploadBox").style.display = "block";
+  if ($("desktopUploadBox")) $("desktopUploadBox").style.display = "flex";
   if ($("desktopFinalBox")) $("desktopFinalBox").style.display = "none";
-  if ($("mobileUploadBox")) $("mobileUploadBox").style.display = "block";
+  if ($("mobileUploadBox")) $("mobileUploadBox").style.display = "flex";
   if ($("mobileFinalBox")) $("mobileFinalBox").style.display = "none";
 
   const prevSeg = $("previewDeviceSeg");
@@ -1972,9 +1972,9 @@ function editCat(id) {
     state.catDesktopIsFinal = false;
     state.catMobileIsFinal = false;
 
-    if ($("desktopUploadBox")) $("desktopUploadBox").style.display = "block";
+    if ($("desktopUploadBox")) $("desktopUploadBox").style.display = "flex";
     if ($("desktopFinalBox")) $("desktopFinalBox").style.display = "none";
-    if ($("mobileUploadBox")) $("mobileUploadBox").style.display = "block";
+    if ($("mobileUploadBox")) $("mobileUploadBox").style.display = "flex";
     if ($("mobileFinalBox")) $("mobileFinalBox").style.display = "none";
   } else {
     const b = c.banner || {};
@@ -1985,21 +1985,21 @@ function editCat(id) {
 
     if (state.catDesktopImg) {
       if ($("desktopUploadBox")) $("desktopUploadBox").style.display = "none";
-      if ($("desktopFinalBox")) $("desktopFinalBox").style.display = "block";
+      if ($("desktopFinalBox")) $("desktopFinalBox").style.display = "flex";
       if ($("desktopFinalImg")) $("desktopFinalImg").src = state.catDesktopImg;
       if ($("desktopSizeInfo")) $("desktopSizeInfo").textContent = b.isFinal ? "WebP معتمد (2000×500)" : "صورة سابقة";
     } else {
-      if ($("desktopUploadBox")) $("desktopUploadBox").style.display = "block";
+      if ($("desktopUploadBox")) $("desktopUploadBox").style.display = "flex";
       if ($("desktopFinalBox")) $("desktopFinalBox").style.display = "none";
     }
 
     if (state.catMobileImg) {
       if ($("mobileUploadBox")) $("mobileUploadBox").style.display = "none";
-      if ($("mobileFinalBox")) $("mobileFinalBox").style.display = "block";
+      if ($("mobileFinalBox")) $("mobileFinalBox").style.display = "flex";
       if ($("mobileFinalImg")) $("mobileFinalImg").src = state.catMobileImg;
       if ($("mobileSizeInfo")) $("mobileSizeInfo").textContent = b.isFinal ? "WebP معتمد (1200×900)" : "صورة سابقة";
     } else {
-      if ($("mobileUploadBox")) $("mobileUploadBox").style.display = "block";
+      if ($("mobileUploadBox")) $("mobileUploadBox").style.display = "flex";
       if ($("mobileFinalBox")) $("mobileFinalBox").style.display = "none";
     }
   }
