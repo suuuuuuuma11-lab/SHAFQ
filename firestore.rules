@@ -12,12 +12,16 @@ service cloud.firestore {
     // Self-registration or arbitrary authenticated users are NEVER granted admin access.
     function isAdmin() {
       return isAuthenticated() && (
-        request.auth.token.admin == true
-        || request.auth.token.role == 'admin'
+        ('admin' in request.auth.token && request.auth.token.admin == true)
+        || ('role' in request.auth.token && request.auth.token.role == 'admin')
         || (
           exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+          && 'role' in get(/databases/$(database)/documents/admins/$(request.auth.uid)).data
           && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'admin'
-          && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active != false
+          && (
+            !('active' in get(/databases/$(database)/documents/admins/$(request.auth.uid)).data)
+            || get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active != false
+          )
         )
       );
     }
