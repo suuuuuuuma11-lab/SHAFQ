@@ -7,6 +7,7 @@
 import { subscribeStoreCatalog, optimizeProductImage } from "./catalog-adapter.js";
 import { loadFavorites, isFavorite, toggleFavorite, setFavorites, getFavoritesCount } from "./favorites.js";
 import { filterProductsByQuery, setSearchCatalog } from "./search.js";
+import { addToCart } from "./cart.js";
 
 const PER_PAGE = 6;
 const MIN_PRICE = 0;
@@ -59,6 +60,11 @@ let unsubscribeCatalog = null;
 
 function isOnSaleProduct(p) {
   return Boolean(p && typeof p.oldPrice === "number" && p.oldPrice > p.price);
+}
+
+function getDiscountPercent(p) {
+  if (!isOnSaleProduct(p)) return 0;
+  return Math.round((1 - p.price / p.oldPrice) * 100);
 }
 
 function getSyncedSaleCount() {
@@ -728,10 +734,12 @@ function renderCatalog(animate) {
       const isFav = isFavorite(p.id);
       const href = "/product?id=" + encodeURIComponent(p.id);
       const badgeLabel = p.badge || (p.isNew ? "New" : "");
+      const disc = getDiscountPercent(p);
       return (
         '<article class="product-card" data-product-id="' + esc(p.id) + '">' +
           '<a class="product-card__media" href="' + href + '">' +
             '<img class="product-card__img" src="' + esc(p.image) + '" alt="' + esc(p.name) + '" loading="lazy" decoding="async" style="object-position:' + esc(p.imagePosition || "50% 25%") + '" onerror="this.style.opacity=\'0\'">' +
+            (disc > 0 ? '<span class="product-card__sale">-' + disc + '%</span>' : '') +
             '<button type="button" class="product-card__fav' + (isFav ? " is-favorited" : "") + '" data-fav-id="' + esc(p.id) + '" aria-label="Favorite ' + esc(p.name) + '" aria-pressed="' + String(isFav) + '">' +
               '<svg class="ico ico--heart" aria-hidden="true"><use href="#i-heart" /></svg>' +
             '</button>' +
@@ -741,7 +749,16 @@ function renderCatalog(animate) {
               '<h3 class="product-card__name" dir="auto"><a href="' + href + '">' + esc(p.name) + '</a></h3>' +
               (badgeLabel ? '<span class="product-card__new" dir="auto">' + esc(badgeLabel) + '</span>' : '') +
             '</div>' +
-            '<p class="product-card__price">' + formatDA(p.price) + '</p>' +
+            '<p class="product-card__price">' +
+              '<span>' + formatDA(p.price) + '</span>' +
+              (disc > 0 ? '<span class="product-card__old-price">' + formatDA(p.oldPrice) + '</span>' : '') +
+            '</p>' +
+            '<div class="product-card__actions">' +
+              '<button type="button" class="product-card__cart" data-add-id="' + esc(p.id) + '" aria-label="Add ' + esc(p.name) + ' to bag">' +
+                '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.6 8.2h14.8l.4 12.3H4.2z"/><path d="M8.6 8.2V6.4a3.4 3.4 0 0 1 6.8 0v1.8"/></svg>' +
+                '<span class="product-card__cart-text">Add to Bag</span>' +
+              '</button>' +
+            '</div>' +
           '</div>' +
         '</article>'
       );
@@ -936,10 +953,18 @@ function bindCatalogDomEvents(catalog) {
     });
   }
 
-  // Favorite toggle & product card click delegation
+  // Favorite toggle, Quick Add to Bag, & product card click delegation
   const grid = $("#product-grid", catalog);
   if (grid) {
     grid.addEventListener("click", (e) => {
+      const cartBtn = e.target?.closest?.(".product-card__cart");
+      if (cartBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const pid = cartBtn.dataset.addId;
+        if (pid) handleCardQuickAdd(pid, cartBtn);
+        return;
+      }
       const favBtn = e.target?.closest?.(".product-card__fav");
       if (favBtn) {
         e.preventDefault();
@@ -997,6 +1022,331 @@ function syncRenderedCardFavorites() {
   });
 }
 
+// --- Quick Add to Bag & Editorial Quick Options Modal ---
+const qoState = {
+  product: null,
+  triggerBtn: null,
+  size: "",
+  color: "",
+  colorHex: "",
+  qty: 1,
+  submitting: false
+};
+
+function setCardButtonFeedback(btn, durationMs = 1500) {
+  if (!btn) return;
+  if (btn._resetTimer) {
+    clearTimeout(btn._resetTimer);
+    btn._resetTimer = null;
+  }
+  btn.classList.add("is-added");
+  const txt = btn.querySelector(".product-card__cart-text");
+  if (txt) txt.textContent = "Added to Bag";
+
+  btn._resetTimer = setTimeout(() => {
+    btn.classList.remove("is-added");
+    if (txt) txt.textContent = "Add to Bag";
+    btn._resetTimer = null;
+  }, durationMs);
+}
+
+function closeQuickOptions() {
+  $("#qoModal")?.classList.remove("show");
+  $("#qoBackdrop")?.classList.remove("show");
+  document.body.classList.remove("modal-open");
+  if (qoState.triggerBtn) qoState.triggerBtn._busy = false;
+  qoState.product = null;
+  qoState.triggerBtn = null;
+}
+
+function updateQoSubtotal() {
+  if (!qoState.product) return;
+  const subEl = $("#qoSubtotalVal");
+  if (subEl) subEl.textContent = formatDA(qoState.product.price * qoState.qty);
+}
+
+function ensureQuickOptionsModal() {
+  let backdrop = $("#qoBackdrop");
+  let modal = $("#qoModal");
+  if (backdrop && modal) return { backdrop, modal };
+
+  if (!backdrop) {
+    backdrop = document.createElement("div");
+    backdrop.className = "qo-backdrop";
+    backdrop.id = "qoBackdrop";
+    document.body.appendChild(backdrop);
+  }
+
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.className = "qo-modal";
+    modal.id = "qoModal";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    modal.setAttribute("aria-labelledby", "qoTitle");
+    modal.innerHTML =
+      '<div class="qo-head">' +
+        '<div class="qo-prod">' +
+          '<img class="qo-prod__img" id="qoImg" src="" alt="">' +
+          '<div class="qo-prod__info">' +
+            '<h4 class="qo-prod__title" id="qoTitle" dir="auto"></h4>' +
+            '<div class="qo-prod__prices">' +
+              '<span class="qo-prod__price" id="qoPrice"></span>' +
+              '<span class="qo-prod__old" id="qoOldPrice" hidden></span>' +
+              '<span class="qo-prod__disc" id="qoDiscBadge" hidden></span>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<button type="button" class="qo-close" id="qoClose" aria-label="Close">&times;</button>' +
+      '</div>' +
+      '<div class="qo-body">' +
+        '<div class="qo-section" id="qoSizesSection">' +
+          '<label class="qo-label">Size: <strong id="qoSelectedSizeText"></strong></label>' +
+          '<div class="p-sizes" id="qoSizesList"></div>' +
+          '<div class="qo-err" id="qoSizeErr" hidden>Please select a size</div>' +
+        '</div>' +
+        '<div class="qo-section" id="qoColorsSection">' +
+          '<label class="qo-label">Color: <strong id="qoSelectedColorText" dir="auto"></strong></label>' +
+          '<div class="p-colors" id="qoColorsList"></div>' +
+          '<div class="qo-err" id="qoColorErr" hidden>Please select a color</div>' +
+        '</div>' +
+        '<div class="qo-qty-row">' +
+          '<div class="qty">' +
+            '<button type="button" id="qoQtyMinus" aria-label="Decrease quantity">&minus;</button>' +
+            '<span id="qoQtyVal">1</span>' +
+            '<button type="button" id="qoQtyPlus" aria-label="Increase quantity">+</button>' +
+          '</div>' +
+          '<div class="qo-subtotal">Subtotal: <strong id="qoSubtotalVal">0 DA</strong></div>' +
+        '</div>' +
+        '<div class="qo-banner-err" id="qoBannerErr" hidden></div>' +
+        '<button type="button" class="qo-submit" id="qoSubmitBtn">' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.6 8.2h14.8l.4 12.3H4.2z"/><path d="M8.6 8.2V6.4a3.4 3.4 0 0 1 6.8 0v1.8"/></svg>' +
+          '<span>Add to Bag</span>' +
+        '</button>' +
+      '</div>';
+    document.body.appendChild(modal);
+  }
+
+  if (!modal._shafqBound) {
+    modal._shafqBound = true;
+    backdrop.addEventListener("click", closeQuickOptions);
+    $("#qoClose", modal)?.addEventListener("click", closeQuickOptions);
+
+    $("#qoQtyPlus", modal)?.addEventListener("click", () => {
+      if (qoState.qty < 50) qoState.qty += 1;
+      const qtyEl = $("#qoQtyVal", modal);
+      if (qtyEl) qtyEl.textContent = String(qoState.qty);
+      updateQoSubtotal();
+    });
+
+    $("#qoQtyMinus", modal)?.addEventListener("click", () => {
+      if (qoState.qty > 1) {
+        qoState.qty -= 1;
+        const qtyEl = $("#qoQtyVal", modal);
+        if (qtyEl) qtyEl.textContent = String(qoState.qty);
+        updateQoSubtotal();
+      }
+    });
+
+    $("#qoSubmitBtn", modal)?.addEventListener("click", () => {
+      const p = qoState.product;
+      if (qoState.submitting || !p) return;
+
+      const hasSizes = Array.isArray(p.sizes) && p.sizes.length > 0;
+      const hasColors = Array.isArray(p.colors) && p.colors.length > 0;
+      const needSize = hasSizes && !qoState.size;
+      const needColor = hasColors && !qoState.color;
+
+      const sizeErr = $("#qoSizeErr", modal);
+      const colorErr = $("#qoColorErr", modal);
+      const bannerErr = $("#qoBannerErr", modal);
+
+      if (sizeErr) sizeErr.hidden = !needSize;
+      if (colorErr) colorErr.hidden = !needColor;
+      if (needSize || needColor) {
+        if (bannerErr) {
+          bannerErr.textContent = (needSize && needColor)
+            ? "Please select a size and color"
+            : (needSize ? "Please select a size first" : "Please select a color first");
+          bannerErr.hidden = false;
+        }
+        return;
+      }
+
+      qoState.submitting = true;
+      const submitBtn = $("#qoSubmitBtn", modal);
+      if (submitBtn) submitBtn.disabled = true;
+
+      const addFn = typeof addToCart === "function" ? addToCart : window.shafqCart?.addToCart;
+      if (typeof addFn === "function") {
+        addFn({
+          productId: p.id,
+          name: p.name,
+          price: p.price,
+          image: p.image || "",
+          quantity: qoState.qty,
+          size: hasSizes ? qoState.size : "",
+          color: hasColors ? qoState.color : "",
+          colorHex: hasColors ? qoState.colorHex : "",
+          availableSizes: hasSizes ? p.sizes : [],
+          availableColors: hasColors ? p.colors : [],
+          openDrawer: false
+        });
+      }
+
+      const targetBtn = qoState.triggerBtn;
+      closeQuickOptions();
+      setCardButtonFeedback(targetBtn, 1500);
+
+      setTimeout(() => {
+        qoState.submitting = false;
+        if (submitBtn) submitBtn.disabled = false;
+      }, 220);
+    });
+  }
+
+  return { backdrop, modal };
+}
+
+function openQuickOptions(p, btn) {
+  const { backdrop, modal } = ensureQuickOptionsModal();
+  const sizes = Array.isArray(p.sizes) ? p.sizes : [];
+  const colors = Array.isArray(p.colors) ? p.colors : [];
+
+  qoState.product = p;
+  qoState.triggerBtn = btn;
+  qoState.qty = 1;
+  qoState.size = sizes.length === 1 ? sizes[0] : "";
+  qoState.color = colors.length === 1 ? (colors[0].name || "") : "";
+  qoState.colorHex = colors.length === 1 ? (colors[0].value || "#1D1916") : "#1D1916";
+
+  const imgEl = $("#qoImg", modal);
+  const titleEl = $("#qoTitle", modal);
+  const priceEl = $("#qoPrice", modal);
+  const oldEl = $("#qoOldPrice", modal);
+  const discEl = $("#qoDiscBadge", modal);
+  const qtyEl = $("#qoQtyVal", modal);
+  const sizeErr = $("#qoSizeErr", modal);
+  const colorErr = $("#qoColorErr", modal);
+  const bannerErr = $("#qoBannerErr", modal);
+  const sizeText = $("#qoSelectedSizeText", modal);
+  const colorText = $("#qoSelectedColorText", modal);
+
+  if (imgEl) {
+    imgEl.src = optimizeProductImage(p.image || "", 320);
+    imgEl.alt = p.name || "";
+  }
+  if (titleEl) titleEl.textContent = p.name || "";
+  if (priceEl) priceEl.textContent = formatDA(p.price);
+
+  const disc = getDiscountPercent(p);
+  if (oldEl) {
+    oldEl.textContent = disc > 0 ? formatDA(p.oldPrice) : "";
+    oldEl.hidden = disc <= 0;
+  }
+  if (discEl) {
+    discEl.textContent = disc > 0 ? `-${disc}%` : "";
+    discEl.hidden = disc <= 0;
+  }
+
+  if (qtyEl) qtyEl.textContent = "1";
+  if (sizeErr) sizeErr.hidden = true;
+  if (colorErr) colorErr.hidden = true;
+  if (bannerErr) bannerErr.hidden = true;
+  if (sizeText) sizeText.textContent = qoState.size;
+  if (colorText) colorText.textContent = qoState.color;
+  updateQoSubtotal();
+
+  const sizesSec = $("#qoSizesSection", modal);
+  const sizesList = $("#qoSizesList", modal);
+  if (sizes.length > 0 && sizesSec && sizesList) {
+    sizesSec.hidden = false;
+    sizesList.innerHTML = sizes
+      .map((s) => '<button type="button" class="size' + (s === qoState.size ? " active" : "") + '" data-size="' + esc(s) + '">' + esc(s) + "</button>")
+      .join("");
+    $$(".size", sizesList).forEach((chip) => {
+      chip.addEventListener("click", () => {
+        $$(".size", sizesList).forEach((c) => c.classList.remove("active"));
+        chip.classList.add("active");
+        qoState.size = chip.dataset.size || "";
+        if (sizeText) sizeText.textContent = qoState.size;
+        if (sizeErr) sizeErr.hidden = true;
+        if (bannerErr) bannerErr.hidden = true;
+      });
+    });
+  } else if (sizesSec) {
+    sizesSec.hidden = true;
+  }
+
+  const colorsSec = $("#qoColorsSection", modal);
+  const colorsList = $("#qoColorsList", modal);
+  if (colors.length > 0 && colorsSec && colorsList) {
+    colorsSec.hidden = false;
+    colorsList.innerHTML = colors
+      .map((c) => {
+        const nm = c.name || "";
+        const hex = c.value || "#1D1916";
+        return '<button type="button" class="dot' + (nm === qoState.color ? " active" : "") + '" style="background:' + esc(hex) + '" title="' + esc(nm) + '" aria-label="' + esc(nm) + '" data-name="' + esc(nm) + '" data-val="' + esc(hex) + '"></button>';
+      })
+      .join("");
+    $$(".dot", colorsList).forEach((dot) => {
+      dot.addEventListener("click", () => {
+        $$(".dot", colorsList).forEach((d) => d.classList.remove("active"));
+        dot.classList.add("active");
+        qoState.color = dot.dataset.name || "";
+        qoState.colorHex = dot.dataset.val || "#1D1916";
+        if (colorText) colorText.textContent = qoState.color;
+        if (colorErr) colorErr.hidden = true;
+        if (bannerErr) bannerErr.hidden = true;
+      });
+    });
+  } else if (colorsSec) {
+    colorsSec.hidden = true;
+  }
+
+  backdrop.classList.add("show");
+  modal.classList.add("show");
+  document.body.classList.add("modal-open");
+}
+
+function handleCardQuickAdd(productId, btn) {
+  if (!btn || btn._busy) return;
+  btn._busy = true;
+  setTimeout(() => { btn._busy = false; }, 220);
+
+  const p = liveProducts.find((item) => String(item.id) === String(productId));
+  if (!p) {
+    btn._busy = false;
+    return;
+  }
+
+  const hasSizes = Array.isArray(p.sizes) && p.sizes.length > 0;
+  const hasColors = Array.isArray(p.colors) && p.colors.length > 0;
+
+  if (!hasSizes && !hasColors) {
+    const addFn = typeof addToCart === "function" ? addToCart : window.shafqCart?.addToCart;
+    if (typeof addFn === "function") {
+      addFn({
+        productId: p.id,
+        name: p.name,
+        price: p.price,
+        image: p.image || "",
+        quantity: 1,
+        size: "",
+        color: "",
+        colorHex: "",
+        availableSizes: [],
+        availableColors: [],
+        openDrawer: false
+      });
+      setCardButtonFeedback(btn, 1500);
+    }
+    return;
+  }
+
+  openQuickOptions(p, btn);
+}
+
 function init() {
   const catalog = $("#shop-catalog");
   if (!catalog) return;
@@ -1048,6 +1398,9 @@ if (!document._shafqShopGlobalBound) {
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
+      if ($("#qoModal")?.classList.contains("show")) {
+        closeQuickOptions();
+      }
       const menu = $("#shop-sort-menu"), trig = $("#shop-sort-trigger");
       if (menu && !menu.hidden) {
         menu.hidden = true;
