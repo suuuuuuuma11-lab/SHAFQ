@@ -4,7 +4,14 @@
    preserving SHAFQ's filtering, sorting, favorites, pagination, and View
    Transition navigation without demonstration fallbacks.
    ========================================================================== */
-import { subscribeStoreCatalog, optimizeProductImage } from "./catalog-adapter.js";
+import {
+  subscribeStoreCatalog,
+  optimizeProductImage,
+  getProductImageUrl,
+  readCatalogCache,
+  readActiveBannerCache,
+  writeActiveBannerCache
+} from "./catalog-adapter.js";
 import { loadFavorites, isFavorite, toggleFavorite, setFavorites, getFavoritesCount } from "./favorites.js";
 import { filterProductsByQuery, setSearchCatalog } from "./search.js";
 import { addToCart } from "./cart.js";
@@ -57,6 +64,10 @@ let liveCategories = [];
 let isLoading = true;
 let loadError = null;
 let unsubscribeCatalog = null;
+let pendingSubscriptionTimer = null;
+let loadEventSyncHandler = null;
+let isServerConfirmed = false;
+let catalogDataState = "loading"; // "loading" | "swr-cache" | "offline-cache" | "server"
 
 function isOnSaleProduct(p) {
   return Boolean(p && typeof p.oldPrice === "number" && p.oldPrice > p.price);
@@ -109,6 +120,7 @@ function applyShopHeroBanner({ src = DEFAULT_HERO_IMG, isCustomBanner = false, b
   heroImg.style.opacity = "0";
 
   const preloader = new Image();
+  preloader.fetchPriority = "high";
   preloader.onload = () => {
     if (requestId !== heroBannerRequestId) return;
     heroImg.style.objectPosition = isCustomBanner ? "50% 50%" : "";
@@ -134,6 +146,24 @@ function updateShopHero() {
   if (!titleEl || !subEl) return;
 
   if (isLoading && pendingCatParam) {
+    const cachedBanner = readActiveBannerCache(pendingCatParam);
+    if (cachedBanner) {
+      titleEl.setAttribute("dir", "auto");
+      titleEl.textContent = cachedBanner.title || DEFAULT_HERO_TITLE;
+      if (cachedBanner.sub) {
+        subEl.setAttribute("dir", "auto");
+        subEl.textContent = cachedBanner.sub;
+      } else {
+        subEl.removeAttribute("dir");
+        subEl.textContent = DEFAULT_HERO_SUB;
+      }
+      applyShopHeroBanner({
+        src: cachedBanner.src || DEFAULT_HERO_IMG,
+        isCustomBanner: cachedBanner.isCustomBanner,
+        bgGradient: cachedBanner.bgGradient || ""
+      });
+      return;
+    }
     titleEl.removeAttribute("dir");
     subEl.removeAttribute("dir");
     titleEl.textContent = DEFAULT_HERO_TITLE;
@@ -192,12 +222,30 @@ function updateShopHero() {
     if (b && b.type === "image" && (b.img || b.mobileImg)) {
       const chosenSrc = (isMobile && b.mobileImg) ? b.mobileImg : (b.img || b.mobileImg);
       applyShopHeroBanner({ src: chosenSrc, isCustomBanner: true });
+      if (selCat) {
+        writeActiveBannerCache(selCat.id, {
+          title: displayTitle,
+          sub: promoMsg || DEFAULT_HERO_SUB,
+          src: chosenSrc,
+          isCustomBanner: true
+        });
+      }
     } else if (b && b.type === "color" && b.c1 && b.c2) {
+      const grad = `linear-gradient(135deg, ${b.c1}, ${b.c2})`;
       applyShopHeroBanner({
         src: "",
         isCustomBanner: true,
-        bgGradient: `linear-gradient(135deg, ${b.c1}, ${b.c2})`
+        bgGradient: grad
       });
+      if (selCat) {
+        writeActiveBannerCache(selCat.id, {
+          title: displayTitle,
+          sub: promoMsg || DEFAULT_HERO_SUB,
+          src: "",
+          isCustomBanner: true,
+          bgGradient: grad
+        });
+      }
     } else {
       applyShopHeroBanner({ src: DEFAULT_HERO_IMG, isCustomBanner: false });
     }
@@ -622,12 +670,52 @@ function renderPagination(pagEl, total, totalPages) {
   pagEl.innerHTML = html;
 }
 
+function getResponsiveGridColumns(gridEl) {
+  if (gridEl && window.getComputedStyle) {
+    const colsVal = window.getComputedStyle(gridEl).gridTemplateColumns || "";
+    const tracks = colsVal
+      .split(" ")
+      .map((s) => s.trim())
+      .filter((s) => s && s !== "none");
+    if (tracks.length > 0) return tracks.length;
+  }
+  const vw = window.innerWidth || document.documentElement.clientWidth || 1280;
+  return vw <= 1024 ? 2 : 3;
+}
+
+function getPriorityImageCount(gridEl, itemCount) {
+  if (itemCount <= 0) return 0;
+  const cols = getResponsiveGridColumns(gridEl);
+  const vw = window.innerWidth || document.documentElement.clientWidth || 1280;
+  const vh = window.innerHeight || document.documentElement.clientHeight || 800;
+  const rect = gridEl ? gridEl.getBoundingClientRect() : null;
+  const visibleTopOffset = rect ? Math.max(0, rect.top) : 420;
+  const approxRowHeight = vw <= 768 ? 320 : 440;
+  const visibleRows = visibleTopOffset < vh
+    ? Math.max(1, Math.min(2, Math.ceil((vh - visibleTopOffset) / approxRowHeight)))
+    : 1;
+  return Math.min(itemCount, cols * visibleRows);
+}
+
+function formatCatalogSyncHtml() {
+  if (isServerConfirmed) return "";
+  const isOffline = typeof navigator !== "undefined" && navigator.onLine === false;
+  if (isOffline || catalogDataState === "offline-cache") {
+    return ' <span class="shop-sync-state is-offline" title="Showing saved catalog offline. Live availability and prices will sync when reconnected.">\u00B7 Offline preview</span>';
+  }
+  if (catalogDataState === "swr-cache") {
+    return ' <span class="shop-sync-state is-syncing" title="Displaying cached catalog while verifying updates from server.">\u00B7 Syncing</span>';
+  }
+  return "";
+}
+
 function renderCatalog(animate) {
   updateShopHero();
   const grid = $("#product-grid"), countEl = $("#shop-count"), pagEl = $("#shop-pagination");
   if (!grid || !countEl || !pagEl) return;
 
   if (isLoading) {
+    countEl.dataset.catalogState = "loading";
     countEl.textContent = "Loading collection...";
     pagEl.innerHTML = "";
     grid.innerHTML =
@@ -637,12 +725,18 @@ function renderCatalog(animate) {
     return;
   }
 
-  if (loadError) {
-    countEl.textContent = "Catalog unavailable";
+  if (loadError && liveProducts.length === 0) {
+    const isOffline = typeof navigator !== "undefined" && navigator.onLine === false;
+    countEl.dataset.catalogState = isOffline ? "offline-error" : "error";
+    countEl.textContent = isOffline ? "You appear to be offline" : "Catalog unavailable";
     pagEl.innerHTML = "";
     grid.innerHTML =
       '<div class="shop-empty">' +
-        '<p class="shop-empty__text">Unable to load products from the database. Please check your connection and try again.</p>' +
+        '<p class="shop-empty__text">' +
+          (isOffline
+            ? "No cached catalog is available offline. Reconnect to the internet and retry."
+            : "Unable to load products from the database. Please check your connection and try again.") +
+        '</p>' +
         '<button type="button" class="shop-empty__reset" id="btn-retry-catalog">Retry</button>' +
       '</div>';
     const retryBtn = $("#btn-retry-catalog");
@@ -650,6 +744,7 @@ function renderCatalog(animate) {
       retryBtn.addEventListener("click", () => {
         isLoading = true;
         loadError = null;
+        catalogDataState = "loading";
         renderCatalog(false);
         startCatalogSubscription(true);
       });
@@ -664,22 +759,24 @@ function renderCatalog(animate) {
 
   const startIdx = (currentPage - 1) * PER_PAGE;
   const pageItems = items.slice(startIdx, startIdx + PER_PAGE);
+  const syncHtml = formatCatalogSyncHtml();
+  countEl.dataset.catalogState = catalogDataState;
 
   if (currentView === "fav") {
     if (total === 0) {
-      countEl.textContent = "Showing 0 favorite products";
+      countEl.innerHTML = "Showing 0 favorite products" + syncHtml;
     } else {
       const from = startIdx + 1;
       const to = startIdx + pageItems.length;
-      countEl.textContent = "Showing " + from + "\u2013" + to + " of " + total + " favorite product" + (total === 1 ? "" : "s");
+      countEl.innerHTML = "Showing " + from + "\u2013" + to + " of " + total + " favorite product" + (total === 1 ? "" : "s") + syncHtml;
     }
   } else if (currentView === "sale") {
     if (total === 0) {
-      countEl.textContent = "Showing 0 discounted products";
+      countEl.innerHTML = "Showing 0 discounted products" + syncHtml;
     } else {
       const from = startIdx + 1;
       const to = startIdx + pageItems.length;
-      countEl.textContent = "Showing " + from + "\u2013" + to + " of " + total + " discounted product" + (total === 1 ? "" : "s");
+      countEl.innerHTML = "Showing " + from + "\u2013" + to + " of " + total + " discounted product" + (total === 1 ? "" : "s") + syncHtml;
     }
   } else {
     let baseCountText;
@@ -691,11 +788,11 @@ function renderCatalog(animate) {
       baseCountText = "Showing " + from + "\u2013" + to + " of " + total + " product" + (total === 1 ? "" : "s");
     }
     if (searchQuery) {
-      countEl.innerHTML = `${baseCountText} for \u201C<span dir="auto">${esc(searchQuery)}</span>\u201D <button type="button" class="shop-search-clear" id="btn-clear-search">Clear</button>`;
+      countEl.innerHTML = `${baseCountText} for \u201C<span dir="auto">${esc(searchQuery)}</span>\u201D <button type="button" class="shop-search-clear" id="btn-clear-search">Clear</button>${syncHtml}`;
       const clearBtn = $("#btn-clear-search");
       if (clearBtn) clearBtn.addEventListener("click", () => applySearchQuery(""));
     } else {
-      countEl.textContent = baseCountText;
+      countEl.innerHTML = baseCountText + syncHtml;
     }
   }
 
@@ -730,15 +827,21 @@ function renderCatalog(animate) {
     const emptyReset = $("#btn-empty-reset");
     if (emptyReset) emptyReset.addEventListener("click", resetAllFilters);
   } else {
-    grid.innerHTML = pageItems.map((p) => {
+    const priorityCount = getPriorityImageCount(grid, pageItems.length);
+    grid.innerHTML = pageItems.map((p, idx) => {
       const isFav = isFavorite(p.id);
       const href = "/product?id=" + encodeURIComponent(p.id);
       const badgeLabel = p.badge || (p.isNew ? "New" : "");
       const disc = getDiscountPercent(p);
+      const cardImgSrc = getProductImageUrl(p, "card");
+      const isPriority = idx < priorityCount;
+      const isLeadCard = currentPage === 1 && idx === 0;
+      const loadingAttr = isPriority ? 'loading="eager"' : 'loading="lazy"';
+      const priorityAttr = isLeadCard ? ' fetchpriority="high"' : '';
       return (
         '<article class="product-card" data-product-id="' + esc(p.id) + '">' +
           '<a class="product-card__media" href="' + href + '">' +
-            '<img class="product-card__img" src="' + esc(p.image) + '" alt="' + esc(p.name) + '" loading="lazy" decoding="async" style="object-position:' + esc(p.imagePosition || "50% 25%") + '" onerror="this.style.opacity=\'0\'">' +
+            '<img class="product-card__img" src="' + esc(cardImgSrc) + '" alt="' + esc(p.name) + '" ' + loadingAttr + priorityAttr + ' decoding="async" style="object-position:' + esc(p.imagePosition || "50% 25%") + '" onerror="this.style.opacity=\'0\'">' +
             (disc > 0 ? '<span class="product-card__sale">-' + disc + '%</span>' : '') +
             '<button type="button" class="product-card__fav' + (isFav ? " is-favorited" : "") + '" data-fav-id="' + esc(p.id) + '" aria-label="Favorite ' + esc(p.name) + '" aria-pressed="' + String(isFav) + '">' +
               '<svg class="ico ico--heart" aria-hidden="true"><use href="#i-heart" /></svg>' +
@@ -768,7 +871,31 @@ function renderCatalog(animate) {
   renderPagination(pagEl, total, totalPages);
 }
 
-function handleCatalogSnapshot({ products, categories }) {
+function hydrateCatalogFromCache() {
+  const cached = readCatalogCache({ allowStale: true });
+  if (cached.hasCategories) {
+    liveCategories = cached.categories;
+  }
+  if (!cached.hasProducts) return false;
+
+  const prevCeiling = maxPriceLimit;
+  const highestPrice = cached.products.reduce((mx, p) => Math.max(mx, Number(p.price) || 0), 0);
+  maxPriceLimit = Math.max(DEFAULT_MAX_PRICE, Math.ceil(highestPrice / 500) * 500);
+  if (draft.maxPrice === prevCeiling) draft.maxPrice = maxPriceLimit;
+  if (applied.maxPrice === prevCeiling) applied.maxPrice = maxPriceLimit;
+
+  liveProducts = cached.products;
+  isLoading = false;
+  loadError = null;
+  isServerConfirmed = false;
+  catalogDataState = (typeof navigator !== "undefined" && navigator.onLine === false)
+    ? "offline-cache"
+    : "swr-cache";
+  setSearchCatalog(liveProducts, optimizeProductImage);
+  return true;
+}
+
+function handleCatalogSnapshot({ products, categories, serverConfirmed = false }) {
   const prevCeiling = maxPriceLimit;
   const highestPrice = products.reduce((mx, p) => Math.max(mx, Number(p.price) || 0), 0);
   maxPriceLimit = Math.max(DEFAULT_MAX_PRICE, Math.ceil(highestPrice / 500) * 500);
@@ -780,6 +907,10 @@ function handleCatalogSnapshot({ products, categories }) {
   liveCategories = categories;
   isLoading = false;
   loadError = null;
+  isServerConfirmed = Boolean(serverConfirmed);
+  catalogDataState = isServerConfirmed
+    ? "server"
+    : ((typeof navigator !== "undefined" && navigator.onLine === false) ? "offline-cache" : "swr-cache");
   setSearchCatalog(products, optimizeProductImage);
 
   if (pendingCatParam) {
@@ -797,7 +928,27 @@ function handleCatalogSnapshot({ products, categories }) {
   }
 }
 
+function clearPendingSubscription() {
+  if (pendingSubscriptionTimer) {
+    clearTimeout(pendingSubscriptionTimer);
+    pendingSubscriptionTimer = null;
+  }
+  if (loadEventSyncHandler) {
+    window.removeEventListener("load", loadEventSyncHandler);
+    loadEventSyncHandler = null;
+  }
+}
+
+function cleanupCatalogSubscription() {
+  clearPendingSubscription();
+  if (unsubscribeCatalog) {
+    try { unsubscribeCatalog(); } catch (_) {}
+    unsubscribeCatalog = null;
+  }
+}
+
 function startCatalogSubscription(forceRestart = false) {
+  clearPendingSubscription();
   if (unsubscribeCatalog && !forceRestart) return;
   if (unsubscribeCatalog) {
     try { unsubscribeCatalog(); } catch (_) {}
@@ -809,10 +960,47 @@ function startCatalogSubscription(forceRestart = false) {
     (err) => {
       console.error("Firestore Shop catalog error:", err);
       isLoading = false;
-      loadError = err;
+      isServerConfirmed = false;
+      if (liveProducts.length > 0) {
+        catalogDataState = "offline-cache";
+        loadError = null;
+      } else {
+        loadError = err;
+        catalogDataState = "error";
+      }
       if ($("#shop-catalog")) renderCatalog(false);
     }
   );
+}
+
+function scheduleCatalogSubscription(hasCachedCatalog) {
+  if (unsubscribeCatalog) return;
+  clearPendingSubscription();
+
+  // Cold visit without SWR cache: subscribe immediately so products aren't blocked by hero assets.
+  if (!hasCachedCatalog) {
+    startCatalogSubscription(false);
+    return;
+  }
+
+  // Returning visit with valid SWR cache: defer persistent listener until after window.load + 50ms
+  // so initial LCP images/fonts settle without browser loading-spinner contention.
+  const triggerSync = () => {
+    pendingSubscriptionTimer = setTimeout(() => {
+      pendingSubscriptionTimer = null;
+      if ($("#shop-catalog")) startCatalogSubscription(false);
+    }, 50);
+  };
+
+  if (document.readyState === "complete") {
+    triggerSync();
+  } else {
+    loadEventSyncHandler = () => {
+      loadEventSyncHandler = null;
+      triggerSync();
+    };
+    window.addEventListener("load", loadEventSyncHandler, { once: true });
+  }
 }
 
 function bindCatalogDomEvents(catalog) {
@@ -1183,7 +1371,7 @@ function ensureQuickOptionsModal() {
           productId: p.id,
           name: p.name,
           price: p.price,
-          image: p.image || "",
+          image: p.rawImage || p.image || "",
           quantity: qoState.qty,
           size: hasSizes ? qoState.size : "",
           color: hasColors ? qoState.color : "",
@@ -1233,7 +1421,7 @@ function openQuickOptions(p, btn) {
   const colorText = $("#qoSelectedColorText", modal);
 
   if (imgEl) {
-    imgEl.src = optimizeProductImage(p.image || "", 320);
+    imgEl.src = getProductImageUrl(p, "card");
     imgEl.alt = p.name || "";
   }
   if (titleEl) titleEl.textContent = p.name || "";
@@ -1330,7 +1518,7 @@ function handleCardQuickAdd(productId, btn) {
         productId: p.id,
         name: p.name,
         price: p.price,
-        image: p.image || "",
+        image: p.rawImage || p.image || "",
         quantity: 1,
         size: "",
         color: "",
@@ -1352,8 +1540,9 @@ function init() {
   if (!catalog) return;
 
   loadFavorites();
+  const hasCachedCatalog = hydrateCatalogFromCache();
   parseUrlViewState();
-  startCatalogSubscription(false);
+  scheduleCatalogSubscription(hasCachedCatalog);
   bindCatalogDomEvents(catalog);
 
   if (!isLoading && !loadError) {
@@ -1373,6 +1562,21 @@ if (!document._shafqShopGlobalBound) {
       });
     }
   }
+  window.addEventListener("online", () => {
+    if (!$("#shop-catalog")) return;
+    if (!isServerConfirmed) {
+      catalogDataState = liveProducts.length > 0 ? "swr-cache" : "loading";
+      renderCatalog(false);
+      startCatalogSubscription(!unsubscribeCatalog);
+    }
+  });
+  window.addEventListener("offline", () => {
+    if (!$("#shop-catalog")) return;
+    if (!isServerConfirmed && liveProducts.length > 0) {
+      catalogDataState = "offline-cache";
+      renderCatalog(false);
+    }
+  });
   window.addEventListener("popstate", () => {
     if (!$("#shop-catalog")) return;
     loadFavorites();
@@ -1412,6 +1616,7 @@ if (!document._shafqShopGlobalBound) {
 
 window.SHAFQ_SHOP = {
   init,
+  destroy: cleanupCatalogSubscription,
   closeDrawer: closeFilterDrawer,
   getProducts: () => liveProducts,
   applySearch: applySearchQuery,

@@ -304,7 +304,15 @@ export async function ensureSearchCatalog(forceRefresh = false) {
   }
   if (!inflightCatalogPromise) {
     inflightCatalogPromise = loadCatalogAdapter()
-      .then((mod) => mod.fetchStoreCatalog())
+      .then((mod) => {
+        if (!catalogLoaded && typeof mod.readCatalogCache === "function") {
+          const cached = mod.readCatalogCache({ allowStale: true });
+          if (cached && cached.hasProducts) {
+            setSearchCatalog(cached.products, mod.optimizeProductImage);
+          }
+        }
+        return mod.fetchStoreCatalog();
+      })
       .then(({ products }) => {
         setSearchCatalog(products);
         return cachedCatalog;
@@ -374,7 +382,7 @@ function renderResultsInto({ gridEl, statusEl, rawQuery, hits, state, onRerender
 
   let html = visibleHits
     .map((p) => {
-      const rawImg = p.image || p.img || p.mainImage || "";
+      const rawImg = p.rawImage || p.image || p.img || p.mainImage || "";
       const thumb = optimizeProductImageFn ? optimizeProductImageFn(rawImg, 120) : String(rawImg || "");
       const priceStr = `${(Number(p.price) || 0).toLocaleString("en-US")} DA`;
       const catHtml = p.category ? `<div class="sr-cat" dir="auto">${esc(p.category)}</div>` : "";

@@ -69,7 +69,39 @@ a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
 img { display: block; max-width: 100%; }
 [hidden] { display: none !important; }
-:focus-visible { outline: 1px solid var(--cream); outline-offset: 4px; }
+:focus:not(:focus-visible) { outline: none; }
+:focus-visible { outline: 1.5px solid var(--cream); outline-offset: 4px; }
+.page-inner :focus-visible,
+.drawer :focus-visible,
+.p-modal :focus-visible,
+.p-success-modal :focus-visible,
+.qo-modal :focus-visible {
+  outline-color: #1D1916;
+}
+.header :focus-visible,
+.sheet :focus-visible,
+.p-search-panel :focus-visible,
+.page-inner .nav :focus-visible {
+  outline-color: var(--cream);
+}
+
+a,
+button,
+input,
+select,
+textarea,
+label,
+.product-card,
+.tool,
+.page-btn,
+.filter-cat,
+.filter-size,
+.filter-color,
+.product-card__fav,
+.product-card__cart,
+.sr-item {
+  -webkit-tap-highlight-color: transparent;
+}
 
 .ico {
   width: max(18px, calc(22 * var(--u)));
@@ -718,6 +750,7 @@ img { display: block; max-width: 100%; }
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
   * { animation: none !important; transition: none !important; }
   ::view-transition-group(*),
   ::view-transition-old(*),
@@ -1211,6 +1244,19 @@ html.is-page-entering body {
   font-size: max(13px, calc(15 * var(--u)));
   line-height: max(20px, calc(24 * var(--u)));
   color: #1D1916;
+}
+
+.shop-sync-state {
+  font-family: var(--font-ui);
+  font-size: max(11px, calc(11.5 * var(--u)));
+  letter-spacing: .04em;
+  color: rgba(29, 25, 22, .56);
+  white-space: nowrap;
+}
+
+.shop-sync-state.is-offline {
+  color: #8a3a22;
+  font-weight: 500;
 }
 
 .shop-sort {
@@ -3384,5 +3430,37 @@ html.is-page-entering body {
   .product-card__cart {
     height: 36px;
     font-size: 13px;
+  }
+}
+
+/* ---------- Mobile Motion & Scroll Performance Pass ---------- */
+.drawer__body,
+.shop-sidebar,
+.p-search-results,
+.p-modal,
+.p-success-modal,
+.qo-modal {
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 768px) {
+  .scrim,
+  .p-search-overlay,
+  .p-modal-backdrop,
+  .qo-backdrop {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .product-card__img,
+  .hero__img,
+  .shop-hero__img {
+    will-change: auto;
+  }
+}
+
+@media (hover: none) {
+  .product-card:hover .product-card__img {
+    transform: none;
   }
 }

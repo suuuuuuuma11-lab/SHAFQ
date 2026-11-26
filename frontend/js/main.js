@@ -177,9 +177,19 @@
     }
   }
 
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeAll(); });
+  function cleanupPage() {
+    if (window.SHAFQ_SHOP && window.SHAFQ_SHOP.destroy) {
+      window.SHAFQ_SHOP.destroy();
+    }
+    if (window.SHAFQ_PRODUCT && window.SHAFQ_PRODUCT.destroy) {
+      window.SHAFQ_PRODUCT.destroy();
+    }
+  }
 
-  window.SHAFQ = { initPage: initPage, closeAll: closeAll };
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeAll(); });
+  window.addEventListener("pagehide", cleanupPage);
+
+  window.SHAFQ = { initPage: initPage, cleanupPage: cleanupPage, closeAll: closeAll };
 
   initPage();
 })();

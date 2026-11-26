@@ -7,6 +7,9 @@
   <title>Product — SHAFQ</title>
   <meta name="description" content="SHAFQ — Editorial menswear details, sizing, and Cash on Delivery across Algeria.">
   <meta name="theme-color" content="#14120f">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
   <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -103,7 +106,7 @@
         </button>
         <div class="p-media">
           <div class="skel-shimmer" id="pImgSkeleton" aria-hidden="true"></div>
-          <img id="pImg" src="" alt="" style="opacity:0">
+          <img id="pImg" src="" alt="" decoding="async" fetchpriority="high" style="opacity:0">
         </div>
       </div>
 

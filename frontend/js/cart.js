@@ -20,6 +20,7 @@ import {
   resolveLocationCodes,
   submitCodOrder
 } from "./checkout.js";
+import { optimizeProductImage } from "./image-utils.js";
 
 // Arabic Color Name to Hex Code Resolver
 export const ARABIC_COLOR_MAP = {
@@ -508,7 +509,7 @@ export function renderCartDrawer() {
 
     return `
       <div class="drawer__item" data-key="${esc(k)}">
-        <img class="drawer__item-img" src="${esc(item.image)}" alt="${esc(item.name)}" onerror="this.style.opacity='0'">
+        <img class="drawer__item-img" src="${esc(optimizeProductImage(item.image, "cart"))}" alt="${esc(item.name)}" loading="lazy" decoding="async" onerror="this.style.opacity='0'">
         <div class="drawer__item-info">
           <div class="drawer__item-name" dir="auto">${esc(item.name)}</div>
           ${optionsContainerHTML}
@@ -591,7 +592,7 @@ function renderCheckoutModalReview() {
   if (listEl) {
     listEl.innerHTML = cart.map(item => `
       <div class="cm-review-item">
-        <img src="${esc(item.image)}" alt="${esc(item.name)}" onerror="this.style.opacity='0'">
+        <img src="${esc(optimizeProductImage(item.image, "cart"))}" alt="${esc(item.name)}" loading="lazy" decoding="async" onerror="this.style.opacity='0'">
         <div class="cm-review-info">
           <div class="cm-review-name" dir="auto">${esc(item.name)}</div>
           ${(() => {

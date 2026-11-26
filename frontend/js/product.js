@@ -1,5 +1,5 @@
 import { addToCart, toast, esc } from "./cart.js";
-import { fetchProductById, subscribeCategories, optimizeProductImage } from "./catalog-adapter.js";
+import { fetchProductById, subscribeCategories, optimizeProductImage, readCachedProductById, readCatalogCache } from "./catalog-adapter.js";
 import { loadFavorites, isFavorite, toggleFavorite } from "./favorites.js";
 import "./search.js";
 import {
@@ -105,38 +105,45 @@ function renderProductDetails(p) {
     }
   }
   
-  const rawImg = p.img || p.mainImage || '';
-  const mainImg = optimizeProductImage(rawImg, 800);
+  const rawImg = p.rawImage || p.img || p.mainImage || '';
+  const mainImg = optimizeProductImage(rawImg, "detail");
   const imgSkel = document.getElementById("pImgSkeleton");
 
   if (imgEl) {
     imgEl.alt = p.name;
 
-    const onImageLoaded = () => {
-      imgEl.src = mainImg;
-      imgEl.style.opacity = "1";
-      if (imgSkel) {
-        imgSkel.style.opacity = "0";
-        setTimeout(() => {
-          if (imgSkel && imgSkel.parentNode) imgSkel.style.display = "none";
-        }, 250);
-      }
-    };
+    if (imgEl.dataset.loadedSrc === mainImg && imgEl.style.opacity === "1") {
+      if (imgSkel && imgSkel.parentNode) imgSkel.style.display = "none";
+    } else {
+      const onImageLoaded = () => {
+        imgEl.dataset.loadedSrc = mainImg;
+        imgEl.src = mainImg;
+        imgEl.style.opacity = "1";
+        if (imgSkel) {
+          imgSkel.style.opacity = "0";
+          setTimeout(() => {
+            if (imgSkel && imgSkel.parentNode) imgSkel.style.display = "none";
+          }, 250);
+        }
+      };
 
-    // Preload image so skeleton stays until the image pixels are actually downloaded
-    const preloader = new Image();
-    preloader.onload = onImageLoaded;
-    preloader.onerror = () => {
-      imgEl.removeAttribute('src');
-      imgEl.style.opacity = "0";
-      if (imgSkel) {
-        imgSkel.style.opacity = "0";
-        setTimeout(() => {
-          if (imgSkel && imgSkel.parentNode) imgSkel.style.display = "none";
-        }, 250);
-      }
-    };
-    preloader.src = mainImg;
+      // Preload image so skeleton stays until the image pixels are actually downloaded
+      const preloader = new Image();
+      preloader.fetchPriority = "high";
+      preloader.onload = onImageLoaded;
+      preloader.onerror = () => {
+        imgEl.dataset.loadedSrc = "";
+        imgEl.removeAttribute('src');
+        imgEl.style.opacity = "0";
+        if (imgSkel) {
+          imgSkel.style.opacity = "0";
+          setTimeout(() => {
+            if (imgSkel && imgSkel.parentNode) imgSkel.style.display = "none";
+          }, 250);
+        }
+      };
+      preloader.src = mainImg;
+    }
   }
   
   if (badgeEl) {
@@ -287,7 +294,7 @@ function bindOrderForm() {
           size: hasSizes ? selectedSize : '',
           color: colorName,
           colorHex: colorHex,
-          image: currentProduct.img || currentProduct.mainImage || ""
+          image: currentProduct.rawImage || currentProduct.img || currentProduct.mainImage || ""
         }
       ]
     };
@@ -411,7 +418,7 @@ function bindAddCartButton() {
       productId: currentProduct.id,
       name: currentProduct.name,
       price: currentProduct.price,
-      image: currentProduct.img || currentProduct.mainImage || '',
+      image: currentProduct.rawImage || currentProduct.img || currentProduct.mainImage || '',
       quantity: qty,
       size: hasSizes ? selectedSize : '',
       color: colorName,
@@ -429,11 +436,35 @@ function bindAddCartButton() {
 let categoriesList = [];
 let currentTargetProduct = null;
 let categoriesSubscribed = false;
+let unsubscribeCategories = null;
+let pendingCatSyncTimer = null;
+let catLoadEventHandler = null;
 
-function initCategoriesSync() {
-  if (categoriesSubscribed) return;
+function clearPendingCategorySync() {
+  if (pendingCatSyncTimer) {
+    clearTimeout(pendingCatSyncTimer);
+    pendingCatSyncTimer = null;
+  }
+  if (catLoadEventHandler) {
+    window.removeEventListener("load", catLoadEventHandler);
+    catLoadEventHandler = null;
+  }
+}
+
+function cleanupProductListeners() {
+  activeLoadSeq += 1;
+  clearPendingCategorySync();
+  if (unsubscribeCategories) {
+    try { unsubscribeCategories(); } catch (_) {}
+    unsubscribeCategories = null;
+  }
+  categoriesSubscribed = false;
+}
+
+function startCategoriesSubscription() {
+  if (categoriesSubscribed || !document.querySelector('.product-wrap')) return;
   categoriesSubscribed = true;
-  subscribeCategories(
+  unsubscribeCategories = subscribeCategories(
     (sortedCats) => {
       categoriesList = sortedCats;
       syncProductCategoryBreadcrumb();
@@ -443,6 +474,39 @@ function initCategoriesSync() {
       syncProductCategoryBreadcrumb();
     }
   );
+}
+
+function initCategoriesSync() {
+  if (categoriesSubscribed) return;
+  const cached = readCatalogCache({ allowStale: true });
+  const hasCachedCats = Boolean(cached && cached.hasCategories);
+  if (hasCachedCats) {
+    categoriesList = cached.categories;
+    syncProductCategoryBreadcrumb();
+  }
+
+  clearPendingCategorySync();
+  if (!hasCachedCats) {
+    startCategoriesSubscription();
+    return;
+  }
+
+  const trigger = () => {
+    pendingCatSyncTimer = setTimeout(() => {
+      pendingCatSyncTimer = null;
+      startCategoriesSubscription();
+    }, 50);
+  };
+
+  if (document.readyState === "complete") {
+    trigger();
+  } else {
+    catLoadEventHandler = () => {
+      catLoadEventHandler = null;
+      trigger();
+    };
+    window.addEventListener("load", catLoadEventHandler, { once: true });
+  }
 }
 
 function syncProductCategoryBreadcrumb() {
@@ -480,12 +544,21 @@ function showProductErrorState(msg = "This piece is currently unavailable.") {
 
 let activeLoadSeq = 0;
 
-// --- Fetch Data from Cloud Firestore (Strict exact ID matching, no demo fallback) ---
+// --- Fetch Data from Cloud Firestore (SWR Cache preview + Authoritative Server sync) ---
 async function loadProductFromFirestore(seq) {
   const idParam = getIdParam();
   if (!idParam) {
     showProductErrorState("No piece was specified. Please select a piece from the shop.");
     return;
+  }
+
+  let hasCachedPreview = false;
+  const cachedEntry = readCachedProductById(idParam);
+  if (cachedEntry && cachedEntry.product) {
+    hasCachedPreview = true;
+    currentTargetProduct = cachedEntry.product;
+    renderProductDetails(cachedEntry.product);
+    syncProductCategoryBreadcrumb();
   }
 
   const { product, error } = await fetchProductById(idParam);
@@ -499,6 +572,10 @@ async function loadProductFromFirestore(seq) {
   }
 
   if (error) {
+    if (hasCachedPreview) {
+      toast("Offline — showing cached piece details (verified at checkout)", false);
+      return;
+    }
     toast("Unable to load product details", false);
     showProductErrorState("We could not retrieve this piece from the catalog. Please check your connection and try again.");
   } else {
@@ -549,7 +626,7 @@ export function initProductPage() {
   loadProductFromFirestore(seq);
 }
 
-window.SHAFQ_PRODUCT = { init: initProductPage };
+window.SHAFQ_PRODUCT = { init: initProductPage, destroy: cleanupProductListeners };
 
 if (document.querySelector('.product-wrap')) {
   initProductPage();

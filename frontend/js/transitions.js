@@ -198,6 +198,7 @@
 
   function applyDocument(nextDoc, url) {
     if (window.SHAFQ && window.SHAFQ.closeAll) window.SHAFQ.closeAll();
+    if (window.SHAFQ && window.SHAFQ.cleanupPage) window.SHAFQ.cleanupPage();
     syncMeta(nextDoc);
 
     document.body.className = nextDoc.body.className;
