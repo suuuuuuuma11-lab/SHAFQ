@@ -7,7 +7,43 @@
       "destination": "/frontend/index"
     },
     {
+      "source": "/index",
+      "destination": "/frontend/index"
+    },
+    {
+      "source": "/shop",
+      "destination": "/frontend/shop"
+    },
+    {
+      "source": "/about",
+      "destination": "/frontend/about"
+    },
+    {
+      "source": "/contact",
+      "destination": "/frontend/contact"
+    },
+    {
       "source": "/product",
+      "destination": "/frontend/product"
+    },
+    {
+      "source": "/index.html",
+      "destination": "/frontend/index"
+    },
+    {
+      "source": "/shop.html",
+      "destination": "/frontend/shop"
+    },
+    {
+      "source": "/about.html",
+      "destination": "/frontend/about"
+    },
+    {
+      "source": "/contact.html",
+      "destination": "/frontend/contact"
+    },
+    {
+      "source": "/product.html",
       "destination": "/frontend/product"
     },
     {
@@ -23,12 +59,12 @@
       "destination": "/dashboard/admin"
     },
     {
-      "source": "/dashboard/img/:path*",
-      "destination": "/frontend/img/:path*"
+      "source": "/product/assets/:path*",
+      "destination": "/frontend/assets/:path*"
     },
     {
-      "source": "/product/img/:path*",
-      "destination": "/frontend/img/:path*"
+      "source": "/product/data/:path*",
+      "destination": "/frontend/data/:path*"
     },
     {
       "source": "/product/css/:path*",
@@ -51,16 +87,20 @@
       "destination": "/dashboard/js/login.js"
     },
     {
+      "source": "/assets/:path*",
+      "destination": "/frontend/assets/:path*"
+    },
+    {
+      "source": "/data/:path*",
+      "destination": "/frontend/data/:path*"
+    },
+    {
       "source": "/css/:path*",
       "destination": "/frontend/css/:path*"
     },
     {
       "source": "/js/:path*",
       "destination": "/frontend/js/:path*"
-    },
-    {
-      "source": "/img/:path*",
-      "destination": "/frontend/img/:path*"
     }
   ]
 }

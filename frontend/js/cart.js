@@ -1,29 +1,25 @@
 /* ==========================================================================
-   HADJAJ STORE — Unified Shopping Cart & Checkout Module
+   SHAFQ — Unified Shopping Cart & Cash-on-Delivery Checkout Module
    Manages:
-   - Cart Persistence (hadjaj_cart with alnoor_cart fallback)
-   - Add to Cart with Variant Identification (productId + size + color)
-   - Quantity Controls (qty >= 1 strictly enforced)
-   - In-Cart Size & Color Modification with Automatic Merge Logic
-   - Subtotal & Total Exact Calculations
-   - Universal Cash-on-Delivery Checkout Modal (Cloud Firestore + Telegram)
-   - Seamless RTL UX and Mobile Responsiveness
+   - Single Shared Storage ("shafq_cart" with one-time legacy migration)
+   - Unified SHAFQ Drawer UI (#drawer-cart, #scrim, #btn-cart, #cart-count)
+   - Variant Identification (productId + size + color) & Automatic Merge
+   - Quantity Controls (qty >= 1) & Item Removal
+   - Authoritative Cash-on-Delivery Checkout via /api/order
    ========================================================================== */
 
-import { db } from "./firebase-config.js";
-import { 
-  collection, 
-  addDoc 
-} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+// Single canonical storage key across all SHAFQ pages
+const CART_STORAGE_KEY = "shafq_cart";
+const LEGACY_STORAGE_KEYS = ["hadjaj_cart", "alnoor_cart"];
 
-// Storage Keys
-const PRIMARY_CART_KEY = "hadjaj_cart";
-const LEGACY_CART_KEY = "alnoor_cart";
-
-import { setupWilayaCommuneCascade } from "./locations.js";
-import { loadActiveShippingSettings, getInitialShippingSettings, getShippingPrice, findWilaya } from "./shipping.js";
-
-export const DEFAULT_SIZES = ["S", "M", "L", "XL", "XXL"];
+import {
+  setupWilayaCommuneCascade,
+  createCheckoutPricingController,
+  getSelectedDeliveryMethod,
+  validateCodFormFields,
+  resolveLocationCodes,
+  submitCodOrder
+} from "./checkout.js";
 
 // Arabic Color Name to Hex Code Resolver
 export const ARABIC_COLOR_MAP = {
@@ -57,14 +53,27 @@ export const esc = s => String(s || "").replace(/[&<>"']/g, m => ({ "&": "&amp;"
 // --- Cart State & Storage Helpers ---
 function loadCartFromStorage() {
   try {
-    const raw = localStorage.getItem(PRIMARY_CART_KEY) || localStorage.getItem(LEGACY_CART_KEY) || "[]";
-    const parsed = JSON.parse(raw);
+    let raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) {
+      for (const oldKey of LEGACY_STORAGE_KEYS) {
+        const legacyRaw = localStorage.getItem(oldKey);
+        if (legacyRaw) {
+          raw = legacyRaw;
+          localStorage.setItem(CART_STORAGE_KEY, legacyRaw);
+          break;
+        }
+      }
+      for (const oldKey of LEGACY_STORAGE_KEYS) {
+        localStorage.removeItem(oldKey);
+      }
+    }
+    const parsed = JSON.parse(raw || "[]");
     if (!Array.isArray(parsed)) return [];
     
     // Normalize existing items to ensure required fields exist
     return parsed.map(item => {
       const pid = item.productId || item.id || "item_" + Math.random().toString(36).slice(2, 7);
-      const name = item.name || "قميص فاخر";
+      const name = item.name || "SHAFQ Piece";
       const price = typeof item.price === "number" ? item.price : Number(item.price) || 0;
       const qty = Math.max(1, parseInt(item.quantity || item.qty, 10) || 1);
       const size = String(item.size || "");
@@ -98,9 +107,7 @@ export let cart = loadCartFromStorage();
 
 export function saveCart() {
   try {
-    const serialized = JSON.stringify(cart);
-    localStorage.setItem(PRIMARY_CART_KEY, serialized);
-    localStorage.setItem(LEGACY_CART_KEY, serialized);
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
   } catch (err) {
     console.error("Cart save error:", err);
   }
@@ -189,7 +196,7 @@ export function addToCart({
   if (openDrawer) {
     openCartDrawer();
   }
-  toast(`تمت إضافة "${name}" إلى السلة`);
+  toast(`Added "${name}" to bag`);
 }
 
 /**
@@ -206,7 +213,7 @@ export function changeCartQty(key, delta) {
   if (newQty < 1) {
     // Strictly enforce minimum of 1
     item.quantity = 1;
-    toast("الحد الأدنى للكمية هو 1");
+    toast("Minimum quantity is 1");
   } else {
     item.quantity = newQty;
   }
@@ -226,8 +233,17 @@ export function removeFromCart(key) {
     saveCart();
     renderCartDrawer();
     syncCheckoutModalIfOpen();
-    toast("أُزيل المنتج من الحقيبة");
+    toast("Removed from bag");
   }
+}
+
+function mergeVariantQuantity(sourceItem, targetItem, toastLabel) {
+  const targetQty = Math.max(1, parseInt(targetItem.quantity, 10) || 1);
+  const sourceQty = Math.max(1, parseInt(sourceItem.quantity, 10) || 1);
+  const mergedQty = targetQty + sourceQty;
+  targetItem.quantity = mergedQty;
+  cart = cart.filter(c => c !== sourceItem);
+  toast(`${toastLabel} (${mergedQty})`);
 }
 
 /**
@@ -238,18 +254,15 @@ export function changeCartItemSize(key, newSize) {
   const item = cart.find(c => cartKey(c) === key);
   if (!item || item.size === newSize) return;
 
-  const duplicateIndex = cart.findIndex(
-    c => cartKey(c) !== key && String(c.productId || c.id) === String(item.productId || item.id) && c.color === item.color && c.size === newSize
+  const duplicate = cart.find(
+    c => c !== item && String(c.productId || c.id) === String(item.productId || item.id) && c.color === item.color && c.size === newSize
   );
 
-  if (duplicateIndex > -1) {
-    // Merge into existing item
-    cart[duplicateIndex].quantity += item.quantity;
-    cart = cart.filter(c => cartKey(c) !== key);
-    toast(`تم تغيير المقاس ودمج الكمية مع المقاس الموجود (${cart[duplicateIndex].quantity})`);
+  if (duplicate) {
+    mergeVariantQuantity(item, duplicate, "Updated size and merged quantity");
   } else {
     item.size = newSize;
-    toast(`تم تعديل المقاس إلى ${newSize}`);
+    toast(`Updated size to ${newSize}`);
   }
 
   saveCart();
@@ -272,19 +285,16 @@ export function changeCartItemColor(key, newColorName) {
     if (match) newHex = typeof match === "object" ? match.value : match;
   }
 
-  const duplicateIndex = cart.findIndex(
-    c => cartKey(c) !== key && String(c.productId || c.id) === String(item.productId || item.id) && c.size === item.size && c.color === newColorName
+  const duplicate = cart.find(
+    c => c !== item && String(c.productId || c.id) === String(item.productId || item.id) && c.size === item.size && c.color === newColorName
   );
 
-  if (duplicateIndex > -1) {
-    // Merge into existing item
-    cart[duplicateIndex].quantity += item.quantity;
-    cart = cart.filter(c => cartKey(c) !== key);
-    toast(`تم تغيير اللون ودمج الكمية مع العنصر المطابق (${cart[duplicateIndex].quantity})`);
+  if (duplicate) {
+    mergeVariantQuantity(item, duplicate, "Updated color and merged quantity");
   } else {
     item.color = newColorName;
     item.colorHex = newHex;
-    toast(`تم تعديل اللون إلى ${newColorName}`);
+    toast(`Updated color to ${newColorName}`);
   }
 
   saveCart();
@@ -302,58 +312,164 @@ export function clearCart() {
   syncCheckoutModalIfOpen();
 }
 
-// --- Cart Drawer Rendering ---
+// --- Shared Checkout Modal & Toast Injector (available on every page) ---
+function ensureCheckoutModals() {
+  if (!document.getElementById("toast")) {
+    const toastEl = document.createElement("div");
+    toastEl.className = "p-toast";
+    toastEl.id = "toast";
+    toastEl.setAttribute("role", "status");
+    toastEl.setAttribute("aria-live", "polite");
+    document.body.appendChild(toastEl);
+  }
+
+  if (!document.getElementById("checkoutModal")) {
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = `
+      <div class="p-modal-backdrop" id="checkoutBackdrop"></div>
+      <div class="p-modal" id="checkoutModal" role="dialog" aria-modal="true" aria-labelledby="checkoutModalTitle">
+        <div class="p-modal__head">
+          <h2 id="checkoutModalTitle">Checkout — Cash on Delivery</h2>
+          <button type="button" class="tool" id="checkoutClose" aria-label="Close">
+            <svg class="ico"><use href="#i-close" /></svg>
+          </button>
+        </div>
+        <div class="p-modal__body">
+          <div class="cm-review-box">
+            <div class="cm-review-title">Order Summary (<span id="cmItemCount">0</span>)</div>
+            <div class="cm-items-list" id="cmItemsList"></div>
+            <div class="cm-summary-row">
+              <span>Total</span>
+              <strong class="cm-total" id="cmTotalAmount">0 DA</strong>
+            </div>
+            <p class="cm-note">Cash on Delivery across Algeria after inspection.</p>
+          </div>
+          <form id="checkoutForm" novalidate>
+            <div class="p-field" id="cmFName">
+              <label for="cmName">Full Name <em>*</em></label>
+              <input type="text" id="cmName" placeholder="e.g. Mohamed Benali" autocomplete="name" required>
+              <div class="err">Please enter your full name (at least 3 characters).</div>
+            </div>
+            <div class="p-field" id="cmFPhone">
+              <label for="cmPhone">Phone Number <em>*</em></label>
+              <input type="tel" id="cmPhone" placeholder="e.g. 0551234567" autocomplete="tel" maxlength="10" inputmode="numeric" required>
+              <div class="err">Please enter a valid 10-digit Algerian number (starting with 05, 06, or 07).</div>
+            </div>
+            <div class="two-col">
+              <div class="p-field" id="cmFWilaya">
+                <label for="cmWilaya">Wilaya <em>*</em></label>
+                <select id="cmWilaya" required dir="auto"><option value="">— Select Wilaya —</option></select>
+                <div class="err">Please select a wilaya.</div>
+              </div>
+              <div class="p-field" id="cmFCommune">
+                <label for="cmCommune">Commune <em>*</em></label>
+                <select id="cmCommune" disabled required dir="auto"><option value="">— Select Wilaya First —</option></select>
+                <div class="err">Please select a commune.</div>
+              </div>
+            </div>
+            <div class="p-field">
+              <label for="cmAddress">Street Address (Optional)</label>
+              <input type="text" id="cmAddress" placeholder="Neighborhood, street, building..." dir="auto">
+            </div>
+            <div class="delivery-group" id="cmFDeliveryMethod">
+              <span class="delivery-group-label">Delivery Method <em>*</em></span>
+              <div class="delivery-options-grid">
+                <label class="delivery-option-card active" id="cmCardHome">
+                  <input type="radio" name="cmDeliveryMethod" value="home" checked>
+                  <div class="doc-info"><span class="doc-name">Home Delivery</span></div>
+                  <div class="doc-price" id="cmHomePriceDisplay">&mdash;</div>
+                </label>
+                <label class="delivery-option-card" id="cmCardStopDesk">
+                  <input type="radio" name="cmDeliveryMethod" value="stopDesk">
+                  <div class="doc-info"><span class="doc-name">Stop Desk Pickup</span></div>
+                  <div class="doc-price" id="cmStopDeskPriceDisplay">&mdash;</div>
+                </label>
+              </div>
+            </div>
+            <div class="order-price-summary" id="cmPriceSummary">
+              <div class="ops-row"><span>Items Subtotal</span><span id="cmOpsSubtotal">0 DA</span></div>
+              <div class="ops-row"><span>Shipping (<span id="cmOpsMethodLabel">Home Delivery</span>)</span><span id="cmOpsShipping">Select wilaya</span></div>
+              <div class="ops-row ops-row--total"><span>Total</span><strong id="cmOpsTotal">0 DA</strong></div>
+            </div>
+            <button type="submit" class="btn-order" id="cmSubmitBtn">Confirm Order — Cash on Delivery</button>
+            <p class="p-secure">Pay only upon receiving and inspecting your order.</p>
+          </form>
+        </div>
+      </div>
+      <div class="p-success-modal" id="orderSuccessModal" role="dialog" aria-modal="true">
+        <div class="sm-card">
+          <div class="p-success__mark" aria-hidden="true">&#10003;</div>
+          <h2 class="p-success__title">Order Confirmed</h2>
+          <p class="p-success__sub">Thank you for shopping with SHAFQ. We will contact you shortly by phone to confirm delivery. Payment is cash on delivery.</p>
+          <div class="p-summary" id="smOrderSummary"></div>
+          <button type="button" class="btn-order" id="smContinueBtn">Continue Shopping</button>
+        </div>
+      </div>
+    `;
+    while (wrapper.firstElementChild) {
+      document.body.appendChild(wrapper.firstElementChild);
+    }
+  }
+}
+
+// --- Unified Cart Drawer Rendering (#drawer-cart, #cart-count, #scrim) ---
 
 export function updateBadge() {
-  const badgeEl = document.getElementById("cartBadge");
+  const badgeEl = document.getElementById("cart-count");
   const qty = getCartQty();
   if (badgeEl) {
     badgeEl.textContent = qty;
-    badgeEl.style.display = qty > 0 ? "flex" : "none";
+    badgeEl.hidden = qty <= 0;
   }
 }
 
 export function openCartDrawer() {
-  const drawer = document.getElementById("cartDrawer");
-  const backdrop = document.getElementById("backdrop");
+  const drawer = document.getElementById("drawer-cart");
+  const scrim = document.getElementById("scrim");
+  if (window.SHAFQ && window.SHAFQ.closeAll) {
+    window.SHAFQ.closeAll();
+  }
   renderCartDrawer();
-  drawer?.classList.add("open");
-  backdrop?.classList.add("show");
-  document.body.classList.add("drawer-open");
+  if (drawer) {
+    drawer.hidden = false;
+    drawer.setAttribute("aria-hidden", "false");
+  }
+  if (scrim) scrim.hidden = false;
 }
 
 export function closeCartDrawer() {
-  const drawer = document.getElementById("cartDrawer");
-  const backdrop = document.getElementById("backdrop");
-  drawer?.classList.remove("open");
-  backdrop?.classList.remove("show");
-  document.body.classList.remove("drawer-open");
+  if (window.SHAFQ && window.SHAFQ.closeAll) {
+    window.SHAFQ.closeAll();
+    return;
+  }
+  const drawer = document.getElementById("drawer-cart");
+  const scrim = document.getElementById("scrim");
+  if (drawer) {
+    drawer.hidden = true;
+    drawer.setAttribute("aria-hidden", "true");
+  }
+  if (scrim) scrim.hidden = true;
 }
 
 export function renderCartDrawer() {
-  const box = document.getElementById("cartItems");
-  const foot = document.getElementById("cartFoot");
-  const totalEl = document.getElementById("cartTotal");
+  const body = document.getElementById("drawer-cart-body");
+  const foot = document.getElementById("drawer-cart-foot");
+  const totalEl = document.getElementById("drawer-cart-total");
 
-  if (!box) return;
+  if (!body) return;
 
   if (cart.length === 0) {
-    box.innerHTML = `
-      <div class="drawer-empty">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" style="margin:0 auto 12px;opacity:0.4"><path d="M6 7h12l1 13H5L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
-        <p>حقيبتك فارغة</p>
-        <small>تصفح القمصان وأضف ما يعجبك</small>
-      </div>`;
-    if (foot) foot.style.display = "none";
-    if (totalEl) totalEl.textContent = "0 دج";
+    body.innerHTML = `<p class="drawer__empty">Your bag is empty.</p>`;
+    if (foot) foot.hidden = true;
+    if (totalEl) totalEl.textContent = "0 DA";
     return;
   }
 
-  if (foot) foot.style.display = "block";
+  if (foot) foot.hidden = false;
 
-  box.innerHTML = cart.map(item => {
+  body.innerHTML = cart.map(item => {
     const k = cartKey(item);
-    const itemTotal = (item.price * item.quantity).toLocaleString("ar-DZ");
+    const itemTotal = (item.price * item.quantity).toLocaleString("en-US");
     const sizes = Array.isArray(item.availableSizes) ? item.availableSizes : [];
     const colors = Array.isArray(item.availableColors) ? item.availableColors : [];
     const hasSizes = sizes.length > 0;
@@ -362,9 +478,9 @@ export function renderCartDrawer() {
     let sizeOptionsHTML = "";
     if (hasSizes) {
       sizeOptionsHTML = `
-        <div class="ci-opt-group">
-          <label>المقاس:</label>
-          <select class="ci-select" onchange="window.hadjajCart.changeCartItemSize('${esc(k)}', this.value)">
+        <div class="drawer__opt">
+          <label>Size:</label>
+          <select class="drawer__select" data-cart-action="size" data-cart-key="${esc(k)}" dir="auto">
             ${sizes.map(s => `<option value="${esc(s)}" ${s === item.size ? "selected" : ""}>${esc(s)}</option>`).join("")}
           </select>
         </div>
@@ -374,9 +490,9 @@ export function renderCartDrawer() {
     let colorOptionsHTML = "";
     if (hasColors) {
       colorOptionsHTML = `
-        <div class="ci-opt-group">
-          <label>اللون:</label>
-          <select class="ci-select" onchange="window.hadjajCart.changeCartItemColor('${esc(k)}', this.value)">
+        <div class="drawer__opt">
+          <label>Color:</label>
+          <select class="drawer__select" data-cart-action="color" data-cart-key="${esc(k)}" dir="auto">
             ${colors.map(c => {
               const cName = typeof c === "object" ? c.name : c;
               return `<option value="${esc(cName)}" ${cName === item.color ? "selected" : ""}>${esc(cName)}</option>`;
@@ -387,32 +503,30 @@ export function renderCartDrawer() {
     }
 
     const optionsContainerHTML = (hasSizes || hasColors)
-      ? `<div class="ci-options">${sizeOptionsHTML}${colorOptionsHTML}</div>`
+      ? `<div class="drawer__item-opts">${sizeOptionsHTML}${colorOptionsHTML}</div>`
       : "";
 
     return `
-      <div class="ci" data-key="${esc(k)}">
-        <img src="${esc(item.image)}" alt="${esc(item.name)}" onerror="this.style.opacity='0'">
-        <div class="ci-info">
-          <div class="ci-name">${esc(item.name)}</div>
+      <div class="drawer__item" data-key="${esc(k)}">
+        <img class="drawer__item-img" src="${esc(item.image)}" alt="${esc(item.name)}" onerror="this.style.opacity='0'">
+        <div class="drawer__item-info">
+          <div class="drawer__item-name" dir="auto">${esc(item.name)}</div>
           ${optionsContainerHTML}
-
-          <div class="ci-row">
-            <div class="ci-qty">
-              <button type="button" onclick="window.hadjajCart.changeCartQty('${esc(k)}', 1)" aria-label="زيادة">+</button>
+          <div class="drawer__item-row">
+            <div class="drawer__qty">
+              <button type="button" data-cart-action="qty-dec" data-cart-key="${esc(k)}" aria-label="Decrease" ${item.quantity <= 1 ? "disabled" : ""}>&minus;</button>
               <span>${item.quantity}</span>
-              <button type="button" onclick="window.hadjajCart.changeCartQty('${esc(k)}', -1)" aria-label="إنقاص" ${item.quantity <= 1 ? "disabled style='opacity:0.4;cursor:not-allowed'" : ""}>−</button>
+              <button type="button" data-cart-action="qty-inc" data-cart-key="${esc(k)}" aria-label="Increase">+</button>
             </div>
-            <span class="ci-price">${itemTotal} دج</span>
+            <span class="drawer__item-price">${itemTotal} DA</span>
           </div>
-
-          <button type="button" class="ci-remove" onclick="window.hadjajCart.removeFromCart('${esc(k)}')">إزالة</button>
+          <button type="button" class="drawer__remove" data-cart-action="remove" data-cart-key="${esc(k)}">Remove</button>
         </div>
       </div>`;
   }).join("");
 
   if (totalEl) {
-    totalEl.textContent = getCartTotal().toLocaleString("ar-DZ") + " دج";
+    totalEl.textContent = getCartTotal().toLocaleString("en-US") + " DA";
   }
 }
 
@@ -423,7 +537,7 @@ function syncCheckoutModalIfOpen() {
   if (modal && modal.classList.contains("show")) {
     if (cart.length === 0) {
       closeCheckoutModal();
-      toast("أصبحت السلة فارغة");
+      toast("Your bag is empty");
     } else {
       renderCheckoutModalReview();
     }
@@ -432,17 +546,21 @@ function syncCheckoutModalIfOpen() {
 
 export function openCheckoutModal() {
   if (cart.length === 0) {
-    toast("حقيبتك فارغة، اختر منتجاً أولاً", false);
+    toast("Your bag is empty — choose a piece first", false);
     return;
   }
 
+  ensureCheckoutModals();
+  bindCheckoutModalControls();
   closeCartDrawer();
   const modal = document.getElementById("checkoutModal");
   const backdrop = document.getElementById("checkoutBackdrop");
 
   renderCheckoutModalReview();
-  populateWilayasDropdown();
+  cartPricingController.activate();
+  cartPricingController.bindListeners();
   updateCartCheckoutPricing();
+  populateWilayasDropdown().then(() => updateCartCheckoutPricing());
 
   modal?.classList.add("show");
   backdrop?.classList.add("show");
@@ -466,312 +584,139 @@ function renderCheckoutModalReview() {
   const total = getCartTotal();
   const count = getCartQty();
 
-  if (countEl) countEl.textContent = `${count} ${count > 1 ? "قطع" : "قطعة"}`;
-  if (totalEl) totalEl.textContent = total.toLocaleString("ar-DZ") + " دج";
-  if (btnEl) btnEl.textContent = `تأكيد الطلب — الدفع عند الاستلام (${total.toLocaleString("ar-DZ")} دج)`;
+  if (countEl) countEl.textContent = `${count} ${count > 1 ? "pieces" : "piece"}`;
+  if (totalEl) totalEl.textContent = total.toLocaleString("en-US") + " DA";
+  if (btnEl) btnEl.textContent = `Confirm Order — Cash on Delivery (${total.toLocaleString("en-US")} DA)`;
 
   if (listEl) {
     listEl.innerHTML = cart.map(item => `
       <div class="cm-review-item">
         <img src="${esc(item.image)}" alt="${esc(item.name)}" onerror="this.style.opacity='0'">
         <div class="cm-review-info">
-          <div class="cm-review-name">${esc(item.name)}</div>
+          <div class="cm-review-name" dir="auto">${esc(item.name)}</div>
           ${(() => {
             const metaParts = [];
-            if (item.size) metaParts.push('المقاس: <b>' + esc(item.size) + '</b>');
-            if (item.color) metaParts.push('اللون: <b>' + esc(item.color) + '</b>');
+            if (item.size) metaParts.push('Size: <b dir="auto">' + esc(item.size) + '</b>');
+            if (item.color) metaParts.push('Color: <b dir="auto">' + esc(item.color) + '</b>');
             return metaParts.length ? '<div class="cm-review-meta">' + metaParts.join(' — ') + '</div>' : '';
           })()}
         </div>
         <div class="cm-review-calc">
-          <div>${item.quantity} × ${item.price.toLocaleString("ar-DZ")} دج</div>
-          <b>${(item.price * item.quantity).toLocaleString("ar-DZ")} دج</b>
+          <div>${item.quantity} × ${item.price.toLocaleString("en-US")} DA</div>
+          <b>${(item.price * item.quantity).toLocaleString("en-US")} DA</b>
         </div>
       </div>
     `).join("");
   }
 }
 
-let cmCascadeInitialized = false;
-
-let activeCartShippingSettings = getInitialShippingSettings();
+const cartPricingController = createCheckoutPricingController({
+  wilayaSelectId: "cmWilaya",
+  radioName: "cmDeliveryMethod",
+  cardHomeId: "cmCardHome",
+  cardStopDeskId: "cmCardStopDesk",
+  homePriceId: "cmHomePriceDisplay",
+  stopDeskPriceId: "cmStopDeskPriceDisplay",
+  opsSubtotalId: "cmOpsSubtotal",
+  opsShippingId: "cmOpsShipping",
+  opsMethodLabelId: "cmOpsMethodLabel",
+  opsTotalId: "cmOpsTotal",
+  mirrorTotalId: "cmTotalAmount",
+  getSubtotal: getCartTotal
+});
 
 export function getCartSelectedDeliveryMethod() {
-  const checked = document.querySelector('input[name="cmDeliveryMethod"]:checked');
-  return checked ? checked.value : "home";
+  return getSelectedDeliveryMethod("cmDeliveryMethod");
 }
 
 export function updateCartCheckoutPricing() {
-  const wilayaEl = document.getElementById("cmWilaya");
-  const wilayaVal = wilayaEl ? wilayaEl.value : "";
-  const method = getCartSelectedDeliveryMethod();
-
-  const homePriceEl = document.getElementById("cmHomePriceDisplay");
-  const stopDeskPriceEl = document.getElementById("cmStopDeskPriceDisplay");
-  const opsSubtotalEl = document.getElementById("cmOpsSubtotal");
-  const opsShippingEl = document.getElementById("cmOpsShipping");
-  const opsMethodLabelEl = document.getElementById("cmOpsMethodLabel");
-  const opsTotalEl = document.getElementById("cmOpsTotal");
-  const cmTotalAmountEl = document.getElementById("cmTotalAmount");
-  const cardHome = document.getElementById("cmCardHome");
-  const cardStopDesk = document.getElementById("cmCardStopDesk");
-
-  if (cardHome) cardHome.classList.toggle("active", method === "home");
-  if (cardStopDesk) cardStopDesk.classList.toggle("active", method === "stopDesk");
-
-  const rates = (activeCartShippingSettings && activeCartShippingSettings.rates) ? activeCartShippingSettings.rates : null;
-  let homePrice = 0;
-  let stopDeskPrice = 0;
-  let hasWilaya = false;
-
-  if (wilayaVal && rates) {
-    hasWilaya = true;
-    homePrice = getShippingPrice(rates, wilayaVal, "home");
-    stopDeskPrice = getShippingPrice(rates, wilayaVal, "stopDesk");
-  }
-
-  if (homePriceEl) homePriceEl.textContent = hasWilaya ? `${homePrice.toLocaleString("ar-DZ")} دج` : "—";
-  if (stopDeskPriceEl) stopDeskPriceEl.textContent = hasWilaya ? `${stopDeskPrice.toLocaleString("ar-DZ")} دج` : "—";
-
-  const subtotal = getCartTotal();
-  const activeShipping = hasWilaya ? (method === "stopDesk" ? stopDeskPrice : homePrice) : 0;
-  const finalTotal = subtotal + activeShipping;
-
-  if (opsSubtotalEl) opsSubtotalEl.textContent = `${subtotal.toLocaleString("ar-DZ")} دج`;
-  if (opsShippingEl) {
-    opsShippingEl.textContent = hasWilaya ? `${activeShipping.toLocaleString("ar-DZ")} دج` : "اختر الولاية";
-  }
-  if (opsMethodLabelEl) {
-    opsMethodLabelEl.textContent = method === "stopDesk" ? "استلام من المكتب" : "توصيل للمنزل";
-  }
-  if (opsTotalEl) opsTotalEl.textContent = `${finalTotal.toLocaleString("ar-DZ")} دج`;
-  if (cmTotalAmountEl) cmTotalAmountEl.textContent = `${finalTotal.toLocaleString("ar-DZ")} دج`;
-}
-
-// Load shipping settings on initialization
-loadActiveShippingSettings().then(s => {
-  activeCartShippingSettings = s;
-  updateCartCheckoutPricing();
-});
-
-function setupCartDeliveryListeners() {
-  document.querySelectorAll('input[name="cmDeliveryMethod"]').forEach(r => {
-    r.addEventListener('change', () => updateCartCheckoutPricing());
-  });
-  document.getElementById("cmCardHome")?.addEventListener("click", () => {
-    const r = document.querySelector('input[name="cmDeliveryMethod"][value="home"]');
-    if (r) { r.checked = true; updateCartCheckoutPricing(); }
-  });
-  document.getElementById("cmCardStopDesk")?.addEventListener("click", () => {
-    const r = document.querySelector('input[name="cmDeliveryMethod"][value="stopDesk"]');
-    if (r) { r.checked = true; updateCartCheckoutPricing(); }
-  });
-  document.getElementById("cmWilaya")?.addEventListener("change", () => {
-    updateCartCheckoutPricing();
-  });
+  cartPricingController.update();
 }
 
 function populateWilayasDropdown() {
-  if (!cmCascadeInitialized) {
-    setupWilayaCommuneCascade({
+  const wEl = document.getElementById("cmWilaya");
+  if (wEl && wEl.options.length <= 1) {
+    return setupWilayaCommuneCascade({
       wilayaSelectId: "cmWilaya",
       communeSelectId: "cmCommune",
       wilayaFieldId: "cmFWilaya",
       communeFieldId: "cmFCommune"
     });
-    cmCascadeInitialized = true;
   }
+  return Promise.resolve(null);
 }
 
-// Telegram Order Dispatcher (Securely routed through serverless endpoint /api/telegram)
-export async function sendTelegramOrderNotification(orderData, orderId) {
-  try {
-    const res = await fetch("/api/telegram", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId, orderData })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.success) return data;
-    }
-  } catch (err) {
-    console.warn("Telegram notification dispatch error:", err);
-  }
-  return { ok: false };
-}
-
-// Handle Checkout Form Submission
+// Handle Checkout Form Submission (Strictly routed through authoritative /api/order)
 export async function handleCheckoutSubmit(e) {
   e.preventDefault();
   if (cart.length === 0) {
-    toast("حقيبتك فارغة", false);
+    toast("Your bag is empty", false);
     return;
   }
 
-  const nameEl = document.getElementById("cmName");
-  const phoneEl = document.getElementById("cmPhone");
-  const wilayaEl = document.getElementById("cmWilaya");
-  const communeEl = document.getElementById("cmCommune");
-  const addressEl = document.getElementById("cmAddress");
   const submitBtn = document.getElementById("cmSubmitBtn");
-
-  const name = nameEl ? nameEl.value.trim() : "";
-  const phone = phoneEl ? phoneEl.value.trim().replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)) : "";
-  const wilaya = wilayaEl ? wilayaEl.value : "";
-  const commune = communeEl ? communeEl.value.trim() : "";
-  const address = addressEl ? addressEl.value.trim() : "";
-
-  // Validation
-  const setInvalid = (fid, bad) => {
-    const el = document.getElementById(fid);
-    if (el) el.classList.toggle("invalid", bad);
-    return !bad;
-  };
-
-  let valid = true;
-  valid = setInvalid("cmFName", name.length < 3) && valid;
-  valid = setInvalid("cmFPhone", !/^0[5-7][0-9]{8}$/.test(phone)) && valid;
-  valid = setInvalid("cmFWilaya", !wilaya) && valid;
-  valid = setInvalid("cmFCommune", !commune) && valid;
+  const { valid, customer, phone, wilaya, commune, address } = validateCodFormFields({
+    nameInputId: "cmName",
+    phoneInputId: "cmPhone",
+    wilayaSelectId: "cmWilaya",
+    communeSelectId: "cmCommune",
+    addressInputId: "cmAddress",
+    nameFieldId: "cmFName",
+    phoneFieldId: "cmFPhone",
+    wilayaFieldId: "cmFWilaya",
+    communeFieldId: "cmFCommune"
+  });
 
   if (!valid) return;
 
-  const originalBtnText = submitBtn ? submitBtn.textContent : "تأكيد الطلب — الدفع عند الاستلام";
+  const originalBtnText = submitBtn ? submitBtn.textContent : "Confirm Order — Cash on Delivery";
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.textContent = "جاري تأكيد الطلب وحفظه في السحابة...";
+    submitBtn.textContent = "Placing order...";
   }
 
   const deliveryMethod = getCartSelectedDeliveryMethod();
-  const wilayaInfo = findWilaya(wilaya);
-  const wilayaCode = wilayaInfo ? wilayaInfo.code : "";
-  const communeInfo = wilayaInfo?.communes?.find(c => c.name === commune);
-  const communeCode = communeInfo ? communeInfo.code : "";
-
-  const subtotal = getCartTotal();
-  const rates = (activeCartShippingSettings && activeCartShippingSettings.rates) ? activeCartShippingSettings.rates : null;
-  const shippingPrice = getShippingPrice(rates, wilaya, deliveryMethod);
-  const calculatedTotal = subtotal + shippingPrice;
+  const { canonicalWilaya, wilayaCode, communeCode } = await resolveLocationCodes(wilaya, commune);
 
   const orderItems = cart.map(i => ({
     productId: i.productId,
     name: i.name,
-    price: i.price,
     quantity: i.quantity,
     size: i.size,
     color: i.color,
     colorHex: i.colorHex || "#1d1a16",
-    image: i.image || ''
+    image: i.image || ""
   }));
 
-  let createdOrderId = null;
-  let savedOrderData = null;
-  let telegramAlreadySent = false;
-
   try {
-    // 1. Authoritative Backend Calculation & Verification
-    const backendRes = await fetch("/api/order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        customer: name,
-        phone,
-        wilaya,
-        wilayaCode,
-        commune,
-        communeCode,
-        address,
-        deliveryMethod,
-        items: orderItems,
-        paymentMethod: "الدفع عند الاستلام"
-      })
-    });
-
-    if (backendRes.ok) {
-      const backendData = await backendRes.json();
-      if (backendData.success && backendData.orderId) {
-        createdOrderId = backendData.orderId;
-        savedOrderData = backendData.order;
-        telegramAlreadySent = Boolean(backendData.telegramSent);
-      }
-    }
-  } catch (apiErr) {
-    console.warn("Backend /api/order call failed, falling back to direct Firestore:", apiErr);
-  }
-
-  try {
-    // 2. Direct Firestore Fallback if backend was unavailable
-    if (!createdOrderId) {
-      const orderPayload = {
-        customer: name,
-        phone,
-        wilaya,
-        commune,
-        address,
-        deliveryMethod: deliveryMethod,
-        shippingPrice: shippingPrice,
-        subtotal: subtotal,
-        total: calculatedTotal,
-        shipping: {
-          method: deliveryMethod,
-          wilayaCode: wilayaCode,
-          communeCode: communeCode,
-          price: shippingPrice
-        },
-        items: orderItems,
-        paymentMethod: "الدفع عند الاستلام",
-        status: "جديد",
-        createdAt: new Date().toISOString()
-      };
-
-      const docRef = await addDoc(collection(db, "orders"), orderPayload);
-      createdOrderId = docRef.id;
-      savedOrderData = orderPayload;
-    }
-
-    // Always guarantee Telegram notification is dispatched
-    if (!telegramAlreadySent) {
-      try {
-        await sendTelegramOrderNotification({
-          name,
-          phone,
-          wilaya,
-          commune,
-          address,
-          items: orderItems,
-          deliveryMethod,
-          shippingPrice,
-          subtotal,
-          total: calculatedTotal.toLocaleString("ar-DZ")
-        }, createdOrderId);
-      } catch (tgErr) {
-        console.warn("Direct Telegram notification warning:", tgErr);
-      }
-    }
-
-    // 3. Clear Cart
-    clearCart();
-
-    // 4. Close Checkout Modal
-    closeCheckoutModal();
-
-    // 5. Show Success Screen
-    showOrderSuccessReceipt(createdOrderId, savedOrderData || {
-      customer: name,
+    const result = await submitCodOrder({
+      customer,
       phone,
-      wilaya,
+      wilaya: canonicalWilaya,
+      wilayaCode,
       commune,
+      communeCode,
+      address,
       deliveryMethod,
-      shippingPrice,
-      subtotal,
-      total: calculatedTotal,
       items: orderItems
     });
 
+    if (!result.ok) {
+      toast(result.error, false);
+      return;
+    }
+
+    // Clear Cart
+    clearCart();
+
+    // Close Checkout Modal
+    closeCheckoutModal();
+
+    // Show Success Screen with authoritative server-computed totals
+    showOrderSuccessReceipt(result.orderId, result.order);
   } catch (err) {
     console.error("Order submission exception:", err);
-    toast("حدث خطأ أثناء حفظ الطلب في السحابة، يرجى المحاولة ثانية", false);
+    toast("Order service is currently unreachable. Please try again.", false);
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
@@ -787,31 +732,31 @@ function showOrderSuccessReceipt(orderId, orderData) {
 
   if (summaryEl) {
     const itemsListHTML = (orderData.items || []).map(it => `
-      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #e7e1d7;font-size:13px">
-        <span>${esc(it.name)} (${esc(it.size)} / ${esc(it.color)}) × ${it.quantity}</span>
-        <b>${(it.price * it.quantity).toLocaleString("ar-DZ")} دج</b>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed rgba(29,25,22,0.16);font-size:13.5px">
+        <span dir="auto">${esc(it.name)} (${esc(it.size)}${it.size && it.color ? " / " : ""}${esc(it.color)}) × ${it.quantity}</span>
+        <b>${(it.price * it.quantity).toLocaleString("en-US")} DA</b>
       </div>
     `).join("");
 
     summaryEl.innerHTML = `
       <div style="font-size:14px;line-height:1.8">
-        <div style="margin-bottom:8px">رقم الطلب: <b style="color:var(--gold-dark)">#${esc(orderId.slice(-6).toUpperCase())}</b></div>
+        <div style="margin-bottom:8px">Order ID: <b>#${esc(orderId.slice(-6).toUpperCase())}</b></div>
         <div style="margin-bottom:8px">${itemsListHTML}</div>
-        <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px;color:var(--muted)">
-          <span>طريقة التوصيل:</span>
-          <b>${orderData.deliveryMethod === "stopDesk" ? "استلام من المكتب (Stop Desk)" : "توصيل للمنزل (Home)"}</b>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13.5px;opacity:0.78">
+          <span>Delivery Method:</span>
+          <b>${orderData.deliveryMethod === "stopDesk" ? "Stop Desk Pickup" : "Home Delivery"}</b>
         </div>
-        <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px;color:var(--muted)">
-          <span>تكلفة التوصيل:</span>
-          <b>${(orderData.shippingPrice || 0).toLocaleString("ar-DZ")} دج</b>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13.5px;opacity:0.78">
+          <span>Shipping:</span>
+          <b>${(orderData.shippingPrice || 0).toLocaleString("en-US")} DA</b>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:16px;margin:8px 0;padding-top:6px;border-top:1px solid #e7e1d7">
-          <b>الإجمالي الكلي:</b>
-          <b style="color:var(--gold-dark)">${orderData.total.toLocaleString("ar-DZ")} دج</b>
+        <div style="display:flex;justify-content:space-between;font-size:16px;margin:8px 0;padding-top:6px;border-top:1px solid rgba(29,25,22,0.2)">
+          <b>Total:</b>
+          <b>${orderData.total.toLocaleString("en-US")} DA</b>
         </div>
-        <div style="color:var(--muted);font-size:12px;margin-top:8px">
-          العميل: ${esc(orderData.customer)} | الهاتف: ${esc(orderData.phone)}<br>
-          العنوان: ${esc(orderData.wilaya)} — ${esc(orderData.commune)}
+        <div style="opacity:0.78;font-size:13px;margin-top:8px" dir="auto">
+          Customer: ${esc(orderData.customer)} | Phone: ${esc(orderData.phone)}<br>
+          Location: ${esc(orderData.wilaya)} — ${esc(orderData.commune)}
         </div>
       </div>
     `;
@@ -830,64 +775,125 @@ export function closeOrderSuccessReceipt() {
   document.body.classList.remove("modal-open");
 }
 
-// Global initialization helper for both index.html & product.html
-export function initCartUI() {
-  updateBadge();
-  renderCartDrawer();
-  populateWilayasDropdown();
-  setupCartDeliveryListeners();
+function bindDrawerActions() {
+  const body = document.getElementById("drawer-cart-body");
+  if (body && !body.dataset.shafqBound) {
+    body.dataset.shafqBound = "1";
+    body.addEventListener("click", e => {
+      const btn = e.target?.closest?.("[data-cart-action]");
+      if (!btn) return;
+      const action = btn.dataset.cartAction;
+      const key = btn.dataset.cartKey;
+      if (!key) return;
+      if (action === "qty-dec") changeCartQty(key, -1);
+      else if (action === "qty-inc") changeCartQty(key, 1);
+      else if (action === "remove") removeFromCart(key);
+    });
+    body.addEventListener("change", e => {
+      const sel = e.target?.closest?.("select[data-cart-action]");
+      if (!sel) return;
+      const action = sel.dataset.cartAction;
+      const key = sel.dataset.cartKey;
+      if (!key) return;
+      if (action === "size") changeCartItemSize(key, sel.value);
+      else if (action === "color") changeCartItemColor(key, sel.value);
+    });
+  }
 
-  // Drawer event bindings
-  document.getElementById("cartBtn")?.addEventListener("click", openCartDrawer);
-  document.getElementById("cartClose")?.addEventListener("click", closeCartDrawer);
-  document.getElementById("backdrop")?.addEventListener("click", () => {
-    closeCartDrawer();
-  });
+  const checkoutBtn = document.getElementById("drawer-checkout-btn");
+  if (checkoutBtn && !checkoutBtn.dataset.shafqBound) {
+    checkoutBtn.dataset.shafqBound = "1";
+    checkoutBtn.addEventListener("click", openCheckoutModal);
+  }
+}
 
-  // Checkout modal bindings
-  document.getElementById("checkoutBtn")?.addEventListener("click", openCheckoutModal);
-  document.getElementById("checkoutClose")?.addEventListener("click", closeCheckoutModal);
-  document.getElementById("checkoutBackdrop")?.addEventListener("click", () => {
-    closeCheckoutModal();
-    closeOrderSuccessReceipt();
-  });
-
-  // Checkout form submit
-  document.getElementById("checkoutForm")?.addEventListener("submit", handleCheckoutSubmit);
-
-  // Success modal button
-  document.getElementById("smContinueBtn")?.addEventListener("click", closeOrderSuccessReceipt);
-
-  // Keyboard Escape
-  document.addEventListener("keydown", e => {
-    if (e.key === "Escape") {
-      closeCartDrawer();
+function bindCheckoutModalControls() {
+  const closeBtn = document.getElementById("checkoutClose");
+  if (closeBtn && !closeBtn.dataset.shafqBound) {
+    closeBtn.dataset.shafqBound = "1";
+    closeBtn.addEventListener("click", closeCheckoutModal);
+  }
+  const backdrop = document.getElementById("checkoutBackdrop");
+  if (backdrop && !backdrop.dataset.shafqBound) {
+    backdrop.dataset.shafqBound = "1";
+    backdrop.addEventListener("click", () => {
       closeCheckoutModal();
       closeOrderSuccessReceipt();
-    }
-  });
+    });
+  }
+  const form = document.getElementById("checkoutForm");
+  if (form && !form.dataset.shafqBound) {
+    form.dataset.shafqBound = "1";
+    form.addEventListener("submit", handleCheckoutSubmit);
+  }
+  const contBtn = document.getElementById("smContinueBtn");
+  if (contBtn && !contBtn.dataset.shafqBound) {
+    contBtn.dataset.shafqBound = "1";
+    contBtn.addEventListener("click", closeOrderSuccessReceipt);
+  }
+}
 
-  // Expose to window for inline HTML onclick attributes
-  window.hadjajCart = {
+// Unified initialization helper for all SHAFQ pages (and View Transitions)
+export function initCartUI() {
+  ensureCheckoutModals();
+  updateBadge();
+  renderCartDrawer();
+  bindDrawerActions();
+  bindCheckoutModalControls();
+
+  // Escape closes checkout modals (drawer Escape is handled once in main.js)
+  if (!document._shafqCheckoutKeyBound) {
+    document._shafqCheckoutKeyBound = true;
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        closeCheckoutModal();
+        closeOrderSuccessReceipt();
+      }
+    });
+  }
+
+  // Keep storage synced across tabs
+  if (!window._shafqCartStorageBound) {
+    window._shafqCartStorageBound = true;
+    window.addEventListener("storage", e => {
+      if (e.key === CART_STORAGE_KEY) {
+        cart = loadCartFromStorage();
+        updateBadge();
+        renderCartDrawer();
+        syncCheckoutModalIfOpen();
+      }
+    });
+  }
+
+  // Single canonical global controller across the entire site
+  window.shafqCart = {
+    init: initCartUI,
+    render: renderCartDrawer,
+    updateBadge,
+    open: openCartDrawer,
+    close: closeCartDrawer,
     get cart() { return cart; },
     getCart: () => cart,
     getCartQty,
     getCartTotal,
+    addItem: addToCart,
     addToCart,
     changeCartQty,
     removeFromCart,
     changeCartItemSize,
     changeCartItemColor,
     clearCart,
-    openCartDrawer,
-    closeCartDrawer,
     openCheckoutModal,
     closeCheckoutModal,
     resolveColorHex,
     ARABIC_COLOR_MAP
   };
+}
 
-  // Keep legacy global names pointing to unified module
-  window.changeCartQty = changeCartQty;
-  window.removeFromCart = removeFromCart;
+if (typeof document !== "undefined") {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCartUI, { once: true });
+  } else {
+    initCartUI();
+  }
 }

@@ -14,9 +14,25 @@
  * 8. Authenticated Endpoint: Validates 'x-worker-secret' to prevent unauthorized external triggers.
  */
 
-const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || "clothstore-a9b2c";
-const BASE_FS_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
-export const WORKER_SECRET = process.env.QUEUE_WORKER_SECRET || "hadjaj_secure_worker_token_2026";
+import { createHash, timingSafeEqual } from "node:crypto";
+import {
+  FIREBASE_PROJECT_ID,
+  BASE_FS_URL,
+  hasServiceAccountConfig,
+  adminFirestoreFetch
+} from "./firebase-admin.js";
+
+export function getWorkerSecret() {
+  return process.env.QUEUE_WORKER_SECRET || "";
+}
+
+function isSecretValid(incoming) {
+  const expected = getWorkerSecret();
+  if (!expected || !incoming || typeof incoming !== "string") return false;
+  const a = createHash("sha256").update(incoming).digest();
+  const b = createHash("sha256").update(expected).digest();
+  return timingSafeEqual(a, b);
+}
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -83,6 +99,10 @@ export function fromFirestoreFields(fields = {}) {
  * Uses orderId as the document ID for absolute idempotency.
  */
 export async function enqueueTelegramNotification(payload) {
+  if (!hasServiceAccountConfig()) {
+    console.warn("[QUEUE ENQUEUE SKIPPED]: Firebase Service Account not configured on server.");
+    return { success: false, disabled: true, error: "Service account unconfigured" };
+  }
   try {
     const orderId = String(payload.orderId || `ord_${Date.now()}`).trim();
     const docUrl = `${BASE_FS_URL}/telegramQueue/${encodeURIComponent(orderId)}`;
@@ -105,7 +125,7 @@ export async function enqueueTelegramNotification(payload) {
       .map((k) => `updateMask.fieldPaths=${encodeURIComponent(k)}`)
       .join("&");
 
-    const res = await fetch(`${docUrl}?${updateMask}`, {
+    const res = await adminFirestoreFetch(`${docUrl}?${updateMask}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fields: toFirestoreFields(docData) })
@@ -135,7 +155,7 @@ export async function acquireLock(workerId) {
   const LOCK_TTL_MS = 25 * 1000; // 25s auto-expiration
 
   try {
-    const getRes = await fetch(lockUrl);
+    const getRes = await adminFirestoreFetch(lockUrl);
     if (getRes.ok) {
       const lockDoc = await getRes.json();
       const lockData = fromFirestoreFields(lockDoc.fields || {});
@@ -163,7 +183,7 @@ export async function acquireLock(workerId) {
       .map((k) => `updateMask.fieldPaths=${encodeURIComponent(k)}`)
       .join("&");
 
-    const patchRes = await fetch(`${lockUrl}?${updateMask}`, {
+    const patchRes = await adminFirestoreFetch(`${lockUrl}?${updateMask}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fields: toFirestoreFields(lockPayload) })
@@ -192,7 +212,7 @@ export async function releaseLock(workerId) {
       .map((k) => `updateMask.fieldPaths=${encodeURIComponent(k)}`)
       .join("&");
 
-    await fetch(`${lockUrl}?${updateMask}`, {
+    await adminFirestoreFetch(`${lockUrl}?${updateMask}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fields: toFirestoreFields(unlockPayload) })
@@ -218,7 +238,7 @@ export async function updateQueueItem(docId, fieldsToUpdate = {}) {
 
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      const res = await fetch(`${docUrl}?${updateMask}`, {
+      const res = await adminFirestoreFetch(`${docUrl}?${updateMask}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fields: toFirestoreFields(payload) })
@@ -253,7 +273,7 @@ export async function recoverStaleProcessingItems() {
   };
 
   try {
-    const res = await fetch(queryUrl, {
+    const res = await adminFirestoreFetch(queryUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(queryBody)
@@ -322,7 +342,7 @@ export async function fetchPendingQueueItems(limit = 15) {
   };
 
   try {
-    const res = await fetch(queryUrl, {
+    const res = await adminFirestoreFetch(queryUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(queryBody)
@@ -549,13 +569,14 @@ export async function processTelegramQueue(options = {}) {
     await releaseLock(workerId);
 
     // 6. Self-Chaining: If more orders remain, spawn the next worker invocation
-    if (hasMoreToProcess && options.triggerNextUrl) {
+    const secret = getWorkerSecret();
+    if (hasMoreToProcess && options.triggerNextUrl && secret) {
       try {
         fetch(options.triggerNextUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-worker-secret": WORKER_SECRET
+            "x-worker-secret": secret
           },
           body: JSON.stringify({ trigger: "self_chain", timestamp: Date.now() })
         }).catch(() => {});
@@ -569,18 +590,21 @@ export async function processTelegramQueue(options = {}) {
  * Route: /api/queue-worker
  */
 export default async function handler(req, res) {
-  // 1. Security Authentication Check
-  const incomingSecret = req.headers["x-worker-secret"] || req.query?.secret;
-  const isInternalSecretValid = incomingSecret === WORKER_SECRET;
-  const isDevMode = !process.env.NODE_ENV || process.env.NODE_ENV === "development";
-
-  // Allow GET for simple health / authorized manual status checks, require secret for POST
-  if (req.method === "POST" && !isInternalSecretValid && !isDevMode) {
-    return res.status(401).json({ error: "Unauthorized worker trigger: invalid secret token" });
-  }
-
   if (req.method !== "GET" && req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // Fail closed when server security configuration is incomplete
+  if (!getWorkerSecret() || !hasServiceAccountConfig()) {
+    return res.status(503).json({
+      error: "Queue worker security credentials are not configured on the server."
+    });
+  }
+
+  // Strict authentication required on ALL methods (GET and POST)
+  const incomingSecret = req.headers?.["x-worker-secret"] || "";
+  if (!isSecretValid(incomingSecret)) {
+    return res.status(401).json({ error: "Unauthorized worker trigger: invalid secret token" });
   }
 
   try {

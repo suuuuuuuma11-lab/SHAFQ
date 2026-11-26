@@ -13,17 +13,15 @@
 
 import { DEFAULT_SHIPPING_RATES } from "../frontend/data/default-shipping-rates.js";
 import { ALGERIA_LOCATIONS } from "../frontend/data/algeria-locations.js";
-import { enqueueTelegramNotification, WORKER_SECRET } from "./queue-worker.js";
+import { adminFirestoreFetch, hasServiceAccountConfig, FIREBASE_PROJECT_ID } from "./firebase-admin.js";
+import { enqueueTelegramNotification, fromFirestoreFields, getWorkerSecret } from "./queue-worker.js";
 
-const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || "clothstore-a9b2c";
-
-// In-memory rate limiter per IP (Expanded to 150/min to accommodate burst testing & shared 4G CGNAT networks)
+// In-memory rate limiter per IP (Expanded to 150/min to accommodate shared 4G CGNAT networks)
 const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const MAX_REQUESTS_PER_WINDOW = 150;
 
 function isRateLimited(req) {
-  if (req?.headers?.["x-simulation-test"] === "hadjaj-test") return false;
   const ip = req?.headers?.["x-forwarded-for"]?.split(",")?.[0]?.trim() || req?.socket?.remoteAddress || "unknown";
   const now = Date.now();
   const record = rateLimitMap.get(ip) || { count: 0, resetTime: now + RATE_LIMIT_WINDOW_MS };
@@ -34,6 +32,11 @@ function isRateLimited(req) {
     record.count += 1;
   }
   rateLimitMap.set(ip, record);
+  if (rateLimitMap.size > 1000) {
+    for (const [k, v] of rateLimitMap.entries()) {
+      if (now > v.resetTime) rateLimitMap.delete(k);
+    }
+  }
   return record.count > MAX_REQUESTS_PER_WINDOW;
 }
 
@@ -93,6 +96,33 @@ async function fetchActiveRates() {
 
   // Fallback to official default rates
   return DEFAULT_SHIPPING_RATES;
+}
+
+/**
+ * Fetches an authoritative product record from Cloud Firestore REST API.
+ * Uses a per-request Map cache when verifying multi-variant orders.
+ */
+async function fetchProductFromFirestore(productId, cache) {
+  if (!productId) return null;
+  if (cache && cache.has(productId)) return cache.get(productId);
+
+  const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/products/${encodeURIComponent(productId)}`;
+  const res = await fetch(url);
+  if (res.status === 404) {
+    if (cache) cache.set(productId, null);
+    return null;
+  }
+  if (!res.ok) {
+    throw new Error(`Firestore product lookup failed (${res.status})`);
+  }
+  const docJson = await res.json();
+  if (!docJson || !docJson.fields) {
+    if (cache) cache.set(productId, null);
+    return null;
+  }
+  const parsed = { id: productId, ...fromFirestoreFields(docJson.fields) };
+  if (cache) cache.set(productId, parsed);
+  return parsed;
 }
 
 /**
@@ -162,10 +192,13 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "رقم الهاتف غير صالح" });
     }
 
-    // 2. Identify Selected Wilaya
+    // 2. Identify Selected Wilaya & Commune
     const wilayaInfo = findWilayaData(wilayaCode || wilaya);
     if (!wilayaInfo) {
       return res.status(400).json({ error: "الولاية المحددة غير صحيحة" });
+    }
+    if (!cleanCommune || cleanCommune.length < 2) {
+      return res.status(400).json({ error: "يرجى تحديد البلدية" });
     }
 
     // 3. Authority: Read Official Rates and Calculate Shipping Price
@@ -179,27 +212,96 @@ export default async function handler(req, res) {
         : (method === "stopDesk" ? 400 : 600)
     );
 
-    // 4. Authority: Verify Items and Recalculate Subtotal
+    // 4. Authority: Fetch Products from Firestore, Validate Availability/Variants/Qty & Recalculate Subtotal
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: "لا توجد منتجات في الطلب" });
     }
+    if (items.length > 20) {
+      return res.status(400).json({ error: "تجاوز الطلب الحد الأقصى للمنتجات (20 منتجاً)" });
+    }
 
+    const productCache = new Map();
     let verifiedSubtotal = 0;
-    const sanitizedItems = items.slice(0, 20).map(it => {
-      const q = Math.max(1, Math.min(50, Number(it.quantity || it.qty || 1)));
-      const p = Math.max(0, Number(it.price || 0));
-      verifiedSubtotal += (p * q);
-      return {
-        productId: sanitizeText(it.productId || "p-default"),
-        name: sanitizeText(it.name || "منتج"),
-        price: p,
-        quantity: q,
-        size: sanitizeText(it.size || ""),
-        color: sanitizeText(it.color || ""),
-        colorHex: sanitizeText(it.colorHex || ""),
-        image: sanitizeText(it.image || '')
-      };
-    });
+    const sanitizedItems = [];
+
+    for (const it of items) {
+      const productId = sanitizeText(it?.productId || "");
+      if (!productId) {
+        return res.status(400).json({ error: "معرّف المنتج مفقود" });
+      }
+
+      const rawQty = Number(it?.quantity ?? it?.qty);
+      if (!Number.isInteger(rawQty) || rawQty < 1 || rawQty > 50) {
+        return res.status(400).json({ error: "كمية المنتج غير صالحة (يجب أن تكون بين 1 و 50)" });
+      }
+
+      const prod = await fetchProductFromFirestore(productId, productCache);
+      if (!prod) {
+        return res.status(400).json({ error: `المنتج غير موجود في قاعدة البيانات (${productId})` });
+      }
+
+      if (String(prod.status || "active").trim().toLowerCase() === "hidden") {
+        return res.status(400).json({ error: `المنتج "${sanitizeText(prod.name)}" غير متوفر حالياً` });
+      }
+
+      const authPrice = Number(prod.price);
+      if (!Number.isFinite(authPrice) || authPrice <= 0) {
+        return res.status(400).json({ error: `سعر المنتج غير صالح في قاعدة البيانات (${productId})` });
+      }
+
+      // Validate size against Firestore product sizes
+      const allowedSizes = Array.isArray(prod.sizes)
+        ? prod.sizes.map(s => String(s || "").trim()).filter(Boolean)
+        : [];
+      const reqSize = sanitizeText(it?.size || "");
+      let matchedSize = "";
+      if (allowedSizes.length > 0) {
+        const foundSize = allowedSizes.find(s => s.toLowerCase() === reqSize.toLowerCase());
+        if (!foundSize) {
+          return res.status(400).json({ error: `المقاس المحدد غير متوفر للمنتج "${sanitizeText(prod.name)}"` });
+        }
+        matchedSize = foundSize;
+      }
+
+      // Validate color if product defines colors
+      const rawColors = Array.isArray(prod.colors) ? prod.colors : [];
+      const allowedColors = rawColors
+        .map((c, idx) => {
+          if (typeof c === "object" && c !== null) {
+            return { name: String(c.name || "").trim(), value: String(c.value || "#1d1a16").trim() };
+          }
+          const fallbackName = Array.isArray(prod.colorNames) && prod.colorNames[idx] ? String(prod.colorNames[idx]).trim() : "";
+          return { name: fallbackName || String(c || "").trim(), value: String(c || "#1d1a16").trim() };
+        })
+        .filter(c => c.name);
+
+      const reqColor = sanitizeText(it?.color || "");
+      let matchedColor = reqColor;
+      let matchedColorHex = sanitizeText(it?.colorHex || "");
+      if (allowedColors.length > 0) {
+        const foundColor = allowedColors.find(c => c.name.toLowerCase() === reqColor.toLowerCase());
+        if (!foundColor) {
+          return res.status(400).json({ error: `اللون المحدد غير متوفر للمنتج "${sanitizeText(prod.name)}"` });
+        }
+        matchedColor = foundColor.name;
+        matchedColorHex = foundColor.value || matchedColorHex;
+      }
+
+      const authName = sanitizeText(prod.name || prod.title || "منتج");
+      const authImage = sanitizeText(prod.mainImage || prod.img || "");
+
+      verifiedSubtotal += authPrice * rawQty;
+      sanitizedItems.push({
+        productId,
+        name: authName,
+        price: authPrice,
+        quantity: rawQty,
+        size: matchedSize,
+        color: matchedColor,
+        colorHex: matchedColorHex,
+        image: authImage
+      });
+    }
 
     const verifiedTotal = verifiedSubtotal + verifiedShippingPrice;
 
@@ -226,11 +328,19 @@ export default async function handler(req, res) {
       createdAt: new Date().toISOString()
     };
 
-    // 6. Write Order to Cloud Firestore (Authoritative Source of Truth)
+    // Fail closed if Server Firebase Service Account is not configured
+    if (!hasServiceAccountConfig()) {
+      return res.status(503).json({
+        success: false,
+        error: "خدمة الطلبات غير مهيأة حالياً على الخادم (Service Account)."
+      });
+    }
+
+    // 6. Write Order to Cloud Firestore via Service Account (Authoritative Source of Truth)
     let createdOrderId = null;
     try {
       const fsUrl = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/orders`;
-      const fsRes = await fetch(fsUrl, {
+      const fsRes = await adminFirestoreFetch(fsUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fields: toFirestoreFields(orderPayload) })
@@ -260,6 +370,7 @@ export default async function handler(req, res) {
     }
 
     // 7. Enqueue Telegram Notification Reliably & Trigger Asynchronous Worker
+    let telegramEnqueued = false;
     try {
       const methodDesc = method === "home" ? "توصيل للمنزل" : "استلام من المكتب";
       const itemsText = sanitizedItems.map(it => {
@@ -272,7 +383,7 @@ export default async function handler(req, res) {
       }).join("\n");
 
       const msg = [
-        "🛍️ طلب جديد من متجر حجاج",
+        "🛍️ طلب جديد من متجر شفق (SHAFQ)",
         "==========================",
         `🔖 رقم الطلب: #${createdOrderId.slice(-6).toUpperCase()}`,
         "",
@@ -311,25 +422,29 @@ export default async function handler(req, res) {
         createdAt: new Date().toISOString()
       };
 
-      await enqueueTelegramNotification(queuePayload);
+      const queueRes = await enqueueTelegramNotification(queuePayload);
+      telegramEnqueued = Boolean(queueRes && queueRes.success);
 
       // Trigger queue worker asynchronously without delaying customer confirmation
-      const host = req.headers?.host || "localhost";
-      const proto = req.headers?.["x-forwarded-proto"] || (host.includes("localhost") ? "http" : "https");
-      const triggerNextUrl = `${proto}://${host}/api/queue-worker`;
+      const workerSecret = getWorkerSecret();
+      if (workerSecret) {
+        const host = req.headers?.host || "localhost";
+        const proto = req.headers?.["x-forwarded-proto"] || (host.includes("localhost") ? "http" : "https");
+        const triggerNextUrl = `${proto}://${host}/api/queue-worker`;
 
-      const abortCtrl = new AbortController();
-      const abortTimer = setTimeout(() => abortCtrl.abort(), 250); // 250ms connection handshake window
+        const abortCtrl = new AbortController();
+        const abortTimer = setTimeout(() => abortCtrl.abort(), 250);
 
-      fetch(triggerNextUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-worker-secret": WORKER_SECRET
-        },
-        body: JSON.stringify({ trigger: "new_order", orderId: createdOrderId, timestamp: Date.now() }),
-        signal: abortCtrl.signal
-      }).catch(() => {}).finally(() => clearTimeout(abortTimer));
+        fetch(triggerNextUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-worker-secret": workerSecret
+          },
+          body: JSON.stringify({ trigger: "new_order", orderId: createdOrderId, timestamp: Date.now() }),
+          signal: abortCtrl.signal
+        }).catch(() => {}).finally(() => clearTimeout(abortTimer));
+      }
 
     } catch (tgErr) {
       console.warn("[TELEGRAM ENQUEUE WARNING]:", tgErr.message);
@@ -340,6 +455,7 @@ export default async function handler(req, res) {
       success: true,
       orderId: createdOrderId,
       order: orderPayload,
+      telegramSent: telegramEnqueued,
       status: "confirmed"
     });
 

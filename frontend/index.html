@@ -1,420 +1,183 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!doctype html>
+<html lang="en" dir="ltr">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>حجاج | قمصان</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/frontend/css/store.css">
-  <link rel="stylesheet" href="/frontend/css/motion-system.css">
-  <link rel="icon"
-    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'></text></svg>">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SHAFQ — Before the lights fade.</title>
+  <meta name="description" content="SHAFQ — More than what you wear. Free delivery across Algeria.">
+  <meta name="theme-color" content="#14120f">
+  <script>
+    (function () {
+      try {
+        var p = new URLSearchParams(location.search);
+        var v = (p.get("view") || "").trim().toLowerCase();
+        if (p.get("cat") || p.get("category") || p.get("q") || p.get("search") || v === "sale" || v === "discounts" || v === "fav" || v === "favorites") {
+          location.replace("/shop" + location.search);
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preload" href="assets/images/hero-1.jpg" as="image">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body>
+<body class="page-home">
 
-  <!-- Header -->
-  <header>
-    <div class="header-inner">
-      <div class="h-icons">
-        <button aria-label="الحقيبة" id="cartBtn" style="position:relative"><span class="cart-badge" id="cartBadge"
-            style="display:none">0</span>
-          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-            <path d="M6 7h12l1 13H5L6 7z" />
-            <path d="M9 7a3 3 0 0 1 6 0" />
-          </svg>
-        </button>
-        <button aria-label="بحث" id="searchBtn">
-          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-            <circle cx="11" cy="11" r="7" />
-            <path d="M21 21l-4.3-4.3" />
-          </svg>
-        </button>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-truck" viewBox="0 0 24 16">
+        <path d="M1.2 1.6h12.2v10.3H1.2z" />
+        <path d="M13.4 4.6h4.3l3.9 3.8v3.5h-8.2" />
+        <circle cx="5.6" cy="12.6" r="2.1" class="knock" />
+        <circle cx="17" cy="12.6" r="2.1" class="knock" />
+      </symbol>
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <circle cx="10.5" cy="10.5" r="6.6" />
+        <path d="M15.4 15.4 21 21" />
+      </symbol>
+
+      <symbol id="i-bag" viewBox="0 0 24 24">
+        <path d="M4.6 8.2h14.8l.4 12.3H4.2z" />
+        <path d="M8.6 8.2V6.4a3.4 3.4 0 0 1 6.8 0v1.8" />
+      </symbol>
+      <symbol id="i-arrow" viewBox="0 0 28 16">
+        <path d="M1 8h25M19.5 1.5 26 8l-6.5 6.5" />
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24">
+        <path d="M5 5l14 14M19 5 5 19" />
+      </symbol>
+      <symbol id="i-menu" viewBox="0 0 24 24">
+        <path d="M3.5 7.5h17M3.5 12h17M3.5 16.5h17" />
+      </symbol>
+    </defs>
+  </svg>
+
+  <main class="hero" id="home">
+    <div class="hero__bg" aria-hidden="true">
+      <img src="assets/images/hero-1.jpg" alt="" class="hero__img" decoding="async">
+    </div>
+    <div class="hero__shade" aria-hidden="true"></div>
+
+    <!-- Announcement / utility bar -->
+    <div class="topbar">
+      <p class="topbar__note">
+        <svg class="ico ico--truck" aria-hidden="true">
+          <use href="#i-truck" />
+        </svg>
+        <span>Free delivery across Algeria</span>
+      </p>
+      <div class="topbar__tools">
+        <button type="button" class="tool" id="btn-search" aria-label="Search" aria-expanded="false"><svg class="ico">
+            <use href="#i-search" />
+          </svg></button>
+
+        <button type="button" class="tool" id="btn-cart" aria-label="Bag"><svg class="ico">
+            <use href="#i-bag" />
+          </svg><span class="tool__count" id="cart-count" hidden>0</span></button>
       </div>
+    </div>
 
-      <nav class="main-nav" id="mainNav" aria-label="أقسام المتجر">
-        <!-- Rendered dynamically from Firestore categories only -->
+    <!-- Brand + navigation -->
+    <header class="header">
+      <a class="brand" href="/" aria-label="SHAFQ — شفق"><img src="assets/images/logo-shafq.png"
+          alt="شفق — Before the lights fade" width="570" height="256"></a>
+      <button type="button" class="burger" id="btn-menu" aria-label="Menu" aria-expanded="false" aria-controls="nav"><svg class="ico">
+          <use href="#i-menu" />
+        </svg></button>
+      <nav class="nav" id="nav" aria-label="Main">
+        <a href="/" class="nav__link is-active" aria-current="page">Home</a>
+        <a href="/shop" class="nav__link">Shop</a>
+        <a href="/about" class="nav__link">About</a>
+        <a href="/contact" class="nav__link">Contact</a>
       </nav>
+    </header>
 
-      <a href="/" class="logo">
-        <div class="mark">HADJAJ</div>
-        <div class="sub">حجاج • SHIRTS</div>
+    <!-- Headline block -->
+    <div class="hero__content">
+      <h1 class="hero__title"><span>Before</span><span>the lights fade.</span>
+      </h1>
+      <p class="hero__sub">More than what you wear.</p>
+      <a class="cta" href="/shop">
+        <span>Discover the Collection</span>
+        <svg class="ico ico--arrow" aria-hidden="true">
+          <use href="#i-arrow" />
+        </svg>
       </a>
     </div>
 
-    <!-- Mobile categories scroll bar -->
-    <div class="mobile-cat-bar" id="mobileCatBar" aria-label="أقسام المتجر للجوال">
-      <div class="mobile-cat-scroller" id="mobileCatScroller">
-        <!-- Rendered dynamically from Firestore categories only -->
-      </div>
+    <!-- Sun emblem -->
+    <div class="emblem" aria-hidden="true">
+      <svg viewBox="190 100 470 360" class="emblem__sun" id="emblem-sun"></svg>
+      <span class="emblem__word">SHAFQ</span>
     </div>
-  </header>
 
-  <!-- Hero -->
-  <section class="hero is-loading">
-    <div class="hero-skel" id="heroBannerSkel" aria-hidden="true"></div>
-    <picture id="heroBannerPic">
-      <source media="(max-width: 768px)" srcset="" id="heroBannerMobile">
-      <img src="" alt="محل حجاج" id="heroBannerImg" class="hero-img-loading">
-    </picture>
-    <script>
-      (function () {
-        try {
-          var params = new URLSearchParams(window.location.search);
-          var catId = params.get('cat') || params.get('category');
-          var viewParam = params.get('view');
-          var hero = document.querySelector('.hero');
-          if (viewParam === 'sale' || viewParam === 'fav') {
-            if (hero) hero.style.display = 'none';
-            return;
-          }
-          var cachedCats = JSON.parse(localStorage.getItem('clothstore_categories_cache') || 'null');
-          var b = null;
-          if (catId && Array.isArray(cachedCats)) {
-            var found = cachedCats.find(function (c) { return c.id === catId || (c.name && c.name.trim().toLowerCase() === catId.trim().toLowerCase()); });
-            if (found && found.banner && found.banner.img) {
-              b = { desktop: found.banner.img, mobile: found.banner.mobileImg || found.banner.img };
-            }
-          }
-          if (!b && (!viewParam || viewParam === 'all')) {
-            if (Array.isArray(cachedCats)) {
-              var allCat = cachedCats.find(function (c) { return c.id === 'system_all' || c.isSystem; });
-              if (allCat && allCat.banner && allCat.banner.img) {
-                b = { desktop: allCat.banner.img, mobile: allCat.banner.mobileImg || allCat.banner.img };
-              }
-            }
-            if (!b) {
-              b = JSON.parse(localStorage.getItem('clothstore_active_banner') || 'null');
-              if (!b && Array.isArray(cachedCats)) {
-                var firstWithBanner = cachedCats.find(function (c) { return c.banner && c.banner.img && c.id !== 'system_all' && !c.isSystem; });
-                if (firstWithBanner) {
-                  b = { desktop: firstWithBanner.banner.img, mobile: firstWithBanner.banner.mobileImg || firstWithBanner.banner.img };
-                }
-              }
-            }
-          }
-          var m = document.getElementById('heroBannerMobile');
-          var img = document.getElementById('heroBannerImg');
-          if (b && b.desktop && img) {
-            if (m && b.mobile) m.srcset = b.mobile;
-            img.src = b.desktop;
-            img.classList.remove('hero-img-loading');
-            var hero = document.querySelector('.hero');
-            if (hero) hero.classList.remove('is-loading');
-          }
-        } catch (e) { }
-      })();
-    </script>
-    <div class="hero-overlay">
-      <div class="hero-content">
-        <div class="hero-brand">HADJAJ • حجاج</div>
-        <h1 class="hero-title" id="heroTitle">محل حجاج</h1>
-        <p class="hero-sub" id="heroSub">أناقة تُرتدى بثقة</p>
-        <p class="hero-desc" id="heroDesc">تشكيلة حصرية من أرقى التصاميم الرجالية بتفاصيل دقيقة وجودة استثنائية</p>
-        <button class="btn-gold" id="heroShopBtn">
-          تسوّق الآن
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
-        </button>
+  </main>
+
+  <!-- Newsletter Banner -->
+  <section class="newsletter" id="newsletter" aria-label="Newsletter">
+    <div class="newsletter__bg" aria-hidden="true">
+      <img src="assets/images/newsletter-bg.jpg" alt="" class="newsletter__img" decoding="async">
+    </div>
+    <div class="newsletter__shade" aria-hidden="true"></div>
+    <div class="newsletter__inner">
+      <div class="newsletter__visual" aria-hidden="true"></div>
+      <div class="newsletter__brand">
+        <img src="assets/images/logo-shafq.png" alt="شفق — Before the lights fade" class="newsletter__logo" width="570" height="256">
+      </div>
+      <div class="newsletter__content">
+        <h2 class="newsletter__title">Stay in the loop</h2>
+        <p class="newsletter__desc">Be the first to know about new collections and exclusive drops.</p>
+        <form class="newsletter__form" id="newsletter-form">
+          <input type="email" class="newsletter__input" placeholder="Your email address" required autocomplete="email" aria-label="Email address">
+          <button type="submit" class="newsletter__btn" aria-label="Subscribe">
+            <svg class="ico ico--arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
+          </button>
+        </form>
+        <p class="newsletter__status" id="newsletter-status" aria-live="polite" hidden></p>
       </div>
     </div>
   </section>
 
-  <!-- Page head -->
-  <div class="section">
-    <div class="page-head">
-      <h1 id="pageHeading">جميع المنتجات</h1>
-      <p id="pageDesc">مجموعة مختارة من أرقى التصاميم الرجالية الفاخرة، بتصاميم كلاسيكية وعصرية تناسب كل إطلالاتك.</p>
-    </div>
-  </div>
-
-  <!-- Toolbar -->
-  <div class="toolbar">
-    <span class="count" id="count">24 منتج</span>
-    <div class="tools">
-      <div class="dropdown">
-        <button class="tool-btn" id="filterBtn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 6h16M7 12h10M10 18h4" />
-          </svg>
-          تصفية
-        </button>
-        <div class="menu" id="filterMenu">
-          <button data-f="all" class="active">الكل</button>
-          <button data-f="lt300">أقل من 300 دج</button>
-          <button data-f="mid">من 300 إلى 350 دج</button>
-          <button data-f="gt350">أكثر من 350 دج</button>
-          <button data-f="sale">الخصومات فقط</button>
-        </div>
-      </div>
-      <div class="dropdown">
-        <button class="tool-btn" id="sortBtn">
-          ترتيب حسب
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </button>
-        <div class="menu" id="sortMenu">
-          <button data-s="default" class="active">الافتراضي</button>
-          <button data-s="asc">السعر: من الأقل إلى الأعلى</button>
-          <button data-s="desc">السعر: من الأعلى إلى الأقل</button>
-          <button data-s="name">الاسم: أ إلى ي</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Products grid -->
-  <div class="grid" id="grid"></div>
-
-  <!-- Footer -->
-  <footer>
-    <div class="footer-inner">
-      <div class="socials">
-        <span>تابعنا:</span>
-        <a href="https://wa.me/213770104040" target="_blank" rel="noopener noreferrer">واتساب</a>
-        <a href="https://www.instagram.com/hdjaj_shop" target="_blank" rel="noopener noreferrer">إنستغرام</a>
-        <a href="https://www.facebook.com/people/%D8%AD%D8%AC%D8%A7%D8%AC-%D9%84%D9%84%D8%A3%D9%82%D9%85%D8%B5%D8%A9-%D9%88%D8%A7%D9%84%D8%B9%D8%B7%D9%88%D8%B1/100051401982410/"
-          target="_blank" rel="noopener noreferrer">فيسبوك</a>
-        <a href="https://www.tiktok.com/@hadjadj_shop" target="_blank" rel="noopener noreferrer">تيك توك</a>
-      </div>
-    </div>
-  </footer>
-
   <!-- Search overlay -->
-  <div class="search-overlay" id="searchOverlay">
-    <div class="search-panel">
-      <div class="search-head">
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#8a8277" stroke-width="1.8">
-          <circle cx="11" cy="11" r="7" />
-          <path d="M21 21l-4.3-4.3" />
-        </svg>
-        <input type="text" id="searchInput" placeholder="ابحث عن قميص...">
-        <button id="searchClose" aria-label="إغلاق"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2">
-            <path d="M6 6l12 12M18 6L6 18" />
-          </svg></button>
-      </div>
-      <div class="search-results" id="searchResults"></div>
-    </div>
+  <div class="sheet sheet--search" id="sheet-search" hidden>
+    <form class="search" id="search-form" role="search">
+      <svg class="ico" aria-hidden="true">
+        <use href="#i-search" />
+      </svg>
+      <input type="search" id="search-input" placeholder="Search the collection" autocomplete="off" aria-label="Search">
+      <button type="button" class="tool" data-close aria-label="Close"><svg class="ico">
+          <use href="#i-close" />
+        </svg></button>
+    </form>
+    <p class="search__result" id="search-result" aria-live="polite"></p>
   </div>
 
-  <!-- Cart drawer -->
-  <div class="backdrop" id="backdrop"></div>
-  <aside class="drawer" id="cartDrawer" aria-label="حقيبة التسوق">
-    <div class="drawer-head">
-      <h3>حقيبة التسوق</h3>
-      <button id="cartClose" aria-label="إغلاق"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2">
-          <path d="M6 6l12 12M18 6L6 18" />
+  <!-- Bag drawer -->
+  <aside class="drawer" id="drawer-cart" aria-hidden="true" aria-label="Bag" hidden>
+    <div class="drawer__head">
+      <h2>Bag</h2>
+      <button type="button" class="tool" data-close aria-label="Close"><svg class="ico">
+          <use href="#i-close" />
         </svg></button>
     </div>
-    <div class="drawer-items" id="cartItems"></div>
-    <div class="drawer-foot" id="cartFoot">
-      <div class="drawer-total"><span>المجموع</span><b id="cartTotal">0 دج</b></div>
-      <button class="btn-order" id="checkoutBtn">إتمام الطلب</button>
+    <div class="drawer__body" id="drawer-cart-body">
+      <p class="drawer__empty">Your bag is empty.</p>
+    </div>
+    <div class="drawer__foot" id="drawer-cart-foot" hidden>
+      <div class="drawer__total">
+        <span>Subtotal</span>
+        <strong id="drawer-cart-total">0 DA</strong>
+      </div>
+      <button type="button" class="drawer__checkout" id="drawer-checkout-btn">Proceed to Checkout</button>
     </div>
   </aside>
+  <div class="scrim" id="scrim" hidden></div>
 
-  <div class="toast" id="toast"></div>
-
-  <!-- Checkout Modal -->
-  <div class="checkout-modal-backdrop" id="checkoutBackdrop"></div>
-  <div class="checkout-modal" id="checkoutModal" role="dialog" aria-labelledby="checkoutModalTitle">
-    <div class="cm-head">
-      <h3 id="checkoutModalTitle">إتمام الطلب — الدفع عند الاستلام</h3>
-      <button type="button" class="cm-close" id="checkoutClose" aria-label="إغلاق">&times;</button>
-    </div>
-    <div class="cm-body">
-      <!-- Order items review summary -->
-      <div class="cm-review-box">
-        <div class="cm-review-title">مراجعة المنتجات في السلة (<span id="cmItemCount">0</span>):</div>
-        <div class="cm-items-list" id="cmItemsList"></div>
-        <div class="cm-summary-row">
-          <span>المجموع الكلي:</span>
-          <b class="cm-total" id="cmTotalAmount">0 دج</b>
-        </div>
-        <div class="cm-note">تدفع نقداً عند استلام طلبك بعد المعاينة. التوصيل متوفر لجميع الولايات.</div>
-      </div>
-
-      <!-- COD Customer Details Form -->
-      <form id="checkoutForm" novalidate>
-        <div class="field" id="cmFName">
-          <label>الاسم الكامل <em>*</em></label>
-          <input type="text" id="cmName" placeholder="مثال: محمد بن علي" autocomplete="name" required>
-          <div class="err">يرجى إدخال الاسم الكامل (3 أحرف على الأقل)</div>
-        </div>
-
-        <div class="field" id="cmFPhone">
-          <label>رقم الهاتف <em>*</em></label>
-          <input type="tel" id="cmPhone" placeholder="مثال: 0551234567" autocomplete="tel" maxlength="10"
-            inputmode="numeric" required>
-          <div class="err">يرجى إدخال رقم هاتف جزائري صحيح (يبدأ بـ 05 / 06 / 07)</div>
-        </div>
-
-        <div class="two-col">
-          <div class="field" id="cmFWilaya">
-            <label>الولاية <em>*</em></label>
-            <select id="cmWilaya" required>
-              <option value="">— اختر الولاية —</option>
-            </select>
-            <div class="err">يرجى اختيار الولاية</div>
-          </div>
-          <div class="field" id="cmFCommune">
-            <label>البلدية <em>*</em></label>
-            <select id="cmCommune" disabled required>
-              <option value="">— اختر الولاية أولاً —</option>
-            </select>
-            <div class="err">يرجى اختيار البلدية</div>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>العنوان (اختياري)</label>
-          <input type="text" id="cmAddress" placeholder="الحي، الشارع، رقم المنزل...">
-        </div>
-
-        <!-- Delivery Method Selection -->
-        <div class="delivery-group" id="cmFDeliveryMethod">
-          <label class="delivery-group-label">طريقة التوصيل <em>*</em></label>
-          <div class="delivery-options-grid">
-            <label class="delivery-option-card active" id="cmCardHome">
-              <input type="radio" name="cmDeliveryMethod" value="home" checked>
-              <div class="doc-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                  <polyline points="9 22 9 12 15 12 15 22" />
-                </svg>
-              </div>
-              <div class="doc-info">
-                <div class="doc-name">توصيل للمنزل</div>
-              </div>
-              <div class="doc-price" id="cmHomePriceDisplay">—</div>
-            </label>
-
-            <label class="delivery-option-card" id="cmCardStopDesk">
-              <input type="radio" name="cmDeliveryMethod" value="stopDesk">
-              <div class="doc-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-                </svg>
-              </div>
-              <div class="doc-info">
-                <div class="doc-name">استلام من المكتب</div>
-              </div>
-              <div class="doc-price" id="cmStopDeskPriceDisplay">—</div>
-            </label>
-          </div>
-        </div>
-
-        <!-- Live Price Breakdown for Cart Checkout Modal -->
-        <div class="order-price-summary" id="cmPriceSummary">
-          <div class="ops-row">
-            <span>المنتجات:</span>
-            <span id="cmOpsSubtotal">0 دج</span>
-          </div>
-          <div class="ops-row">
-            <span>التوصيل (<span id="cmOpsMethodLabel">توصيل للمنزل</span>):</span>
-            <span id="cmOpsShipping">0 دج</span>
-          </div>
-          <div class="ops-row total">
-            <span>المجموع الكلي:</span>
-            <strong id="cmOpsTotal">0 دج</strong>
-          </div>
-        </div>
-
-        <button type="submit" class="btn-order" id="cmSubmitBtn">تأكيد الطلب — الدفع عند الاستلام</button>
-        <div class="secure">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="4" y="10" width="16" height="10" rx="2" />
-            <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-          </svg>
-          معلوماتك مشفرة وآمنة — تدفع فقط عند استلام طلبك
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Order Success Modal -->
-  <div class="success-modal" id="orderSuccessModal">
-    <div class="sm-card">
-      <div class="check">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
-          <path d="M4 12.5l5 5L20 6.5" />
-        </svg>
-      </div>
-      <h3>تم استلام طلبك بنجاح!</h3>
-      <p>شكراً لطلبك من متجر حجاج! سنتصل بك هاتفياً لتأكيد شحن طلبك.<br>الدفع نقداً فقط عند استلام المنتجات.</p>
-      <div class="summary" id="smOrderSummary"></div>
-      <button type="button" class="btn-order" id="smContinueBtn" style="width:100%;margin-top:16px">متابعة
-        التسوق</button>
-    </div>
-  </div>
-
-  <!-- Quick Options Modal (Size & Color Selector for Card 🛒) -->
-  <div class="qo-backdrop" id="qoBackdrop"></div>
-  <div class="qo-modal" id="qoModal" role="dialog" aria-labelledby="qoTitle">
-    <div class="qo-head">
-      <div class="qo-prod-info">
-        <img id="qoImg" src="" alt="" style="background:var(--bg)">
-        <div>
-          <h4 id="qoTitle">اسم المنتج</h4>
-          <div class="qo-price"><span id="qoPrice">0</span> <span>دج</span></div>
-        </div>
-      </div>
-      <button type="button" class="qo-close" id="qoClose" aria-label="إغلاق">&times;</button>
-    </div>
-
-    <div class="qo-body">
-      <!-- Sizes Section -->
-      <div class="qo-section" id="qoSizesSection">
-        <label class="qo-label">المقاس: <span class="qo-selected-text" id="qoSelectedSizeText"></span> <em
-            class="req">*</em></label>
-        <div class="qo-sizes" id="qoSizesList"></div>
-        <div class="qo-err" id="qoSizeErr">يرجى اختيار المقاس أولاً</div>
-      </div>
-
-      <!-- Colors Section -->
-      <div class="qo-section" id="qoColorsSection">
-        <label class="qo-label">اللون: <span class="qo-selected-text" id="qoSelectedColorText"></span> <em
-            class="req">*</em></label>
-        <div class="qo-colors" id="qoColorsList"></div>
-        <div class="qo-err" id="qoColorErr">يرجى اختيار اللون أولاً</div>
-      </div>
-
-      <!-- Quantity Section -->
-      <div class="qo-qty-row">
-        <label class="qo-label" style="margin-bottom:0">الكمية:</label>
-        <div class="ci-qty" style="direction:ltr">
-          <button type="button" id="qoQtyPlus" aria-label="زيادة">+</button>
-          <span id="qoQtyVal">1</span>
-          <button type="button" id="qoQtyMinus" aria-label="إنقاص">−</button>
-        </div>
-        <div class="qo-subtotal">المجموع: <b id="qoSubtotalVal">0 دج</b></div>
-      </div>
-
-      <!-- Error Banner -->
-      <div class="qo-banner-err" id="qoBannerErr">يرجى اختيار المقاس واللون أولاً</div>
-
-      <!-- Submit Button -->
-      <button type="button" class="btn-order" id="qoSubmitBtn">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-          style="margin-left:6px;vertical-align:middle">
-          <path d="M6 7h12l1 13H5L6 7z" />
-          <path d="M9 7a3 3 0 0 1 6 0" />
-        </svg>
-        <span>أضف إلى السلة</span>
-      </button>
-    </div>
-  </div>
-
-  <script type="module" src="/frontend/js/store.js"></script>
-
+  <script src="js/main.js"></script>
+  <script src="js/transitions.js"></script>
+  <script type="module" src="js/search.js"></script>
+  <script type="module" src="js/cart.js"></script>
 </body>
 
 </html>

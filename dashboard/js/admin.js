@@ -1,5 +1,5 @@
 /* ==========================================================================
-   HADJAJ SHIRTS — Admin Dashboard Logic (Cloud Firestore Source of Truth)
+   SHAFQ — Admin Dashboard Logic (Cloud Firestore Source of Truth)
    Firebase Modular SDK v10 (Firestore + Auth + Cloudinary)
    Real-Time Synchronization with onSnapshot & Automatic Seeding
    ========================================================================== */
@@ -708,7 +708,7 @@ const DEFAULT_SYSTEM_SIZES = ["S", "M", "L", "XL", "XXL"];
 
 function getStoredAvailableSizes() {
   try {
-    const raw = localStorage.getItem("hadjaj_admin_available_sizes");
+    const raw = localStorage.getItem("shafq_admin_available_sizes") || localStorage.getItem("hadjaj_admin_available_sizes");
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -720,7 +720,7 @@ function getStoredAvailableSizes() {
 async function saveAvailableSizes(sizes, notifyCloud = true) {
   state.availableSizes = sizes;
   try {
-    localStorage.setItem("hadjaj_admin_available_sizes", JSON.stringify(sizes));
+    localStorage.setItem("shafq_admin_available_sizes", JSON.stringify(sizes));
   } catch (e) {}
 
   if (notifyCloud) {
@@ -2089,7 +2089,7 @@ function renderCatsGrid() {
         <div class="cat-banner" ${style}>
           ${bg}
           <div class="cb-txt">
-            <div class="cb-k">HADJAJ COLLECTION</div>
+            <div class="cb-k">SHAFQ COLLECTION</div>
             <div class="cb-n">${esc(c.name)}</div>
           </div>
         </div>
@@ -2308,6 +2308,13 @@ function renderOrdersTable() {
         </td>
         <td><span class="order-date-time">${dateStr}</span></td>
         <td>
+          <select class="order-status-select" aria-label="حالة الطلب" onchange="updateOrderStatus('${esc(o.id)}', this.value)">
+            ${["جديد", "قيد المعالجة", "مؤكد", "تم التوصيل", "ملغي"]
+              .map((st) => `<option value="${st}" ${(o.status || "جديد") === st ? "selected" : ""}>${st}</option>`)
+              .join("")}
+          </select>
+        </td>
+        <td>
           <div class="row-actions">
             <button class="icon-btn print" title="بطاقة الطلب A5 — طباعة / PDF" onclick="printOrderCard('${o.id}')">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
@@ -2322,6 +2329,21 @@ function renderOrdersTable() {
       </tr>`;
     })
     .join("");
+}
+
+async function updateOrderStatus(orderId, newStatus) {
+  const allowed = ["جديد", "قيد المعالجة", "مؤكد", "تم التوصيل", "ملغي"];
+  if (!orderId || !allowed.includes(newStatus)) return;
+  try {
+    await updateDoc(doc(db, "orders", orderId), {
+      status: newStatus,
+      updatedAt: new Date().toISOString()
+    });
+    toast(`تم تحديث حالة الطلب إلى "${newStatus}" ✓`);
+  } catch (err) {
+    console.error("Update order status error:", err);
+    toast("تعذر تحديث حالة الطلب", false);
+  }
 }
 
 function askDeleteOrder(orderId) {
@@ -2399,7 +2421,7 @@ function initShippingSettings() {
         }
         if (d && Array.isArray(d.availableSizes) && d.availableSizes.length) {
           state.availableSizes = Array.from(new Set([...d.availableSizes]));
-          try { localStorage.setItem("hadjaj_admin_available_sizes", JSON.stringify(state.availableSizes)); } catch(e){}
+          try { localStorage.setItem("shafq_admin_available_sizes", JSON.stringify(state.availableSizes)); } catch(e){}
         }
       }
     },
@@ -2789,7 +2811,7 @@ function buildOrderCardHTML(o) {
   return `
   <div class="a5-card" dir="rtl">
     <div class="oc-head">
-      <div class="oc-brand"><div class="oc-logo">حجاج</div><div class="oc-brand-sub">HADJAJ&nbsp;SHIRTS</div></div>
+      <div class="oc-brand"><div class="oc-logo">شفق</div><div class="oc-brand-sub">SHAFQ</div></div>
       <div class="oc-titlebox"><div class="oc-title">بطاقة الطلب</div><div class="oc-order-no">#${shortId}</div></div>
       <div class="oc-tracking">
         <div class="oc-tr-header">
@@ -2839,7 +2861,7 @@ function buildOrderCardHTML(o) {
     </div>
     <div class="oc-total"><span>الإجمالي — يُدفع عند الاستلام (COD)</span><b>${orderTotal.toLocaleString("ar-DZ")} دج</b></div>
     <div class="oc-foot">
-      <div class="oc-thanks">شكرًا لثقتكم بحجاج ✦ نتمنى لكم إطلالة تليق بكم</div>
+      <div class="oc-thanks">شكرًا لثقتكم بشفق ✦ نتمنى لكم إطلالة تليق بكم</div>
     </div>
   </div>`;
 }
@@ -2956,7 +2978,7 @@ function downloadExport() {
   const b = new Blob([codeBox.textContent], { type: "text/javascript" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(b);
-  a.download = "hadjaj-cloud-data.js";
+  a.download = "shafq-cloud-data.js";
   a.click();
   toast("تم تنزيل الملف ✓");
 }
@@ -3499,6 +3521,7 @@ window.renderProductsTable = renderProductsTable;
 window.renderOrdersTable = renderOrdersTable;
 window.handleOrderTimeFilterChange = handleOrderTimeFilterChange;
 window.askDeleteOrder = askDeleteOrder;
+window.updateOrderStatus = updateOrderStatus;
 window.refreshOrders = refreshOrders;
 window.printOrderCard = printOrderCard;
 window.printAllFiltered = printAllFiltered;
@@ -3515,20 +3538,23 @@ window.updateShippingRate = updateShippingRate;
 window.confirmBox = confirmBox;
 window.saveShippingSettings = saveShippingSettings;
 
-// --- Admin Authorization Guard ---
+// --- Strict Admin Authorization Guard (Custom Claims OR Provisioned /admins/{uid}) ---
 async function verifyIsAdmin(user) {
   if (!user) return false;
   try {
-    const adminSnap = await getDoc(doc(db, "admins", user.uid));
-    if (!adminSnap.exists()) {
-      await setDoc(doc(db, "admins", user.uid), {
-        email: user.email,
-        role: "admin",
-        createdAt: new Date().toISOString()
-      }, { merge: true });
+    const tokenResult = await user.getIdTokenResult();
+    if (tokenResult?.claims?.admin === true || tokenResult?.claims?.role === "admin") {
+      return true;
     }
-  } catch (_) { }
-  return true;
+  } catch (_) {}
+  try {
+    const adminSnap = await getDoc(doc(db, "admins", user.uid));
+    if (adminSnap.exists()) {
+      const data = adminSnap.data() || {};
+      return data.role === "admin" && data.active !== false;
+    }
+  } catch (_) {}
+  return false;
 }
 
 // --- Firebase Auth Observer with Role Verification ---
@@ -3542,24 +3568,10 @@ let isDashboardInitialized = false;
 
 onAuthStateChanged(auth, async (user) => {
   const adminPill = document.querySelector(".admin-pill");
-  const isLocalTest = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") && window.location.search.includes("test=true");
 
-  if (!user && !isLocalTest) {
+  if (!user) {
     // Unauthenticated user -> kick out to login page
     window.location.replace("/login");
-    return;
-  }
-
-  if (!user && isLocalTest) {
-    if (!isDashboardInitialized) {
-      isDashboardInitialized = true;
-      renderSizesChips([]);
-      initEvents();
-      renderColorsPlaceholder();
-      updateClearColorsBtn();
-      updateBannerPreview();
-      initRealtimeFirestore();
-    }
     return;
   }
 

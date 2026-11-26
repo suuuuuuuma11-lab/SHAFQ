@@ -1,395 +1,331 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!doctype html>
+<html lang="en" dir="ltr">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>حجاج | تفاصيل المنتج</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/frontend/css/product.css">
-<link rel="stylesheet" href="/frontend/css/motion-system.css">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👔</text></svg>">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Product — SHAFQ</title>
+  <meta name="description" content="SHAFQ — Editorial menswear details, sizing, and Cash on Delivery across Algeria.">
+  <meta name="theme-color" content="#14120f">
+  <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
 
-<header>
-  <div class="header-inner">
-    <div class="h-icons">
-      <button aria-label="الحقيبة" id="cartBtn" style="position:relative"><span class="cart-badge" id="cartBadge" style="display:none">0</span><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 7h12l1 13H5L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg></button>
-      <button aria-label="بحث" id="searchBtn"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
+<body class="page-inner page-product">
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-truck" viewBox="0 0 24 16">
+        <path d="M1.2 1.6h12.2v10.3H1.2z" />
+        <path d="M13.4 4.6h4.3l3.9 3.8v3.5h-8.2" />
+        <circle cx="5.6" cy="12.6" r="2.1" class="knock" />
+        <circle cx="17" cy="12.6" r="2.1" class="knock" />
+      </symbol>
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <circle cx="10.5" cy="10.5" r="6.6" />
+        <path d="M15.4 15.4 21 21" />
+      </symbol>
+      <symbol id="i-bag" viewBox="0 0 24 24">
+        <path d="M4.6 8.2h14.8l.4 12.3H4.2z" />
+        <path d="M8.6 8.2V6.4a3.4 3.4 0 0 1 6.8 0v1.8" />
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24">
+        <path d="M5 5l14 14M19 5 5 19" />
+      </symbol>
+      <symbol id="i-menu" viewBox="0 0 24 24">
+        <path d="M3.5 7.5h17M3.5 12h17M3.5 16.5h17" />
+      </symbol>
+      <symbol id="i-heart" viewBox="0 0 24 24">
+        <path d="M12 20.4s-7.4-4.7-9.2-9.2C1.7 8.4 3.4 5 6.8 5c2 0 3.7 1.1 5.2 2.8C13.5 6.1 15.2 5 17.2 5c3.4 0 5.1 3.4 4 6.2-1.8 4.5-9.2 9.2-9.2 9.2z" />
+      </symbol>
+      <symbol id="i-chev-right" viewBox="0 0 16 16">
+        <path d="M5.5 3.2 10.5 8l-5 4.8" />
+      </symbol>
+      <symbol id="i-arrow" viewBox="0 0 28 16">
+        <path d="M1 8h25M19.5 1.5 26 8l-6.5 6.5" />
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- Announcement / utility bar -->
+  <div class="topbar">
+    <p class="topbar__note">
+      <svg class="ico ico--truck" aria-hidden="true">
+        <use href="#i-truck" />
+      </svg>
+      <span>Free delivery across Algeria</span>
+    </p>
+    <div class="topbar__tools">
+      <button type="button" class="tool" id="searchBtn" aria-label="Search">
+        <svg class="ico"><use href="#i-search" /></svg>
+      </button>
+      <button type="button" class="tool" id="btn-cart" aria-label="Bag">
+        <svg class="ico"><use href="#i-bag" /></svg>
+        <span class="tool__count" id="cart-count" hidden>0</span>
+      </button>
     </div>
-    <nav class="main-nav" id="mainNav" aria-label="أقسام المتجر">
-      <!-- Rendered dynamically from Firestore categories only -->
-    </nav>
-    <a href="/" class="logo">
-      <div class="mark">HADJAJ</div>
-      <div class="sub">حجاج • SHIRTS</div>
+  </div>
+
+  <!-- Brand + navigation + emblem -->
+  <header class="header">
+    <a class="brand" href="/" aria-label="SHAFQ — شفق">
+      <img src="assets/images/logo-shafq.png" alt="SHAFQ — Before the lights fade" width="570" height="256">
     </a>
-  </div>
-
-  <!-- Mobile categories scroll bar -->
-  <div class="mobile-cat-bar" id="mobileCatBar" aria-label="أقسام المتجر للجوال">
-    <div class="mobile-cat-scroller" id="mobileCatScroller">
-      <!-- Rendered dynamically from Firestore categories only -->
-    </div>
-  </div>
-</header>
-
-
-
-<section class="product-wrap">
-  <!-- Gallery -->
-  <div class="p-gallery">
-    <span class="badge" id="pBadge" style="display:none"></span>
-    <button class="fav" id="favBtn" aria-label="مفضلة" style="opacity:0">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7.5-4.7-9.5-9.2C.9 8.4 3 4.5 6.8 4.5c2 0 3.6 1.1 4.6 2.7h1.2c1-1.6 2.6-2.7 4.6-2.7 3.8 0 5.9 3.9 4.3 7.3C19.5 16.3 12 21 12 21z"/></svg>
+    <button type="button" class="burger" id="btn-menu" aria-label="Menu" aria-expanded="false" aria-controls="nav">
+      <svg class="ico"><use href="#i-menu" /></svg>
     </button>
-    <div class="main-img">
-      <div class="skel-shimmer" id="pImgSkeleton"></div>
-      <img id="pImg" src="" alt="" style="opacity:0">
+    <nav class="nav" id="nav" aria-label="Main">
+      <a href="/" class="nav__link">Home</a>
+      <a href="/shop" class="nav__link is-active" aria-current="page">Shop</a>
+      <a href="/about" class="nav__link">About</a>
+      <a href="/contact" class="nav__link">Contact</a>
+    </nav>
+    <div class="emblem" aria-hidden="true">
+      <svg viewBox="190 100 470 360" class="emblem__sun" id="emblem-sun"></svg>
+      <span class="emblem__word">SHAFQ</span>
     </div>
-  </div>
+  </header>
 
-  <!-- Info + Order -->
-  <div class="p-info">
-    <!-- Professional Skeleton (visible immediately during loading) -->
-    <div class="p-info-skel" id="pInfoSkel" aria-busy="true" aria-label="جاري تحميل بيانات المنتج...">
-      <div class="skel-block skel-title"></div>
-      <div class="skel-block skel-price"></div>
+  <main class="product-main">
+    <nav class="product-breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span aria-hidden="true">/</span>
+      <a href="/shop" id="crumbCatLink" dir="auto">Shop</a>
+      <span aria-hidden="true">/</span>
+      <span id="crumb" dir="auto">Piece</span>
+    </nav>
 
-      <div class="skel-block skel-label"></div>
-      <div class="skel-dots">
-        <div class="skel-block skel-dot"></div>
-        <div class="skel-block skel-dot"></div>
-        <div class="skel-block skel-dot"></div>
-      </div>
-
-      <div class="skel-block skel-label"></div>
-      <div class="skel-sizes">
-        <div class="skel-block skel-size"></div>
-        <div class="skel-block skel-size"></div>
-        <div class="skel-block skel-size"></div>
-        <div class="skel-block skel-size"></div>
-        <div class="skel-block skel-size"></div>
-      </div>
-
-      <div class="skel-qty-row">
-        <div class="skel-block skel-stepper"></div>
-        <div class="skel-block skel-total"></div>
-        <div class="skel-block skel-btn-cart"></div>
-      </div>
-
-      <hr class="divider">
-
-      <div class="skel-order-box">
-        <div class="skel-block skel-order-h2"></div>
-        <div class="skel-block skel-order-note"></div>
-        <div class="skel-block skel-field"></div>
-        <div class="skel-block skel-field"></div>
-        <div class="skel-two-col">
-          <div class="skel-block skel-field"></div>
-          <div class="skel-block skel-field"></div>
+    <section class="product-wrap" aria-label="Product details">
+      <!-- Gallery -->
+      <div class="p-gallery">
+        <span class="p-badge" id="pBadge" style="display:none" dir="auto"></span>
+        <button type="button" class="p-fav" id="favBtn" aria-label="Save to favorites" style="opacity:0">
+          <svg class="ico ico--heart" aria-hidden="true"><use href="#i-heart" /></svg>
+        </button>
+        <div class="p-media">
+          <div class="skel-shimmer" id="pImgSkeleton" aria-hidden="true"></div>
+          <img id="pImg" src="" alt="" style="opacity:0">
         </div>
-        <div class="skel-block skel-btn-order"></div>
       </div>
-    </div>
 
-    <!-- Real Content (revealed after data is ready) -->
-    <div class="form-wrap" id="formWrap" style="display:none">
-      <h1 id="pName">—</h1>
-      <div class="p-price"><span id="pPrice">0</span> <span>دج</span></div>
+      <!-- Info & Order -->
+      <div class="p-info">
+        <!-- Editorial Loading Skeleton -->
+        <div class="p-info-skel" id="pInfoSkel" aria-busy="true" aria-label="Loading product details">
+          <div class="skel-block skel-title"></div>
+          <div class="skel-block skel-price"></div>
+          <div class="skel-block skel-desc"></div>
+          <div class="skel-block skel-desc short"></div>
 
-      <div class="opt-label" id="colorOptLabel">اللون: <small id="colorName">—</small></div>
-      <div class="dots" id="pColors"></div>
+          <div class="skel-block skel-label"></div>
+          <div class="skel-dots">
+            <div class="skel-block skel-dot"></div>
+            <div class="skel-block skel-dot"></div>
+            <div class="skel-block skel-dot"></div>
+          </div>
 
-      <div class="opt-label" id="sizeOptLabel">المقاس:</div>
-      <div class="sizes" id="pSizes"></div>
+          <div class="skel-block skel-label"></div>
+          <div class="skel-sizes">
+            <div class="skel-block skel-size"></div>
+            <div class="skel-block skel-size"></div>
+            <div class="skel-block skel-size"></div>
+            <div class="skel-block skel-size"></div>
+            <div class="skel-block skel-size"></div>
+          </div>
 
-      <div class="qty-row">
-        <div class="qty">
-          <button type="button" id="qtyPlusBtn">+</button>
-          <span id="qty">1</span>
-          <button type="button" onclick="changeQty(-1)">−</button>
+          <div class="skel-qty-row">
+            <div class="skel-block skel-stepper"></div>
+            <div class="skel-block skel-btn-cart"></div>
+          </div>
+
+          <div class="skel-divider"></div>
+
+          <div class="skel-order-box">
+            <div class="skel-block skel-order-h2"></div>
+            <div class="skel-block skel-order-note"></div>
+            <div class="skel-block skel-field"></div>
+            <div class="skel-block skel-field"></div>
+            <div class="skel-two-col">
+              <div class="skel-block skel-field"></div>
+              <div class="skel-block skel-field"></div>
+            </div>
+            <div class="skel-block skel-btn-order"></div>
+          </div>
         </div>
-        <div class="total">المجموع: <b id="total">0 دج</b></div>
-        <button type="button" class="btn-cart" id="addCartBtn">🛒 إضافة إلى السلة</button>
-      </div>
 
-      <hr class="divider">
+        <!-- Product Details & Quick COD Form -->
+        <div class="form-wrap" id="formWrap" style="display:none">
+          <h1 class="p-title" id="pName" dir="auto">—</h1>
 
-      <!-- COD Order form -->
-      <div class="order-box">
-        <h2>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 7h12l1 13H5L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
-          اطلب الآن — الدفع عند التسليم
-        </h2>
-        <p class="note">املأ معلوماتك وسنتصل بك لتأكيد الطلب. لا تدفع أي شيء الآن.</p>
-
-        <form id="orderForm" novalidate>
-          <div class="field" id="fName">
-            <label>الاسم الكامل <em>*</em></label>
-            <input type="text" id="fullName" placeholder="مثال: محمد بن علي" autocomplete="name">
-            <div class="err">يرجى إدخال الاسم الكامل</div>
+          <div class="p-price-row">
+            <span class="p-price"><span id="pPrice">0</span> <span>DA</span></span>
+            <span class="p-old-price" id="pOldPrice" style="display:none"></span>
           </div>
 
-          <div class="field" id="fPhone">
-            <label>رقم الهاتف <em>*</em></label>
-            <input type="tel" id="phone" placeholder="مثال: 0551234567" autocomplete="tel" maxlength="10" inputmode="numeric">
-            <div class="err">يرجى إدخال رقم هاتف جزائري صحيح (يبدأ بـ 05 / 06 / 07)</div>
+          <p class="p-desc" id="pDesc" style="display:none" dir="auto"></p>
+
+          <div class="p-option-group">
+            <div class="opt-label" id="colorOptLabel">Color: <span id="colorName" dir="auto">—</span></div>
+            <div class="p-colors" id="pColors"></div>
           </div>
 
-          <div class="two-col">
-            <div class="field" id="fWilaya">
-              <label>الولاية <em>*</em></label>
-              <select id="wilaya">
-                <option value="">— اختر الولاية —</option>
-              </select>
-              <div class="err">يرجى اختيار الولاية</div>
+          <div class="p-option-group">
+            <div class="opt-label" id="sizeOptLabel">Size</div>
+            <div class="p-sizes" id="pSizes"></div>
+          </div>
+
+          <div class="qty-row">
+            <div class="qty" aria-label="Quantity">
+              <button type="button" id="qtyMinusBtn" aria-label="Decrease quantity">&minus;</button>
+              <span id="qty">1</span>
+              <button type="button" id="qtyPlusBtn" aria-label="Increase quantity">+</button>
             </div>
-            <div class="field" id="fCommune">
-              <label>البلدية <em>*</em></label>
-              <select id="commune" disabled>
-                <option value="">— اختر الولاية أولاً —</option>
-              </select>
-              <div class="err">يرجى اختيار البلدية</div>
-            </div>
+            <button type="button" class="btn-cart" id="addCartBtn">Add to Bag</button>
+          </div>
+          <p class="p-line-total">Subtotal: <strong id="total">0 DA</strong></p>
+
+          <div class="p-shipping-note">
+            <span>Cash on Delivery across all 69 Algerian Wilayas — Home delivery or Stop Desk pickup.</span>
           </div>
 
-          <div class="field">
-            <label>العنوان (اختياري)</label>
-            <input type="text" id="address" placeholder="الحي، الشارع، رقم المنزل...">
-          </div>
+          <hr class="p-divider">
 
-          <!-- Delivery Method Selection -->
-          <div class="delivery-group" id="fDeliveryMethod">
-            <label class="delivery-group-label">طريقة التوصيل <em>*</em></label>
-            <div class="delivery-options-grid">
-              <label class="delivery-option-card active" id="cardHome">
-                <input type="radio" name="deliveryMethod" value="home" checked>
-                <div class="doc-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <!-- Direct Cash-on-Delivery Order Form -->
+          <div class="order-box">
+            <h2 class="order-box__title">Express Checkout — Cash on Delivery</h2>
+            <p class="order-box__note">Complete your delivery details below. Pay in cash upon inspection.</p>
+
+            <form id="orderForm" novalidate>
+              <div class="p-field" id="fName">
+                <label for="fullName">Full Name <em>*</em></label>
+                <input type="text" id="fullName" placeholder="e.g. Mohamed Benali" autocomplete="name">
+                <div class="err">Please enter your full name (at least 3 characters).</div>
+              </div>
+
+              <div class="p-field" id="fPhone">
+                <label for="phone">Phone Number <em>*</em></label>
+                <input type="tel" id="phone" placeholder="e.g. 0551234567" autocomplete="tel" maxlength="10" inputmode="numeric">
+                <div class="err">Please enter a valid 10-digit Algerian number (starting with 05, 06, or 07).</div>
+              </div>
+
+              <div class="two-col">
+                <div class="p-field" id="fWilaya">
+                  <label for="wilaya">Wilaya <em>*</em></label>
+                  <select id="wilaya" dir="auto">
+                    <option value="">— Select Wilaya —</option>
+                  </select>
+                  <div class="err">Please select a wilaya.</div>
                 </div>
-                <div class="doc-info">
-                  <div class="doc-name">توصيل للمنزل</div>
+                <div class="p-field" id="fCommune">
+                  <label for="commune">Commune <em>*</em></label>
+                  <select id="commune" disabled dir="auto">
+                    <option value="">— Select Wilaya First —</option>
+                  </select>
+                  <div class="err">Please select a commune.</div>
                 </div>
-                <div class="doc-price" id="homePriceDisplay">—</div>
-              </label>
+              </div>
 
-              <label class="delivery-option-card" id="cardStopDesk">
-                <input type="radio" name="deliveryMethod" value="stopDesk">
-                <div class="doc-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              <div class="p-field">
+                <label for="address">Street Address (Optional)</label>
+                <input type="text" id="address" placeholder="Neighborhood, street, building..." dir="auto">
+              </div>
+
+              <!-- Delivery Method Selection -->
+              <div class="delivery-group" id="fDeliveryMethod">
+                <span class="delivery-group-label">Delivery Method <em>*</em></span>
+                <div class="delivery-options-grid">
+                  <label class="delivery-option-card active" id="cardHome">
+                    <input type="radio" name="deliveryMethod" value="home" checked>
+                    <div class="doc-info">
+                      <span class="doc-name">Home Delivery</span>
+                    </div>
+                    <div class="doc-price" id="homePriceDisplay">&mdash;</div>
+                  </label>
+
+                  <label class="delivery-option-card" id="cardStopDesk">
+                    <input type="radio" name="deliveryMethod" value="stopDesk">
+                    <div class="doc-info">
+                      <span class="doc-name">Stop Desk Pickup</span>
+                    </div>
+                    <div class="doc-price" id="stopDeskPriceDisplay">&mdash;</div>
+                  </label>
                 </div>
-                <div class="doc-info">
-                  <div class="doc-name">استلام من المكتب</div>
+              </div>
+
+              <!-- Live Price Breakdown -->
+              <div class="order-price-summary" id="orderPriceSummary">
+                <div class="ops-row">
+                  <span>Items Subtotal</span>
+                  <span id="opsSubtotal">0 DA</span>
                 </div>
-                <div class="doc-price" id="stopDeskPriceDisplay">—</div>
-              </label>
-            </div>
+                <div class="ops-row">
+                  <span>Shipping (<span id="opsMethodLabel">Home Delivery</span>)</span>
+                  <span id="opsShipping">Select wilaya</span>
+                </div>
+                <div class="ops-row ops-row--total">
+                  <span>Total (Pay on Delivery)</span>
+                  <strong id="opsTotal">0 DA</strong>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-order">
+                <span>Confirm Order — Cash on Delivery</span>
+                <svg class="ico ico--arrow" aria-hidden="true"><use href="#i-arrow" /></svg>
+              </button>
+              <p class="p-secure">Pay only upon receiving and inspecting your order.</p>
+            </form>
           </div>
-
-          <!-- Live Price Breakdown -->
-          <div class="order-price-summary" id="orderPriceSummary">
-            <div class="ops-row">
-              <span>المنتجات:</span>
-              <span id="opsSubtotal">0 دج</span>
-            </div>
-            <div class="ops-row">
-              <span>التوصيل (<span id="opsMethodLabel">توصيل للمنزل</span>):</span>
-              <span id="opsShipping">0 دج</span>
-            </div>
-            <div class="ops-row total">
-              <span>المجموع الكلي:</span>
-              <strong id="opsTotal">0 دج</strong>
-            </div>
-          </div>
-
-          <button type="submit" class="btn-order">تأكيد الطلب — الدفع عند الاستلام</button>
-          <div class="secure">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-            معلوماتك آمنة — الدفع نقداً عند التسليم فقط
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Success -->
-    <div class="success" id="successBox">
-      <div class="check">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12.5l5 5L20 6.5"/></svg>
-      </div>
-      <h3>تم استلام طلبك بنجاح!</h3>
-      <p>شكراً لك! سنتصل بك قريباً على رقم هاتفك لتأكيد الطلب.<br>تدفع فقط عند استلام المنتج.</p>
-      <div class="summary" id="orderSummary"></div>
-      <a href="/" class="btn-order" style="display:inline-block;text-align:center">العودة إلى المتجر</a>
-      <br><a href="/" class="back-link">← متابعة التسوق</a>
-    </div>
-  </div>
-</section>
-
-<footer>
-  <div class="footer-inner">
-    <div class="socials">
-      <span>تابعنا:</span>
-      <a href="https://wa.me/213770104040" target="_blank" rel="noopener noreferrer">واتساب</a>
-      <a href="https://www.instagram.com/hdjaj_shop" target="_blank" rel="noopener noreferrer">إنستغرام</a>
-      <a href="https://www.facebook.com/people/%D8%AD%D8%AC%D8%A7%D8%AC-%D9%84%D9%84%D8%A3%D9%82%D9%85%D8%B5%D8%A9-%D9%88%D8%A7%D9%84%D8%B9%D8%B7%D9%88%D8%B1/100051401982410/" target="_blank" rel="noopener noreferrer">فيسبوك</a>
-      <a href="https://www.tiktok.com/@hadjadj_shop" target="_blank" rel="noopener noreferrer">تيك توك</a>
-    </div>
-  </div>
-</footer>
-
-<!-- Search overlay -->
-<div class="search-overlay" id="searchOverlay">
-  <div class="search-panel">
-    <div class="search-head">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#8a8277" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-      <input type="text" id="searchInput" placeholder="ابحث عن قميص...">
-      <button id="searchClose" aria-label="إغلاق"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-    </div>
-    <div class="search-results" id="searchResults"></div>
-  </div>
-</div>
-
-<!-- Cart drawer -->
-<div class="backdrop" id="backdrop"></div>
-<aside class="drawer" id="cartDrawer" aria-label="حقيبة التسوق">
-  <div class="drawer-head">
-    <h3>حقيبة التسوق</h3>
-    <button id="cartClose" aria-label="إغلاق"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-  </div>
-  <div class="drawer-items" id="cartItems"></div>
-  <div class="drawer-foot" id="cartFoot">
-    <div class="drawer-total"><span>المجموع</span><b id="cartTotal">0 دج</b></div>
-    <button class="btn-order" id="checkoutBtn">إتمام الطلب</button>
-  </div>
-</aside>
-
-<div class="toast" id="toast"></div>
-
-<!-- Checkout Modal -->
-<div class="checkout-modal-backdrop" id="checkoutBackdrop"></div>
-<div class="checkout-modal" id="checkoutModal" role="dialog" aria-labelledby="checkoutModalTitle">
-  <div class="cm-head">
-    <h3 id="checkoutModalTitle">إتمام الطلب — الدفع عند الاستلام</h3>
-    <button type="button" class="cm-close" id="checkoutClose" aria-label="إغلاق">&times;</button>
-  </div>
-  <div class="cm-body">
-    <!-- Order items review summary -->
-    <div class="cm-review-box">
-      <div class="cm-review-title">مراجعة المنتجات في السلة (<span id="cmItemCount">0</span>):</div>
-      <div class="cm-items-list" id="cmItemsList"></div>
-      <div class="cm-summary-row">
-        <span>المجموع الكلي:</span>
-        <b class="cm-total" id="cmTotalAmount">0 دج</b>
-      </div>
-      <div class="cm-note">تدفع نقداً عند استلام طلبك بعد المعاينة. التوصيل متوفر لجميع الولايات.</div>
-    </div>
-
-    <!-- COD Customer Details Form -->
-    <form id="checkoutForm" novalidate>
-      <div class="field" id="cmFName">
-        <label>الاسم الكامل <em>*</em></label>
-        <input type="text" id="cmName" placeholder="مثال: محمد بن علي" autocomplete="name" required>
-        <div class="err">يرجى إدخال الاسم الكامل (3 أحرف على الأقل)</div>
-      </div>
-
-      <div class="field" id="cmFPhone">
-        <label>رقم الهاتف <em>*</em></label>
-        <input type="tel" id="cmPhone" placeholder="مثال: 0551234567" autocomplete="tel" maxlength="10" inputmode="numeric" required>
-        <div class="err">يرجى إدخال رقم هاتف جزائري صحيح (يبدأ بـ 05 / 06 / 07)</div>
-      </div>
-
-      <div class="two-col">
-        <div class="field" id="cmFWilaya">
-          <label>الولاية <em>*</em></label>
-          <select id="cmWilaya" required>
-            <option value="">— اختر الولاية —</option>
-          </select>
-          <div class="err">يرجى اختيار الولاية</div>
         </div>
-        <div class="field" id="cmFCommune">
-          <label>البلدية <em>*</em></label>
-          <select id="cmCommune" disabled required>
-            <option value="">— اختر الولاية أولاً —</option>
-          </select>
-          <div class="err">يرجى اختيار البلدية</div>
+
+        <!-- Inline Order Confirmation -->
+        <div class="p-success" id="successBox">
+          <div class="p-success__mark" aria-hidden="true">&#10003;</div>
+          <h2 class="p-success__title">Order Confirmed</h2>
+          <p class="p-success__sub">Thank you. Our team will contact you shortly by phone to confirm dispatch. Payment is collected in cash upon delivery.</p>
+          <div class="p-summary" id="orderSummary"></div>
+          <a href="/shop" class="btn-order p-success__cta">Return to Shop</a>
         </div>
       </div>
+    </section>
+  </main>
 
-      <div class="field">
-        <label>العنوان (اختياري)</label>
-        <input type="text" id="cmAddress" placeholder="الحي، الشارع، رقم المنزل...">
+  <!-- Search Overlay (Product Catalog Lookup) -->
+  <div class="p-search-overlay" id="searchOverlay" aria-hidden="true">
+    <div class="p-search-panel">
+      <div class="p-search-head">
+        <svg class="ico" aria-hidden="true"><use href="#i-search" /></svg>
+        <input type="search" id="searchInput" placeholder="Search the collection" autocomplete="off" aria-label="Search products">
+        <button type="button" class="tool" id="searchClose" aria-label="Close">
+          <svg class="ico"><use href="#i-close" /></svg>
+        </button>
       </div>
-
-      <!-- Delivery Method Selection -->
-      <div class="delivery-group" id="cmFDeliveryMethod">
-        <label class="delivery-group-label">طريقة التوصيل <em>*</em></label>
-        <div class="delivery-options-grid">
-          <label class="delivery-option-card active" id="cmCardHome">
-            <input type="radio" name="cmDeliveryMethod" value="home" checked>
-            <div class="doc-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            </div>
-            <div class="doc-info">
-              <div class="doc-name">توصيل للمنزل</div>
-            </div>
-            <div class="doc-price" id="cmHomePriceDisplay">—</div>
-          </label>
-
-          <label class="delivery-option-card" id="cmCardStopDesk">
-            <input type="radio" name="cmDeliveryMethod" value="stopDesk">
-            <div class="doc-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-            </div>
-            <div class="doc-info">
-              <div class="doc-name">استلام من المكتب</div>
-            </div>
-            <div class="doc-price" id="cmStopDeskPriceDisplay">—</div>
-          </label>
-        </div>
-      </div>
-
-      <!-- Live Price Breakdown for Cart Checkout Modal -->
-      <div class="order-price-summary" id="cmPriceSummary">
-        <div class="ops-row">
-          <span>المنتجات:</span>
-          <span id="cmOpsSubtotal">0 دج</span>
-        </div>
-        <div class="ops-row">
-          <span>التوصيل (<span id="cmOpsMethodLabel">توصيل للمنزل</span>):</span>
-          <span id="cmOpsShipping">0 دج</span>
-        </div>
-        <div class="ops-row total">
-          <span>المجموع الكلي:</span>
-          <strong id="cmOpsTotal">0 دج</strong>
-        </div>
-      </div>
-
-      <button type="submit" class="btn-order" id="cmSubmitBtn">تأكيد الطلب — الدفع عند الاستلام</button>
-      <div class="secure">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-        معلوماتك مشفرة وآمنة — تدفع فقط عند استلام طلبك
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Order Success Modal -->
-<div class="success-modal" id="orderSuccessModal">
-  <div class="sm-card">
-    <div class="check">
-      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12.5l5 5L20 6.5"/></svg>
+      <div class="p-search-results" id="searchResults"></div>
     </div>
-    <h3>تم استلام طلبك بنجاح!</h3>
-    <p>شكراً لطلبك من متجر حجاج! سنتصل بك هاتفياً لتأكيد شحن طلبك.<br>الدفع نقداً فقط عند استلام المنتجات.</p>
-    <div class="summary" id="smOrderSummary"></div>
-    <button type="button" class="btn-order" id="smContinueBtn" style="width:100%;margin-top:16px">متابعة التسوق</button>
   </div>
-</div>
 
-<script type="module" src="/frontend/js/product.js"></script>
+  <!-- Bag drawer (Unified SHAFQ Cart) -->
+  <aside class="drawer" id="drawer-cart" aria-hidden="true" aria-label="Bag" hidden>
+    <div class="drawer__head">
+      <h2>Bag</h2>
+      <button type="button" class="tool" data-close aria-label="Close"><svg class="ico">
+          <use href="#i-close" />
+        </svg></button>
+    </div>
+    <div class="drawer__body" id="drawer-cart-body">
+      <p class="drawer__empty">Your bag is empty.</p>
+    </div>
+    <div class="drawer__foot" id="drawer-cart-foot" hidden>
+      <div class="drawer__total">
+        <span>Subtotal</span>
+        <strong id="drawer-cart-total">0 DA</strong>
+      </div>
+      <button type="button" class="drawer__checkout" id="drawer-checkout-btn">Proceed to Checkout</button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
 
+  <script src="js/main.js"></script>
+  <script src="js/transitions.js"></script>
+  <script type="module" src="js/product.js"></script>
 </body>
+
 </html>

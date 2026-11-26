@@ -3,139 +3,73 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- Helper Functions ---
+    // --- Authentication & Strict Admin Authorization ---
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    // Role-Based Access Control:
-    // Any user authenticated via Firebase Authentication is an authorized store Admin.
-    // (Customer checkout is guest/cash-on-delivery and never has an Auth account)
+    // Verified Admin ONLY via Firebase Custom Claims OR provisioned /admins/{uid} document.
+    // Self-registration or arbitrary authenticated users are NEVER granted admin access.
     function isAdmin() {
-      return isAuthenticated();
+      return isAuthenticated() && (
+        request.auth.token.admin == true
+        || request.auth.token.role == 'admin'
+        || (
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+          && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'admin'
+          && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active != false
+        )
+      );
     }
 
     // --- Admins Collection ---
-    // Stores authorized admin profiles
+    // Users may read only their own admin record to verify access; admins may read all.
+    // Client writes are strictly denied — admin records must be provisioned via Firebase Console or Admin SDK.
     match /admins/{adminId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated() && (request.auth.uid == adminId || isAdmin());
+      allow write: if false;
     }
 
     // --- Products Collection ---
-    // Visitors and customers: READ only (public storefront access without login)
-    // Admins only: CREATE, UPDATE, DELETE
-    // Normal authenticated users: DENIED write
+    // Public catalog read; Admin-only mutations.
     match /products/{productId} {
       allow read: if true;
       allow create, update, delete: if isAdmin();
     }
 
     // --- Categories Collection ---
-    // Visitors and customers: READ only (public storefront access without login)
-    // Admins only: CREATE, UPDATE, DELETE
-    // Normal authenticated users: DENIED write
+    // Public catalog read; Admin-only mutations.
     match /categories/{categoryId} {
       allow read: if true;
       allow create, update, delete: if isAdmin();
     }
 
     // --- Shipping Settings Collection ---
-    // Visitors & Storefront: READ active shipping pricing table
-    // Admins only: UPDATE or CREATE rates
+    // Public shipping rate read; Admin-only mutations.
     match /shippingSettings/{docId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
     // --- Orders Collection ---
-    // Customers / Guests: CAN ONLY CREATE with strict field, status, and price validation
-    // Customers / Normal users: CANNOT READ arbitrary orders, CANNOT UPDATE, CANNOT DELETE
-    // Admins: Full management access (read, update status, delete)
+    // Client-side direct writes and reads are DENIED to prevent price/shipping tampering
+    // and exposure of customer PII.
+    // Customer orders are verified and created strictly server-side by /api/order
+    // using the Firebase Service Account (Admin SDK permissions).
+    // Authenticated Admins have full management access (read, status updates, delete).
     match /orders/{orderId} {
-      allow create: if isValidOrder() || isAdmin();
-      allow read, update, delete: if isAdmin();
+      allow read, create, update, delete: if isAdmin();
     }
 
     // --- Telegram Notification Queue & Concurrency Lock ---
-    // Managed securely by backend queue worker and serverless handlers
+    // Contains customer PII and internal lock state.
+    // ZERO client/public access; accessed strictly server-side via Service Account.
     match /telegramQueue/{docId} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
 
     match /queueControl/{docId} {
-      allow read, write: if true;
-    }
-
-    // --- Order Strict Validation & Anti-Tampering ---
-    function isValidOrder() {
-      let data = request.resource.data;
-      let allowedKeys = [
-        'customer', 'phone', 'wilaya', 'commune', 'address',
-        'items', 'total', 'paymentMethod', 'status', 'createdAt',
-        'deliveryMethod', 'shippingPrice', 'subtotal', 'shipping'
-      ];
-
-      return data.keys().hasOnly(allowedKeys)
-        // Customer Name: 3 to 100 characters
-        && data.customer is string 
-        && data.customer.size() >= 3 
-        && data.customer.size() <= 100
-
-        // Algerian Phone Number: Exactly 10 digits starting with 05, 06, or 07
-        && data.phone is string 
-        && data.phone.matches('^0[5-7][0-9]{8}$')
-
-        // Location Info
-        && data.wilaya is string && data.wilaya.size() >= 2 && data.wilaya.size() <= 50
-        && data.commune is string && data.commune.size() >= 2 && data.commune.size() <= 50
-        && data.address is string && data.address.size() <= 200
-
-        // Business Logic & Anti-Tampering:
-        // Status MUST strictly be 'جديد' (prevents customer forging status to 'مؤكد' or 'تم التوصيل')
-        && data.status == 'جديد'
-        && data.paymentMethod == 'الدفع عند الاستلام'
-        && data.createdAt is string
-
-        // Items list validation
-        && data.items is list 
-        && data.items.size() > 0 
-        && data.items.size() <= 20
-
-        // Price verification against database source of truth
-        && data.total is number 
-        && data.total > 0
-        && validateOrderPricing();
-    }
-
-    function validateOrderPricing() {
-      let data = request.resource.data;
-      let hasShipping = data.keys().hasAll(['subtotal', 'shippingPrice']);
-      let validShippingMath = !hasShipping || (data.total == data.subtotal + data.shippingPrice);
-
-      return validShippingMath && (
-        data.items.size() == 1
-          ? validateSingleItemOrderPrice(hasShipping)
-          : data.total > 0
-      );
-    }
-
-    // Enforce that single-item orders match the authentic product price in Firestore
-    function validateSingleItemOrderPrice(hasShipping) {
-      let item = request.resource.data.items[0];
-      let quantity = item.keys().hasAll(['quantity']) ? item.quantity : (item.keys().hasAll(['qty']) ? item.qty : 0);
-      let expectedSubtotal = item.price * quantity;
-
-      return item.productId is string
-        && item.price is number && item.price > 0
-        && quantity is number && quantity >= 1 && quantity <= 50
-        // Check product exists in Firestore
-        && exists(/databases/$(database)/documents/products/$(item.productId))
-        // Verify client price exactly matches Firestore stored price
-        && item.price == get(/databases/$(database)/documents/products/$(item.productId)).data.price
-        // Verify total or subtotal matches price * quantity
-        && (hasShipping
-            ? request.resource.data.subtotal == expectedSubtotal
-            : request.resource.data.total == expectedSubtotal);
+      allow read, write: if false;
     }
 
     // Default deny all other paths

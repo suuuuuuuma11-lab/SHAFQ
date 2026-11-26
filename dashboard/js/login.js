@@ -6,11 +6,12 @@
 import { auth, db } from "./firebase-config.js";
 import { 
   signInWithEmailAndPassword, 
-  onAuthStateChanged 
+  onAuthStateChanged,
+  signOut
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 import { 
   doc, 
-  setDoc 
+  getDoc 
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
 // --- DOM References ---
@@ -37,29 +38,42 @@ if (urlParams.get("error") === "unauthorized") {
   showErrorAlert("يرجى تسجيل الدخول بحساب المشرف.");
 }
 
-// --- Admin Authorization Check & Profile Bootstrap ---
+// --- Strict Admin Authorization Check (Custom Claims OR Provisioned /admins/{uid}) ---
 async function verifyIsAdmin(user) {
   if (!user) return false;
 
-  // Auto-register / update admin profile in Firestore
   try {
-    await setDoc(doc(db, "admins", user.uid), {
-      email: user.email,
-      role: "admin",
-      lastLogin: new Date().toISOString()
-    }, { merge: true });
+    const tokenResult = await user.getIdTokenResult();
+    if (tokenResult?.claims?.admin === true || tokenResult?.claims?.role === "admin") {
+      return true;
+    }
   } catch (err) {
-    console.warn("Notice syncing admin profile:", err.message);
+    console.warn("Token claim check warning:", err.message);
   }
 
-  return true;
+  try {
+    const adminSnap = await getDoc(doc(db, "admins", user.uid));
+    if (adminSnap.exists()) {
+      const data = adminSnap.data() || {};
+      return data.role === "admin" && data.active !== false;
+    }
+  } catch (err) {
+    console.warn("Admin record verification failed:", err.message);
+  }
+
+  return false;
 }
 
 // --- Check If Already Authenticated ---
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    await verifyIsAdmin(user);
-    window.location.replace("/admin");
+    const ok = await verifyIsAdmin(user);
+    if (ok) {
+      window.location.replace("/admin");
+    } else {
+      await signOut(auth).catch(() => {});
+      showErrorAlert("هذا الحساب غير مصرح له بالدخول إلى لوحة الإدارة.");
+    }
   }
 });
 
@@ -141,7 +155,13 @@ DOM.form.addEventListener("submit", async (e) => {
 
   try {
     const cred = await signInWithEmailAndPassword(auth, email, password);
-    await verifyIsAdmin(cred.user);
+    const ok = await verifyIsAdmin(cred.user);
+    if (!ok) {
+      await signOut(auth).catch(() => {});
+      setLoading(false);
+      showErrorAlert("هذا الحساب ليس لديه صلاحيات الإدارة المصرح بها.");
+      return;
+    }
     window.location.replace("/admin");
   } catch (error) {
     console.error("Login failed:", error.code, error.message);
