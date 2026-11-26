@@ -303,12 +303,17 @@ function parseUrlViewState() {
       applied.category = "All";
     } else if (catParam) {
       currentView = "all";
-      if (!isLoading) {
+      if (!isLoading && liveCategories.length > 0) {
         const resolved = resolveCategoryNameFromParam(catParam);
-        const finalCat = resolved || "All";
-        draft.category = finalCat;
-        applied.category = finalCat;
-        pendingCatParam = "";
+        if (resolved) {
+          draft.category = resolved;
+          applied.category = resolved;
+          pendingCatParam = "";
+        } else {
+          draft.category = "All";
+          applied.category = "All";
+          pendingCatParam = catParam;
+        }
       } else {
         pendingCatParam = catParam;
       }
@@ -415,24 +420,28 @@ function renderDynamicFilters() {
   const sizesEl = $(".filter-sizes");
   const colorsEl = $(".filter-colors");
 
-  // 1. Categories: "All" + active Firestore categories (+ any category found on active products)
+  // 1. Categories: "All" + active Firestore categories (+ orphaned legacy categories only if not linked by categoryId)
   if (catsEl) {
     const seenCats = new Set(["All"]);
+    const activeCatIds = new Set();
     const catNames = [];
     liveCategories.forEach((c) => {
+      if (c.id) activeCatIds.add(String(c.id).trim());
       if (c.name && !seenCats.has(c.name)) {
         seenCats.add(c.name);
         catNames.push(c.name);
       }
     });
     liveProducts.forEach((p) => {
+      const pCatId = String(p.categoryId || "").trim();
+      if (pCatId && activeCatIds.has(pCatId)) return;
       if (p.category && !seenCats.has(p.category)) {
         seenCats.add(p.category);
         catNames.push(p.category);
       }
     });
 
-    if (!isLoading && !pendingCatParam && draft.category !== "All" && !seenCats.has(draft.category)) {
+    if (!isLoading && !pendingCatParam && liveCategories.length > 0 && draft.category !== "All" && !seenCats.has(draft.category)) {
       draft.category = "All";
       applied.category = "All";
     }
@@ -489,13 +498,18 @@ function renderDynamicFilters() {
 
 function getFilteredProducts() {
   const baseList = searchQuery ? filterProductsByQuery(liveProducts, searchQuery) : liveProducts;
+  const selectedCatObj = applied.category !== "All"
+    ? liveCategories.find((c) => c.name === applied.category || c.id === applied.category)
+    : null;
   const filtered = baseList.filter((p) => {
     if (currentView === "fav") {
       if (!isFavorite(p.id)) return false;
     } else if (currentView === "sale") {
       if (!isOnSaleProduct(p)) return false;
-    } else if (applied.category !== "All" && p.category !== applied.category) {
-      return false;
+    } else if (applied.category !== "All") {
+      const matchesById = selectedCatObj && String(p.categoryId || "").trim() === selectedCatObj.id;
+      const matchesByName = p.category === applied.category;
+      if (!matchesById && !matchesByName) return false;
     }
     if (applied.sizes.size > 0) {
       const hasSize = (p.availableSizes || []).some((s) => applied.sizes.has(s));
@@ -895,7 +909,7 @@ function hydrateCatalogFromCache() {
   return true;
 }
 
-function handleCatalogSnapshot({ products, categories, serverConfirmed = false }) {
+function handleCatalogSnapshot({ products, categories, categoriesReady = true, serverConfirmed = false }) {
   const prevCeiling = maxPriceLimit;
   const highestPrice = products.reduce((mx, p) => Math.max(mx, Number(p.price) || 0), 0);
   maxPriceLimit = Math.max(DEFAULT_MAX_PRICE, Math.ceil(highestPrice / 500) * 500);
@@ -903,8 +917,33 @@ function handleCatalogSnapshot({ products, categories, serverConfirmed = false }
   if (draft.maxPrice === prevCeiling) draft.maxPrice = maxPriceLimit;
   if (applied.maxPrice === prevCeiling) applied.maxPrice = maxPriceLimit;
 
+  const effectiveCategories = (categoriesReady || (Array.isArray(categories) && categories.length > 0))
+    ? categories
+    : liveCategories;
+
+  // Preserve active category selection by ID if an admin renames the category live
+  const prevAppliedCat = applied.category && applied.category !== "All"
+    ? liveCategories.find((c) => c.name === applied.category)
+    : null;
+  const prevDraftCat = draft.category && draft.category !== "All"
+    ? liveCategories.find((c) => c.name === draft.category)
+    : null;
+
   liveProducts = products;
-  liveCategories = categories;
+  liveCategories = effectiveCategories;
+
+  if (prevAppliedCat) {
+    const renamedApplied = effectiveCategories.find((c) => c.id === prevAppliedCat.id);
+    if (renamedApplied && renamedApplied.name !== applied.category) {
+      applied.category = renamedApplied.name;
+    }
+  }
+  if (prevDraftCat) {
+    const renamedDraft = effectiveCategories.find((c) => c.id === prevDraftCat.id);
+    if (renamedDraft && renamedDraft.name !== draft.category) {
+      draft.category = renamedDraft.name;
+    }
+  }
   isLoading = false;
   loadError = null;
   isServerConfirmed = Boolean(serverConfirmed);
@@ -913,12 +952,14 @@ function handleCatalogSnapshot({ products, categories, serverConfirmed = false }
     : ((typeof navigator !== "undefined" && navigator.onLine === false) ? "offline-cache" : "swr-cache");
   setSearchCatalog(products, optimizeProductImage);
 
-  if (pendingCatParam) {
+  if (pendingCatParam && (categoriesReady || effectiveCategories.length > 0)) {
     const resolved = resolveCategoryNameFromParam(pendingCatParam);
     const finalCat = resolved || "All";
     draft.category = finalCat;
     applied.category = finalCat;
-    pendingCatParam = "";
+    if (resolved || categoriesReady) {
+      pendingCatParam = "";
+    }
   }
 
   if ($("#shop-catalog")) {

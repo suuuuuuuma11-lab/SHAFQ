@@ -18,6 +18,7 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  writeBatch,
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
@@ -3286,8 +3287,10 @@ function initEvents() {
   }
 
   // Category Form Submit -> Firestore (addDoc or updateDoc)
+  let isSavingCategory = false;
   $("categoryForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (isSavingCategory) return;
     const isSystem = state.editingCatId === "system_all" ||
       Boolean(state.categories.find((c) => c.id === state.editingCatId)?.isSystem);
 
@@ -3356,12 +3359,76 @@ function initEvents() {
       updatedAt: new Date().toISOString()
     };
 
+    isSavingCategory = true;
+    const catSubmitBtn = $("cSubmitBtn");
+    if (catSubmitBtn) catSubmitBtn.disabled = true;
+
     try {
       if (isSystem) {
         await setDoc(doc(db, "categories", "system_all"), categoryPayload, { merge: true });
         toast('تم تحديث بنر تصنيف "الكل" بنجاح ✓');
       } else if (state.editingCatId) {
-        await updateDoc(doc(db, "categories", state.editingCatId), categoryPayload);
+        const targetCatId = state.editingCatId;
+        const previousCat = state.categories.find((c) => c.id === targetCatId);
+        const previousName = previousCat ? String(previousCat.name || "").trim() : "";
+        const targetIdLower = targetCatId.toLowerCase();
+        const prevNameLower = previousName.toLowerCase();
+
+        // Find all linked current & legacy products whose denormalized category fields are out of sync
+        const affectedProducts = Array.isArray(state.products)
+          ? state.products.filter((p) => {
+              const pCatId = String(p.categoryId || "").trim();
+              const pCat = String(p.category || "").trim();
+              const pCatIdLower = pCatId.toLowerCase();
+              const pCatLower = pCat.toLowerCase();
+
+              const belongsToCategory =
+                pCatId === targetCatId ||
+                pCatLower === targetIdLower ||
+                (prevNameLower && (pCatIdLower === prevNameLower || (!pCatId && pCatLower === prevNameLower)));
+
+              return belongsToCategory && (pCatId !== targetCatId || pCat !== name);
+            })
+          : [];
+
+        const syncTime = categoryPayload.updatedAt;
+        // Commit category + up to 449 products atomically in the primary batch
+        const primaryBatch = writeBatch(db);
+        primaryBatch.update(doc(db, "categories", targetCatId), categoryPayload);
+        const firstChunk = affectedProducts.slice(0, 449);
+        firstChunk.forEach((p) => {
+          primaryBatch.update(doc(db, "products", p.id), {
+            categoryId: targetCatId,
+            category: name,
+            updatedAt: syncTime
+          });
+        });
+        await primaryBatch.commit();
+
+        // Commit any overflow chunks (>449 products) with explicit partial-failure tracking
+        let failedCount = 0;
+        for (let i = 449; i < affectedProducts.length; i += 450) {
+          const chunk = affectedProducts.slice(i, i + 450);
+          try {
+            const extraBatch = writeBatch(db);
+            chunk.forEach((p) => {
+              extraBatch.update(doc(db, "products", p.id), {
+                categoryId: targetCatId,
+                category: name,
+                updatedAt: syncTime
+              });
+            });
+            await extraBatch.commit();
+          } catch (syncErr) {
+            console.error("Partial sync failure while updating product category batch:", syncErr);
+            failedCount += chunk.length;
+          }
+        }
+
+        if (failedCount > 0) {
+          toast(`تم تحديث التصنيف، لكن تعذرت مزامنة ${failedCount} منتج. اضغط "حفظ التعديلات" لإعادة المحاولة`, false);
+          return;
+        }
         toast("تم تحديث التصنيف في السحابة بنجاح ✓");
       } else {
         categoryPayload.createdAt = new Date().toISOString();
@@ -3372,6 +3439,9 @@ function initEvents() {
     } catch (err) {
       console.error("Save category error:", err);
       toast("حدث خطأ أثناء حفظ التصنيف في السحابة: " + err.message, false);
+    } finally {
+      isSavingCategory = false;
+      if (catSubmitBtn) catSubmitBtn.disabled = false;
     }
   });
 

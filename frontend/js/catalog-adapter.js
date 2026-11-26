@@ -301,6 +301,42 @@ export function sortCategories(list) {
   });
 }
 
+/**
+ * Reconciles product category names against authoritative category documents by categoryId
+ * so renaming a category never creates ghost duplicates from stale denormalized p.category fields.
+ */
+export function reconcileProductsWithCategories(products, categories) {
+  if (!Array.isArray(products) || products.length === 0) return Array.isArray(products) ? products : [];
+  if (!Array.isArray(categories) || categories.length === 0) return products;
+
+  const catById = new Map();
+  const catByLowerName = new Map();
+  for (const c of categories) {
+    if (!c || !c.id || !c.name) continue;
+    catById.set(String(c.id).trim(), c);
+    catByLowerName.set(c.name.trim().toLowerCase(), c);
+  }
+
+  return products.map((p) => {
+    if (!p) return p;
+    const pCatId = String(p.categoryId || "").trim();
+    const pCatName = String(p.category || "").trim();
+    const matched =
+      (pCatId && catById.get(pCatId)) ||
+      (pCatName && catById.get(pCatName)) ||
+      (pCatName && catByLowerName.get(pCatName.toLowerCase())) ||
+      null;
+
+    if (!matched) return p;
+    if (p.category === matched.name && p.categoryId === matched.id) return p;
+    return {
+      ...p,
+      categoryId: matched.id,
+      category: matched.name
+    };
+  });
+}
+
 function sanitizeCachedProduct(raw) {
   if (!raw || typeof raw !== "object") return null;
   const id = String(raw.id || "").trim();
@@ -404,6 +440,10 @@ export function readCatalogCache({ allowStale = true } = {}) {
     } else {
       safeRemoveStorage(SWR_STORAGE_KEYS.categories);
     }
+  }
+
+  if (hasProducts && hasCategories) {
+    products = reconcileProductsWithCategories(products, categories);
   }
 
   return {
@@ -511,14 +551,15 @@ export async function fetchStoreCatalog() {
   });
 
   const sortedCategories = sortCategories(categories);
+  const reconciledProducts = reconcileProductsWithCategories(products, sortedCategories);
   const fromCache = Boolean(prodSnap.metadata?.fromCache || catSnap.metadata?.fromCache);
   const serverConfirmed = !fromCache;
 
-  if (products.length > 0 || serverConfirmed) {
-    writeCatalogCache({ products, categories: sortedCategories, serverConfirmed });
+  if (reconciledProducts.length > 0 || serverConfirmed) {
+    writeCatalogCache({ products: reconciledProducts, categories: sortedCategories, serverConfirmed });
   }
 
-  return { products, categories: sortedCategories, fromCache, serverConfirmed };
+  return { products: reconciledProducts, categories: sortedCategories, fromCache, serverConfirmed };
 }
 
 /**
@@ -599,10 +640,20 @@ export function subscribeStoreCatalog(onUpdate, onError) {
 
   const emit = () => {
     if (prodsReady) {
+      const reconciledProducts = catsReady
+        ? reconcileProductsWithCategories(latestProducts, latestCategories)
+        : latestProducts;
       const fromCache = prodsFromCache;
       const serverConfirmed = !prodsFromCache;
+      if (catsReady && (reconciledProducts.length > 0 || serverConfirmed)) {
+        writeCatalogCache({
+          products: reconciledProducts,
+          categories: latestCategories,
+          serverConfirmed
+        });
+      }
       onUpdate({
-        products: latestProducts,
+        products: reconciledProducts,
         categories: latestCategories,
         categoriesReady: catsReady,
         fromCache,
@@ -624,10 +675,9 @@ export function subscribeStoreCatalog(onUpdate, onError) {
       latestProducts = list;
       prodsReady = true;
       prodsFromCache = Boolean(snap.metadata?.fromCache);
-      if (list.length > 0 || !prodsFromCache) {
+      if (!catsReady && (list.length > 0 || !prodsFromCache)) {
         writeCatalogCache({
           products: list,
-          categories: catsReady ? latestCategories : undefined,
           serverConfirmed: !prodsFromCache
         });
       }
