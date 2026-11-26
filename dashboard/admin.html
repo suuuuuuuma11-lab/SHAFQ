@@ -287,7 +287,7 @@
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
                           <span>بنر الكمبيوتر (Desktop)</span>
                         </div>
-                        <span class="bdc-ratio-tag">2.62 : 1</span>
+                        <span class="bdc-ratio-tag">4 : 1</span>
                       </div>
 
                       <div class="bdc-upload-box" id="desktopUploadBox">
@@ -323,7 +323,7 @@
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>
                           <span>بنر الجوال (Mobile)</span>
                         </div>
-                        <span class="bdc-ratio-tag">0.94 : 1</span>
+                        <span class="bdc-ratio-tag">4 : 3</span>
                       </div>
 
                       <div class="bdc-upload-box" id="mobileUploadBox">
@@ -333,7 +333,7 @@
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
                           </svg>
                           <b>اختر صورة للجوال</b>
-                          <small>صورة رأسية أو مربعة خاصة بالهاتف</small>
+                          <small>صورة مخصصة لعرض الجوال (4:3)</small>
                         </div>
                       </div>
 
@@ -361,16 +361,17 @@
                 <div class="pv-head-row">
                   <label style="margin:0">معاينة حية — هكذا سيظهر البنر في المتجر</label>
                   <div class="seg seg-sm" id="previewDeviceSeg">
-                    <button type="button" class="on" data-target="desktop">💻 كمبيوتر (2.62:1)</button>
-                    <button type="button" data-target="mobile">📱 جوال (0.94:1)</button>
+                    <button type="button" class="on" data-target="desktop">💻 كمبيوتر (4:1)</button>
+                    <button type="button" data-target="mobile">📱 جوال (4:3)</button>
                   </div>
                 </div>
                 <div class="banner-preview-outer">
                   <div class="banner-preview desktop-view" id="bannerPreview">
+                    <div class="banner-shade" aria-hidden="true"></div>
                     <div class="ov" id="bannerPreviewOverlay">
-                      <div class="bt">SHAFQ COLLECTION</div>
-                      <div class="bn" id="pvName">اسم التصنيف</div>
-                      <div class="bm" id="pvMsg">رسالتك التسويقية تظهر هنا…</div>
+                      <div class="bn" id="pvName" dir="auto">اسم التصنيف</div>
+                      <div class="bm" id="pvMsg" dir="auto">رسالتك التسويقية تظهر هنا…</div>
+                      <div class="b-line" aria-hidden="true"></div>
                     </div>
                   </div>
                 </div>
@@ -615,7 +616,7 @@
             <path d="M18 22V8a2 2 0 0 0-2-2H2"/>
           </svg>
           <span id="cropModalTitle">قص واعتماد بنر الكمبيوتر</span>
-          <span class="tag gold" id="cropTargetBadge" style="margin-right:8px;font-size:11px">2.62 : 1</span>
+          <span class="tag gold" id="cropTargetBadge" style="margin-right:8px;font-size:11px">4 : 1</span>
         </h3>
         <p id="cropModalSub">اسحب الصورة وقربها لاختيار الكادر النهائي بدقة — عند الضغط على تأكيد سيتم قصها وتحويلها تلقائياً إلى WebP محسن</p>
       </div>
@@ -654,7 +655,7 @@
           <!-- Target Banner Frame (changes class between desktop-frame and mobile-frame) -->
           <div class="crop-active-frame desktop-frame" id="cropFrame">
             <div class="frame-tag" id="cropFrameTag">
-              مساحة بنر الكمبيوتر (Desktop 2.62:1)
+              مساحة بنر الكمبيوتر (Desktop 4:1)
             </div>
             <div class="crop-thirds-grid"></div>
           </div>
@@ -679,10 +680,11 @@
           <div class="crop-pv-window desktop-ratio" id="cropPvWindow">
             <div class="preview-inner" id="cropPvInner">
               <img id="cropPvImg" alt="" draggable="false">
+              <div class="pv-shade" aria-hidden="true"></div>
               <div class="pv-overlay" id="cropPvOverlay">
-                <span class="pv-brand">SHAFQ COLLECTION</span>
-                <strong class="pv-cat-name" id="pvCropName">اسم التصنيف</strong>
-                <span class="pv-cat-msg" id="pvCropMsg">الرسالة التسويقية تظهر هنا</span>
+                <strong class="pv-cat-name" id="pvCropName" dir="auto">اسم التصنيف</strong>
+                <span class="pv-cat-msg" id="pvCropMsg" dir="auto">الرسالة التسويقية تظهر هنا</span>
+                <div class="pv-line" aria-hidden="true"></div>
               </div>
             </div>
           </div>
@@ -723,7 +725,7 @@
     <!-- Modal Footer Actions -->
     <div class="crop-modal-footer">
       <div class="footer-coord-badge" id="cropCoordInfo">
-        نسبة العرض: 2.62 : 1 • سيتم التصدير كـ WebP فائق الجودة
+        نسبة العرض: 4 : 1 • سيتم التصدير كـ WebP فائق الجودة
       </div>
       <div class="crop-footer-btns">
         <button type="button" class="btn-cancel" id="cropCancelBtn">إلغاء</button>

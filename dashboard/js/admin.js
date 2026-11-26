@@ -1327,8 +1327,14 @@ function updateBannerPreview() {
 
   const pvName = $("pvName");
   const pvMsg = $("pvMsg");
-  if (pvName) pvName.textContent = name;
-  if (pvMsg) pvMsg.textContent = msg;
+  if (pvName) {
+    pvName.setAttribute("dir", "auto");
+    pvName.textContent = name;
+  }
+  if (pvMsg) {
+    pvMsg.setAttribute("dir", "auto");
+    pvMsg.textContent = msg;
+  }
 
   const pv = $("bannerPreview");
   if (!pv) return;
@@ -1345,7 +1351,7 @@ function updateBannerPreview() {
       : (state.catDesktopImg || state.catMobileImg);
 
     if (bannerImgSrc) {
-      pv.style.background = "#1d1a16";
+      pv.style.background = "#14120f";
       pv.querySelector("img")?.remove();
       const im = document.createElement("img");
       im.src = bannerImgSrc;
@@ -1353,7 +1359,7 @@ function updateBannerPreview() {
       pv.insertBefore(im, pv.firstChild);
     } else {
       pv.querySelector("img")?.remove();
-      pv.style.background = "#1d1a16";
+      pv.style.background = "#14120f";
     }
   } else {
     pv.querySelector("img")?.remove();
@@ -1362,19 +1368,19 @@ function updateBannerPreview() {
 }
 
 // --- Category Banner & Product Image Crop & Optimization Settings ---
-const DESKTOP_BANNER_RATIO = 2.62; // 2.62 : 1 (1965 x 750)
-const MOBILE_BANNER_RATIO = 0.94;  // 0.94 : 1 (846 x 900)
+const DESKTOP_BANNER_RATIO = 4;      // 4 : 1 (2000 x 500) matching frontend .shop-hero
+const MOBILE_BANNER_RATIO = 4 / 3;   // 4 : 3 (1200 x 900) matching frontend mobile .shop-hero
 const PRODUCT_IMAGE_RATIO = 3 / 3.4; // 3 : 3.4 (900 x 1020)
 
 const BANNER_SPECS = {
   desktop: {
     ratio: DESKTOP_BANNER_RATIO,
-    width: 1965,
-    height: 750,
+    width: 2000,
+    height: 500,
     quality: 0.86,
     title: "قص واعتماد بنر الكمبيوتر (Desktop)",
-    badge: "2.62 : 1",
-    tag: "مساحة بنر الكمبيوتر (2.62:1)",
+    badge: "4 : 1",
+    tag: "مساحة بنر الكمبيوتر (4:1)",
     tagClass: "desktop-tag",
     frameClass: "desktop-frame",
     ratioClass: "desktop-ratio",
@@ -1382,12 +1388,12 @@ const BANNER_SPECS = {
   },
   mobile: {
     ratio: MOBILE_BANNER_RATIO,
-    width: 846,
+    width: 1200,
     height: 900,
     quality: 0.85,
     title: "قص واعتماد بنر الجوال (Mobile)",
-    badge: "0.94 : 1",
-    tag: "مساحة بنر الجوال (0.94:1)",
+    badge: "4 : 3",
+    tag: "مساحة بنر الجوال (4:3)",
     tagClass: "mobile-tag",
     frameClass: "mobile-frame",
     ratioClass: "mobile-ratio",
@@ -1519,7 +1525,10 @@ function openCropModal(imgUrl, target = "desktop", rawFile = null) {
     const pvCardImg = $("cropPvCardImgElem");
     if (pvCardImg) pvCardImg.src = imgUrl;
   } else {
-    if (pvOverlay) pvOverlay.style.display = "flex";
+    if (pvOverlay) {
+      pvOverlay.style.display = "flex";
+      pvOverlay.classList.toggle("mobile-pv-overlay", target === "mobile");
+    }
     if ($("cropPvWindow")) $("cropPvWindow").style.display = "block";
     if ($("cropPvProductCard")) $("cropPvProductCard").style.display = "none";
     document.querySelector(".crop-modal-body")?.classList.remove("product-crop-body");
@@ -1542,8 +1551,14 @@ function openCropModal(imgUrl, target = "desktop", rawFile = null) {
 
   const catName = $("cName") ? $("cName").value.trim() : "";
   const catMsg = $("cMsg") ? $("cMsg").value.trim() : "";
-  if ($("pvCropName")) $("pvCropName").textContent = catName || "اسم التصنيف";
-  if ($("pvCropMsg")) $("pvCropMsg").textContent = catMsg || "الرسالة التسويقية تظهر هنا";
+  if ($("pvCropName")) {
+    $("pvCropName").setAttribute("dir", "auto");
+    $("pvCropName").textContent = catName || "اسم التصنيف";
+  }
+  if ($("pvCropMsg")) {
+    $("pvCropMsg").setAttribute("dir", "auto");
+    $("pvCropMsg").textContent = catMsg || "الرسالة التسويقية تظهر هنا";
+  }
 
   const coordInfo = $("cropCoordInfo");
   if (coordInfo) {
@@ -1584,15 +1599,15 @@ function centerCropImage() {
   const srcImg = $("cropSourceImg");
   if (!frame) return;
 
-  const defaultH = target === "desktop" ? 200 : target === "mobile" ? 250 : 272;
+  const defaultH = target === "desktop" ? 150 : target === "mobile" ? 240 : 272;
   const defaultW = target === "product" ? 240 : undefined;
   const frameH = frame.clientHeight || defaultH;
-  const frameW = frame.clientWidth || (defaultW || Math.round(frameH * (BANNER_SPECS[target]?.ratio || 2.62)));
+  const frameW = frame.clientWidth || (defaultW || Math.round(frameH * (BANNER_SPECS[target]?.ratio || 4)));
 
   const natW = state.cropEditor.imgNaturalW || srcImg?.naturalWidth || (target === "product" ? 900 : 2000);
   const natH = state.cropEditor.imgNaturalH || srcImg?.naturalHeight || (target === "product" ? 1020 : 1000);
   const r_img = natW / Math.max(1, natH);
-  const r_frame = BANNER_SPECS[target]?.ratio || 2.62;
+  const r_frame = BANNER_SPECS[target]?.ratio || 4;
 
   let baseW, baseH;
   if (r_img >= r_frame) {
@@ -1625,10 +1640,10 @@ function updateCropEditorUI() {
   const pvImg = $("cropPvImg");
   if (!canvas || !frame || !srcImg) return;
 
-  const defaultH = target === "desktop" ? 200 : target === "mobile" ? 250 : 272;
+  const defaultH = target === "desktop" ? 150 : target === "mobile" ? 240 : 272;
   const defaultW = target === "product" ? 240 : undefined;
   const frameH = frame.clientHeight || defaultH;
-  const frameW = frame.clientWidth || (defaultW || Math.round(frameH * (BANNER_SPECS[target]?.ratio || 2.62)));
+  const frameW = frame.clientWidth || (defaultW || Math.round(frameH * (BANNER_SPECS[target]?.ratio || 4)));
   state.cropEditor.frameW = frameW;
   state.cropEditor.frameH = frameH;
 
@@ -1640,7 +1655,7 @@ function updateCropEditorUI() {
   const natW = state.cropEditor.imgNaturalW || srcImg.naturalWidth || (target === "product" ? 900 : 2000);
   const natH = state.cropEditor.imgNaturalH || srcImg.naturalHeight || (target === "product" ? 1020 : 1000);
   const r_img = natW / Math.max(1, natH);
-  const r_frame = BANNER_SPECS[target]?.ratio || 2.62;
+  const r_frame = BANNER_SPECS[target]?.ratio || 4;
 
   let baseW, baseH;
   if (r_img >= r_frame) {
@@ -1680,9 +1695,9 @@ function updateCropEditorUI() {
       cardPvImg.style.top = Math.round(state.cropEditor.imgY * pvScale) + "px";
     }
   } else if (pvWindow && pvImg) {
-    const defaultPvH = target === "desktop" ? 160 : 180;
-    const pvH = pvWindow.clientHeight || defaultPvH;
-    const pvScale = pvH / frameH;
+    const defaultPvW = target === "desktop" ? 560 : 260;
+    const pvW = pvWindow.clientWidth || defaultPvW;
+    const pvScale = pvW / frameW;
     pvImg.style.width = Math.round(imgW * pvScale) + "px";
     pvImg.style.height = Math.round(imgH * pvScale) + "px";
     pvImg.style.left = Math.round(state.cropEditor.imgX * pvScale) + "px";
@@ -1972,7 +1987,7 @@ function editCat(id) {
       if ($("desktopUploadBox")) $("desktopUploadBox").style.display = "none";
       if ($("desktopFinalBox")) $("desktopFinalBox").style.display = "block";
       if ($("desktopFinalImg")) $("desktopFinalImg").src = state.catDesktopImg;
-      if ($("desktopSizeInfo")) $("desktopSizeInfo").textContent = b.isFinal ? "WebP معتمد (1965×750)" : "صورة سابقة";
+      if ($("desktopSizeInfo")) $("desktopSizeInfo").textContent = b.isFinal ? "WebP معتمد (2000×500)" : "صورة سابقة";
     } else {
       if ($("desktopUploadBox")) $("desktopUploadBox").style.display = "block";
       if ($("desktopFinalBox")) $("desktopFinalBox").style.display = "none";
@@ -1982,7 +1997,7 @@ function editCat(id) {
       if ($("mobileUploadBox")) $("mobileUploadBox").style.display = "none";
       if ($("mobileFinalBox")) $("mobileFinalBox").style.display = "block";
       if ($("mobileFinalImg")) $("mobileFinalImg").src = state.catMobileImg;
-      if ($("mobileSizeInfo")) $("mobileSizeInfo").textContent = b.isFinal ? "WebP معتمد (846×900)" : "صورة سابقة";
+      if ($("mobileSizeInfo")) $("mobileSizeInfo").textContent = b.isFinal ? "WebP معتمد (1200×900)" : "صورة سابقة";
     } else {
       if ($("mobileUploadBox")) $("mobileUploadBox").style.display = "block";
       if ($("mobileFinalBox")) $("mobileFinalBox").style.display = "none";
@@ -2089,8 +2104,8 @@ function renderCatsGrid() {
         <div class="cat-banner" ${style}>
           ${bg}
           <div class="cb-txt">
-            <div class="cb-k">SHAFQ COLLECTION</div>
-            <div class="cb-n">${esc(c.name)}</div>
+            <div class="cb-n" dir="auto">${esc(c.name)}</div>
+            <div class="cb-line" aria-hidden="true"></div>
           </div>
         </div>
         <div class="cat-body">
