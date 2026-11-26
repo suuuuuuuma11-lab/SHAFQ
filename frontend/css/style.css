@@ -1955,7 +1955,7 @@ html.is-page-entering body {
   }
 
   .page-inner .header { height: 74px; }
-  .page-inner .brand { width: 112px; top: 0; bottom: 0; margin-block: auto; }
+  .page-inner .brand { width: 112px; top: 0; bottom: 0; margin-block: auto; inset-inline-start: calc(var(--pad-x) - 5px); }
   .page-inner .burger { display: grid; width: 40px; height: 40px; inset-inline-end: calc(var(--bar-pad) - 10px); }
   .page-inner .nav {
     display: none;
